@@ -10,6 +10,12 @@ public final class AppModel: ObservableObject {
     @Published public var selectedDisplay: DisplayDescriptor?
     @Published public var systemMetrics: SystemMetrics?
     @Published public var isDevKitMode = false
+    @Published public var currentPage: Int = 0
+
+    public let weatherService = WeatherDataService()
+    public let networkService = NetworkMonitorService()
+    public let processService = ProcessMonitorService()
+    public let touchService = HardwareTouchService()
 
     private let settingsStore: SettingsStore
     private let displayManager: DisplayManager
@@ -44,10 +50,36 @@ public final class AppModel: ObservableObject {
         hasStarted = true
         refreshDisplays()
         metricsService.start()
+        weatherService.start()
+        networkService.start()
+        processService.start()
+        if !isDevKitMode {
+            touchService.start()
+        }
+
+        // React to touch swipes for page changes
+        touchService.$swipeDirection
+            .compactMap { $0 }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] direction in
+                guard let self else { return }
+                switch direction {
+                case .left:
+                    if self.currentPage < 1 { self.currentPage += 1 }
+                case .right:
+                    if self.currentPage > 0 { self.currentPage -= 1 }
+                }
+                self.touchService.consumeSwipe()
+            }
+            .store(in: &cancellables)
     }
 
     public func stop() {
         metricsService.stop()
+        weatherService.stop()
+        networkService.stop()
+        processService.stop()
+        touchService.stop()
     }
 
     public func refreshDisplays() {

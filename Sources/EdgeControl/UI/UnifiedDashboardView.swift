@@ -11,6 +11,8 @@ public struct UnifiedDashboardView: View {
         model.systemMetrics
     }
 
+    private let totalPages = 2
+
     public var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -27,24 +29,52 @@ public struct UnifiedDashboardView: View {
                 .ignoresSafeArea()
 
                 if let m = metrics {
-                    HStack(spacing: 0) {
-                        // LEFT: 4 gauges vertically stacked in 2 columns
-                        gaugesPanel(m, height: geo.size.height)
-                            .frame(width: geo.size.width * 0.28)
+                    ZStack {
+                        // Page 1: System Monitor + Weather
+                        if model.currentPage == 0 {
+                            page1(m, geo: geo)
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .leading),
+                                    removal: .move(edge: .leading)
+                                ))
+                        }
 
-                        dividerLine()
-
-                        // CENTER: Dual graphs stacked + info strip
-                        centerPanel(m, height: geo.size.height)
-                            .frame(width: geo.size.width * 0.44)
-
-                        dividerLine()
-
-                        // RIGHT: Clock + system specs
-                        rightPanel(m, height: geo.size.height)
-                            .frame(width: geo.size.width * 0.28)
+                        // Page 2: Network + Processes + Disk
+                        if model.currentPage == 1 {
+                            SecondPageView()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .animation(.easeInOut(duration: 0.3), value: model.currentPage)
+                    .gesture(
+                        DragGesture(minimumDistance: 60)
+                            .onEnded { value in
+                                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                                withAnimation {
+                                    if value.translation.width < 0 && model.currentPage < totalPages - 1 {
+                                        model.currentPage += 1
+                                    } else if value.translation.width > 0 && model.currentPage > 0 {
+                                        model.currentPage -= 1
+                                    }
+                                }
+                            }
+                    )
+
+                    // Page indicator dots
+                    HStack(spacing: 8) {
+                        ForEach(0..<totalPages, id: \.self) { index in
+                            Circle()
+                                .fill(index == model.currentPage ? Theme.accentCyan : .white.opacity(0.20))
+                                .frame(width: index == model.currentPage ? 10 : 7, height: index == model.currentPage ? 10 : 7)
+                                .animation(.easeInOut(duration: 0.2), value: model.currentPage)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .padding(.bottom, 8)
+
                 } else {
                     VStack(spacing: 12) {
                         ProgressView()
@@ -57,6 +87,7 @@ public struct UnifiedDashboardView: View {
                 }
             }
         }
+        .coordinateSpace(name: TouchCoordinate.name)
         .onChange(of: model.systemMetrics) { _, newMetrics in
             if let m = newMetrics {
                 history.record(cpu: m.cpuLoadPercent, memory: m.memoryUsedPercent)
@@ -73,6 +104,25 @@ public struct UnifiedDashboardView: View {
         .onAppear {
             model.startIfNeeded()
         }
+    }
+
+    // Page 1 content (original dashboard)
+    private func page1(_ m: SystemMetrics, geo: GeometryProxy) -> some View {
+        HStack(spacing: 0) {
+            gaugesPanel(m, height: geo.size.height)
+                .frame(width: geo.size.width * 0.28)
+
+            dividerLine()
+
+            centerPanel(m, height: geo.size.height)
+                .frame(width: geo.size.width * 0.44)
+
+            dividerLine()
+
+            rightPanel(m, height: geo.size.height)
+                .frame(width: geo.size.width * 0.28)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func dividerLine() -> some View {
@@ -184,11 +234,11 @@ public struct UnifiedDashboardView: View {
         .padding(14)
     }
 
-    // MARK: - RIGHT: Clock + Details
+    // MARK: - RIGHT: Clock + Weather + (future space below)
 
     private func rightPanel(_ m: SystemMetrics, height: CGFloat) -> some View {
         VStack(spacing: 10) {
-            // Clock — compact
+            // Clock
             ClockWidgetView()
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
@@ -199,30 +249,65 @@ public struct UnifiedDashboardView: View {
                 )
                 .fixedSize(horizontal: false, vertical: true)
 
-            // System specs list — scrollable if needed
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    specRow(icon: "cpu", label: "Processor", value: m.cpuBrand, color: Theme.accentCyan, isFirst: true)
-                    specRow(icon: "gpu", label: "Graphics", value: m.gpuName, color: Theme.accentGreen)
-                    specRow(icon: "memorychip", label: "Memory", value: String(format: "%.1f / %.0f GB (%.0f%%)", m.memoryUsedGB, m.memoryTotalGB, m.memoryUsedPercent), color: Theme.accentPurple)
-                    specRow(icon: "internaldrive", label: "Storage", value: String(format: "%.0f / %.0f GB (%.0f%%)", m.storageUsedGB, m.storageTotalGB, m.storageUsedPercent), color: Theme.accentBlue)
-                    specRow(icon: "arrow.triangle.swap", label: "Swap", value: String(format: "%.0f MB used", m.swapUsedMB), color: Theme.accentOrange)
-                    specRow(icon: "thermometer.medium", label: "Thermal", value: m.thermalState, color: thermalColor(m.thermalState), isLast: true)
+            // Weather — fixed size, not expanding
+            WeatherWidgetView()
+                .environmentObject(model)
+                .frame(maxWidth: .infinity)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // Touch status + page controls
+            VStack(spacing: 8) {
+                // Touch status
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(model.touchService.state.hidStatus.contains("active") ? Theme.accentGreen : Theme.accentRed)
+                        .frame(width: 10, height: 10)
+                    Text("TOUCH: \(model.touchService.state.hidStatus.uppercased())")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                    Spacer()
+                }
+
+                // Page navigation — touch zone registered
+                HStack(spacing: 10) {
+                    TouchButton(
+                        id: "page1",
+                        label: "PAGE 1",
+                        isActive: model.currentPage == 0,
+                        activeColor: Theme.accentCyan,
+                        registry: model.touchService.zoneRegistry
+                    ) {
+                        withAnimation { model.currentPage = 0 }
+                    }
+
+                    TouchButton(
+                        id: "page2",
+                        label: "PAGE 2",
+                        isActive: model.currentPage == 1,
+                        activeColor: Theme.accentPurple,
+                        registry: model.touchService.zoneRegistry
+                    ) {
+                        withAnimation { model.currentPage = 1 }
+                    }
+                }
+
+                // Calibration info
+                if !model.touchService.state.isCalibrated {
+                    Text(model.touchService.state.calibrationStatus.uppercased())
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.accentOrange)
+                        .lineLimit(1)
                 }
             }
+            .padding(12)
             .background(Theme.backgroundCard, in: RoundedRectangle(cornerRadius: Theme.cornerRadiusSmall, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadiusSmall, style: .continuous)
                     .strokeBorder(Theme.borderSubtle, lineWidth: 1)
             )
-            .frame(maxHeight: .infinity)
 
-            // Core breakdown — fixed at bottom
-            HStack(spacing: 8) {
-                coreChip(label: "P-CORES", value: "\(m.performanceCoreCount)", color: Theme.accentCyan)
-                coreChip(label: "E-CORES", value: "\(m.efficiencyCoreCount)", color: Theme.accentGreen)
-            }
-            .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
         }
         .padding(14)
     }
@@ -285,56 +370,6 @@ public struct UnifiedDashboardView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .strokeBorder(Theme.borderSubtle, lineWidth: 1)
-        )
-    }
-
-    private func specRow(icon: String, label: String, value: String, color: Color, isFirst: Bool = false, isLast: Bool = false) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(color)
-                .frame(width: 30)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label.uppercased())
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                Text(value)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-            }
-
-            Spacer()
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
-        .overlay(alignment: .bottom) {
-            if !isLast {
-                Rectangle()
-                    .fill(Theme.borderSubtle)
-                    .frame(height: 1)
-                    .padding(.leading, 50)
-            }
-        }
-    }
-
-    private func coreChip(label: String, value: String, color: Color) -> some View {
-        HStack(spacing: 10) {
-            Text(value)
-                .font(.system(size: 36, weight: .bold, design: .rounded))
-                .foregroundStyle(color)
-            Text(label)
-                .font(.system(size: 16, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.textTertiary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 10)
-        .background(color.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(color.opacity(0.12), lineWidth: 1)
         )
     }
 

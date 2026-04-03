@@ -20,15 +20,9 @@
     <string>14.0</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
-    <key>NSHealthShareUsageDescription</key>
-    <string>EdgeControl displays your health metrics on the XENEON EDGE dashboard.</string>
-    <key>NSHealthUpdateUsageDescription</key>
-    <string>EdgeControl does not modify your health data.</string>
-    <key>NSHomeKitUsageDescription</key>
-    <string>EdgeControl displays and controls your HomeKit accessories on the XENEON EDGE dashboard.</string>
     <key>NSLocationUsageDescription</key>
-    <string>EdgeControl uses your location for weather data.</string>
+    <string>EdgeControl uses your location for accurate weather data on your dashboard.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>EdgeControl uses your location for weather data on the dashboard.</string>
+    <string>EdgeControl uses your location for accurate weather data on your dashboard.</string>
 </dict>
 </plist>

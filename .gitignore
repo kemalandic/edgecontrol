@@ -9,3 +9,4 @@ dist/
 *.ipa
 *.dSYM.zip
 *.dSYM
+/.paks
