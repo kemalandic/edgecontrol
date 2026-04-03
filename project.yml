@@ -1,0 +1,44 @@
+name: EdgeControl
+options:
+  bundleIdPrefix: ai.pakslab
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.3"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  EdgeControl:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/EdgeControl
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol
+        PRODUCT_NAME: EdgeControl
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: Sources/EdgeControl/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Sources/EdgeControl/EdgeControl.entitlements
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: CNRZ47Y629
+        GENERATE_INFOPLIST_FILE: false
+        SWIFT_STRICT_CONCURRENCY: complete
+    dependencies: []
+
+  EdgeControlTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/EdgeControlTests
+    dependencies:
+      - target: EdgeControl
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol.tests

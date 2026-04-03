@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>EdgeControl</string>
+    <key>CFBundleDisplayName</key>
+    <string>EdgeControl</string>
+    <key>CFBundleIdentifier</key>
+    <string>ai.pakslab.edgecontrol</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>EdgeControl</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>14.0</string>
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    <key>NSHealthShareUsageDescription</key>
+    <string>EdgeControl displays your health metrics on the XENEON EDGE dashboard.</string>
+    <key>NSHealthUpdateUsageDescription</key>
+    <string>EdgeControl does not modify your health data.</string>
+    <key>NSHomeKitUsageDescription</key>
+    <string>EdgeControl displays and controls your HomeKit accessories on the XENEON EDGE dashboard.</string>
+    <key>NSLocationUsageDescription</key>
+    <string>EdgeControl uses your location for weather data.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>EdgeControl uses your location for weather data on the dashboard.</string>
+</dict>
+</plist>

@@ -1,0 +1,489 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */; };
+		3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */; };
+		3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */; };
+		A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */; };
+		A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */; };
+		A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A033131F227B312B23519B79 /* EdgeControlApp.swift */; };
+		B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B32F73BCB42D4A717959D3 /* AppModel.swift */; };
+		B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */; };
+		CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */; };
+		D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FEAAA8B09E3342724D9B5C /* Theme.swift */; };
+		E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC949C865B9083B7AA95480E /* DisplayManager.swift */; };
+		FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A3AF6BCC447FB39C1EE2C145 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EFBC5C5DC8864FB696860BF5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB33E4AC7A3FA22BCE769CA5;
+			remoteInfo = EdgeControl;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		24BE41E2E67F43326209F5A9 /* EdgeControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EdgeControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		28B32F73BCB42D4A717959D3 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		45F6663A2EB2FF9A47DB4D19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsService.swift; sourceTree = "<group>"; };
+		511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		54A8008862717EF901595923 /* EdgeControl.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EdgeControl.entitlements; sourceTree = "<group>"; };
+		70FEAAA8B09E3342724D9B5C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
+		A033131F227B312B23519B79 /* EdgeControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlApp.swift; sourceTree = "<group>"; };
+		D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetrics.swift; sourceTree = "<group>"; };
+		DC949C865B9083B7AA95480E /* DisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayManager.swift; sourceTree = "<group>"; };
+		EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EdgeControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDescriptor.swift; sourceTree = "<group>"; };
+		F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDashboardView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		19B7C1EF711C04AE3F750513 /* EdgeControl */ = {
+			isa = PBXGroup;
+			children = (
+				AEE5DEEE3222ECCD424E87A8 /* App */,
+				2F002832FE2DEDC7EA75E102 /* Models */,
+				6C21C94077386850ACCD94BB /* Services */,
+				AF8E0DD490510206AF70E25D /* UI */,
+				54A8008862717EF901595923 /* EdgeControl.entitlements */,
+				45F6663A2EB2FF9A47DB4D19 /* Info.plist */,
+			);
+			path = EdgeControl;
+			sourceTree = "<group>";
+		};
+		1E4EC6F9ED3AFE127C35E098 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				806D9CBB4F1F337B653462E0 /* EdgeControlTests */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		25C151DECA53D620E449E828 = {
+			isa = PBXGroup;
+			children = (
+				B256326FE6E70C641A5986B2 /* Sources */,
+				1E4EC6F9ED3AFE127C35E098 /* Tests */,
+				6905EFC26997BC740CCB5FA8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		2F002832FE2DEDC7EA75E102 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */,
+				F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */,
+				D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		6905EFC26997BC740CCB5FA8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				24BE41E2E67F43326209F5A9 /* EdgeControl.app */,
+				EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6C21C94077386850ACCD94BB /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				28B32F73BCB42D4A717959D3 /* AppModel.swift */,
+				DC949C865B9083B7AA95480E /* DisplayManager.swift */,
+				3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */,
+				4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		806D9CBB4F1F337B653462E0 /* EdgeControlTests */ = {
+			isa = PBXGroup;
+			children = (
+				511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */,
+			);
+			path = EdgeControlTests;
+			sourceTree = "<group>";
+		};
+		AEE5DEEE3222ECCD424E87A8 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A033131F227B312B23519B79 /* EdgeControlApp.swift */,
+				71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AF8E0DD490510206AF70E25D /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				70FEAAA8B09E3342724D9B5C /* Theme.swift */,
+				F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		B256326FE6E70C641A5986B2 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				19B7C1EF711C04AE3F750513 /* EdgeControl */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1C0109EC402DBEAD7E3F9B3F /* EdgeControlTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3A02F287C7FDE61A697534E1 /* Build configuration list for PBXNativeTarget "EdgeControlTests" */;
+			buildPhases = (
+				8A537D5E5DA2E96F483B6344 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				64C98B3E626D1FDCE18BD0F8 /* PBXTargetDependency */,
+			);
+			name = EdgeControlTests;
+			packageProductDependencies = (
+			);
+			productName = EdgeControlTests;
+			productReference = EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FB33E4AC7A3FA22BCE769CA5 /* EdgeControl */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ACC7D378811D7666E6ACA783 /* Build configuration list for PBXNativeTarget "EdgeControl" */;
+			buildPhases = (
+				2300285347F0C26FD826A9DC /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = EdgeControl;
+			packageProductDependencies = (
+			);
+			productName = EdgeControl;
+			productReference = 24BE41E2E67F43326209F5A9 /* EdgeControl.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EFBC5C5DC8864FB696860BF5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1630;
+				TargetAttributes = {
+					FB33E4AC7A3FA22BCE769CA5 = {
+						DevelopmentTeam = CNRZ47Y629;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = E99FF889D245458806810156 /* Build configuration list for PBXProject "EdgeControl" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 25C151DECA53D620E449E828;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6905EFC26997BC740CCB5FA8 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FB33E4AC7A3FA22BCE769CA5 /* EdgeControl */,
+				1C0109EC402DBEAD7E3F9B3F /* EdgeControlTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2300285347F0C26FD826A9DC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */,
+				A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */,
+				B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */,
+				E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */,
+				A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */,
+				A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */,
+				FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */,
+				3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */,
+				D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */,
+				3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */,
+				CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8A537D5E5DA2E96F483B6344 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		64C98B3E626D1FDCE18BD0F8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB33E4AC7A3FA22BCE769CA5 /* EdgeControl */;
+			targetProxy = A3AF6BCC447FB39C1EE2C145 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1026773AA1BBF75EBD51A244 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EdgeControl.app/Contents/MacOS/EdgeControl";
+			};
+			name = Debug;
+		};
+		50EC4908D5F227E6AFD765C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		815003D060EEDD2DD1FA85AE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/EdgeControl/EdgeControl.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CNRZ47Y629;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/EdgeControl/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol;
+				PRODUCT_NAME = EdgeControl;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Debug;
+		};
+		89992DCF44D707B0628E6DE9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol.tests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/EdgeControl.app/Contents/MacOS/EdgeControl";
+			};
+			name = Release;
+		};
+		AEECC72D5518074D67F43452 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		FD1286011BC837568448758B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Sources/EdgeControl/EdgeControl.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CNRZ47Y629;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Sources/EdgeControl/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol;
+				PRODUCT_NAME = EdgeControl;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3A02F287C7FDE61A697534E1 /* Build configuration list for PBXNativeTarget "EdgeControlTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1026773AA1BBF75EBD51A244 /* Debug */,
+				89992DCF44D707B0628E6DE9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		ACC7D378811D7666E6ACA783 /* Build configuration list for PBXNativeTarget "EdgeControl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				815003D060EEDD2DD1FA85AE /* Debug */,
+				FD1286011BC837568448758B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E99FF889D245458806810156 /* Build configuration list for PBXProject "EdgeControl" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AEECC72D5518074D67F43452 /* Debug */,
+				50EC4908D5F227E6AFD765C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EFBC5C5DC8864FB696860BF5 /* Project object */;
+}
