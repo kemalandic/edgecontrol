@@ -10,3 +10,4 @@ dist/
 *.dSYM.zip
 *.dSYM
 /.paks
+docs/
