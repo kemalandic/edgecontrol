@@ -2,9 +2,15 @@ import Darwin.Mach
 import Foundation
 import Metal
 
+public struct CoreUsage: Identifiable, Equatable {
+    public let id: Int
+    public let usage: Double // 0-100
+}
+
 @MainActor
 public final class SystemMetricsService: ObservableObject {
     @Published public private(set) var latest: SystemMetrics?
+    @Published public var perCoreUsage: [CoreUsage] = []
 
     private let cpuBrand: String
     private let performanceCoreCount: Int
@@ -13,6 +19,7 @@ public final class SystemMetricsService: ObservableObject {
     private let totalMemoryGB: Double
     private var previousCPUInfo = host_cpu_load_info()
     private var hasPreviousCPUInfo = false
+    private var previousPerCore: [processor_cpu_load_info]?
     private var timer: Timer?
 
     public init() {
@@ -42,6 +49,7 @@ public final class SystemMetricsService: ObservableObject {
         let cpuLoadPercent = currentCPULoadPercent()
         let memory = currentMemorySnapshot()
         let storage = currentStorageSnapshot()
+        perCoreUsage = currentPerCoreUsage()
         latest = SystemMetrics(
             cpuLoadPercent: cpuLoadPercent,
             memoryUsedPercent: memory.usedPercent,
@@ -163,5 +171,50 @@ public final class SystemMetricsService: ObservableObject {
         var size = MemoryLayout<Int32>.size
         let result = key.withCString { sysctlbyname($0, &value, &size, nil, 0) }
         return result == 0 ? Int(value) : nil
+    }
+
+    private func currentPerCoreUsage() -> [CoreUsage] {
+        var cpuInfoCount: mach_msg_type_number_t = 0
+        var cpuInfo: processor_info_array_t?
+        var numCPUs: natural_t = 0
+
+        let result = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &numCPUs, &cpuInfo, &cpuInfoCount)
+        guard result == KERN_SUCCESS, let info = cpuInfo else { return [] }
+
+        defer {
+            let size = vm_size_t(cpuInfoCount) * vm_size_t(MemoryLayout<integer_t>.stride)
+            vm_deallocate(mach_task_self_, vm_address_t(bitPattern: info), size)
+        }
+
+        var currentInfo: [processor_cpu_load_info] = []
+        for i in 0..<Int(numCPUs) {
+            let offset = Int(CPU_STATE_MAX) * i
+            let user = UInt32(info[offset + Int(CPU_STATE_USER)])
+            let system = UInt32(info[offset + Int(CPU_STATE_SYSTEM)])
+            let idle = UInt32(info[offset + Int(CPU_STATE_IDLE)])
+            let nice = UInt32(info[offset + Int(CPU_STATE_NICE)])
+            var loadInfo = processor_cpu_load_info()
+            loadInfo.cpu_ticks.0 = user
+            loadInfo.cpu_ticks.1 = system
+            loadInfo.cpu_ticks.2 = idle
+            loadInfo.cpu_ticks.3 = nice
+            currentInfo.append(loadInfo)
+        }
+
+        var usages: [CoreUsage] = []
+        if let prev = previousPerCore, prev.count == currentInfo.count {
+            for i in 0..<currentInfo.count {
+                let user = Double(currentInfo[i].cpu_ticks.0 - prev[i].cpu_ticks.0)
+                let system = Double(currentInfo[i].cpu_ticks.1 - prev[i].cpu_ticks.1)
+                let idle = Double(currentInfo[i].cpu_ticks.2 - prev[i].cpu_ticks.2)
+                let nice = Double(currentInfo[i].cpu_ticks.3 - prev[i].cpu_ticks.3)
+                let total = user + system + idle + nice
+                let usage = total > 0 ? ((user + system + nice) / total) * 100 : 0
+                usages.append(CoreUsage(id: i, usage: usage))
+            }
+        }
+
+        previousPerCore = currentInfo
+        return usages
     }
 }

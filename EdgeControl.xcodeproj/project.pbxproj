@@ -7,21 +7,32 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0192DB6530FF2E560DB47C03 /* TimeInfoPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */; };
+		06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322BB0E114232C4FC2E95B0A /* BluetoothService.swift */; };
 		110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */; };
+		147366BCAE8B82B11A9342A3 /* TemperaturePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */; };
+		1AA79646711793558B63A2DC /* ConnectivityPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */; };
 		3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */; };
 		3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */; };
+		3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D6B0E686C7958948D5F219 /* DiskIOService.swift */; };
 		450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */; };
 		576555CB0A1ECA090B945198 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59A086B0AFB78148E786B8D /* WeatherService.swift */; };
+		5879452341CDA957397EC907 /* DiskIOPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */; };
 		6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722485033F676CCBCFB190DF /* TouchButton.swift */; };
+		8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B9D5B3D367A656132C2A /* SMCService.swift */; };
+		979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D517F2C5775F62109D1F70 /* WiFiService.swift */; };
 		A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */; };
 		A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */; };
 		A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A033131F227B312B23519B79 /* EdgeControlApp.swift */; };
 		AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E4388008C822687930052 /* HardwareTouchService.swift */; };
+		B11C45705B8FD14749D3EF34 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96BA74C71D7F6F2ED713C5FD /* AudioService.swift */; };
 		B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B32F73BCB42D4A717959D3 /* AppModel.swift */; };
 		B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */; };
 		BA56436DBA4478A4C76D2F50 /* TouchZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = B641FABA26849F495AA4527B /* TouchZone.swift */; };
 		C42344CFBE8775C1CD04E871 /* WeatherWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F39536CB6D73EF154EE97C1 /* WeatherWidgetView.swift */; };
+		C47C29C6EBE5A4DD26D5014B /* NowPlayingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */; };
 		CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */; };
+		D253C27941895562CE75D2FF /* NowPlayingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */; };
 		D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FEAAA8B09E3342724D9B5C /* Theme.swift */; };
 		E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC949C865B9083B7AA95480E /* DisplayManager.swift */; };
 		EE88D2207F764F4AE26A8AC3 /* SecondPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */; };
@@ -47,6 +58,8 @@
 		1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		24BE41E2E67F43326209F5A9 /* EdgeControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EdgeControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		28B32F73BCB42D4A717959D3 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeInfoPage.swift; sourceTree = "<group>"; };
+		322BB0E114232C4FC2E95B0A /* BluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothService.swift; sourceTree = "<group>"; };
 		3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
 		45F6663A2EB2FF9A47DB4D19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsService.swift; sourceTree = "<group>"; };
@@ -55,19 +68,28 @@
 		70FEAAA8B09E3342724D9B5C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
 		722485033F676CCBCFB190DF /* TouchButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchButton.swift; sourceTree = "<group>"; };
+		8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperaturePage.swift; sourceTree = "<group>"; };
+		85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
+		8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityPage.swift; sourceTree = "<group>"; };
 		8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondPageView.swift; sourceTree = "<group>"; };
 		9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitorService.swift; sourceTree = "<group>"; };
 		9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMonitorService.swift; sourceTree = "<group>"; };
+		96BA74C71D7F6F2ED713C5FD /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		A033131F227B312B23519B79 /* EdgeControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlApp.swift; sourceTree = "<group>"; };
+		B1D517F2C5775F62109D1F70 /* WiFiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiService.swift; sourceTree = "<group>"; };
 		B641FABA26849F495AA4527B /* TouchZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchZone.swift; sourceTree = "<group>"; };
+		B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingPage.swift; sourceTree = "<group>"; };
 		C59A086B0AFB78148E786B8D /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
+		D0D6B0E686C7958948D5F219 /* DiskIOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOService.swift; sourceTree = "<group>"; };
 		D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationSupport.swift; sourceTree = "<group>"; };
 		D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetrics.swift; sourceTree = "<group>"; };
 		DC949C865B9083B7AA95480E /* DisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayManager.swift; sourceTree = "<group>"; };
+		DF86B9D5B3D367A656132C2A /* SMCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCService.swift; sourceTree = "<group>"; };
 		EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EdgeControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchRuntimeState.swift; sourceTree = "<group>"; };
 		F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDescriptor.swift; sourceTree = "<group>"; };
 		F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDashboardView.swift; sourceTree = "<group>"; };
+		FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOPage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -127,13 +149,19 @@
 			isa = PBXGroup;
 			children = (
 				28B32F73BCB42D4A717959D3 /* AppModel.swift */,
+				96BA74C71D7F6F2ED713C5FD /* AudioService.swift */,
+				322BB0E114232C4FC2E95B0A /* BluetoothService.swift */,
+				D0D6B0E686C7958948D5F219 /* DiskIOService.swift */,
 				DC949C865B9083B7AA95480E /* DisplayManager.swift */,
 				121E4388008C822687930052 /* HardwareTouchService.swift */,
 				9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */,
+				85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */,
 				9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */,
 				3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */,
+				DF86B9D5B3D367A656132C2A /* SMCService.swift */,
 				4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */,
 				C59A086B0AFB78148E786B8D /* WeatherService.swift */,
+				B1D517F2C5775F62109D1F70 /* WiFiService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -158,8 +186,13 @@
 		AF8E0DD490510206AF70E25D /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */,
+				FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */,
+				B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */,
 				8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */,
+				8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */,
 				70FEAAA8B09E3342724D9B5C /* Theme.swift */,
+				30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */,
 				722485033F676CCBCFB190DF /* TouchButton.swift */,
 				F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */,
 				0F39536CB6D73EF154EE97C1 /* WeatherWidgetView.swift */,
@@ -255,24 +288,35 @@
 			files = (
 				B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */,
 				A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */,
+				B11C45705B8FD14749D3EF34 /* AudioService.swift in Sources */,
+				06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */,
 				FA2DC89A27E123C170BF4422 /* CalibrationSupport.swift in Sources */,
+				1AA79646711793558B63A2DC /* ConnectivityPage.swift in Sources */,
+				5879452341CDA957397EC907 /* DiskIOPage.swift in Sources */,
+				3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */,
 				B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */,
 				E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */,
 				A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */,
 				AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */,
 				F35D84161A1E0DBA97F7F4FC /* NetworkMonitorService.swift in Sources */,
+				C47C29C6EBE5A4DD26D5014B /* NowPlayingPage.swift in Sources */,
+				D253C27941895562CE75D2FF /* NowPlayingService.swift in Sources */,
 				450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */,
+				8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */,
 				EE88D2207F764F4AE26A8AC3 /* SecondPageView.swift in Sources */,
 				A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */,
 				FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */,
 				3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */,
+				147366BCAE8B82B11A9342A3 /* TemperaturePage.swift in Sources */,
 				D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */,
+				0192DB6530FF2E560DB47C03 /* TimeInfoPage.swift in Sources */,
 				6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */,
 				F1867A3A7E2C2E16B323838A /* TouchRuntimeState.swift in Sources */,
 				BA56436DBA4478A4C76D2F50 /* TouchZone.swift in Sources */,
 				3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */,
 				576555CB0A1ECA090B945198 /* WeatherService.swift in Sources */,
 				C42344CFBE8775C1CD04E871 /* WeatherWidgetView.swift in Sources */,
+				979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */,
 				CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

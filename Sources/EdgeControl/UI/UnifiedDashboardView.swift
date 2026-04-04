@@ -11,7 +11,7 @@ public struct UnifiedDashboardView: View {
         model.systemMetrics
     }
 
-    private let totalPages = 2
+    private let totalPages = 7
 
     public var body: some View {
         GeometryReader { geo in
@@ -39,9 +39,54 @@ public struct UnifiedDashboardView: View {
                                 ))
                         }
 
-                        // Page 2: Network + Processes + Disk
+                        // Page 2: Network + Processes
                         if model.currentPage == 1 {
                             SecondPageView()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
+
+                        // Page 3: Temperatures
+                        if model.currentPage == 2 {
+                            TemperaturePage()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
+
+                        // Page 4: Disk I/O + Storage + Network
+                        if model.currentPage == 3 {
+                            DiskIOPage()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
+
+                        // Page 5: Now Playing
+                        if model.currentPage == 4 {
+                            NowPlayingPage()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
+
+                        // Page 6: Connectivity (WiFi + Bluetooth + Audio)
+                        if model.currentPage == 5 {
+                            ConnectivityPage()
+                                .transition(.asymmetric(
+                                    insertion: .move(edge: .trailing),
+                                    removal: .move(edge: .trailing)
+                                ))
+                        }
+
+                        // Page 7: Time & Info (World Clocks + Day Progress + Moon Phase)
+                        if model.currentPage == 6 {
+                            TimeInfoPage()
                                 .transition(.asymmetric(
                                     insertion: .move(edge: .trailing),
                                     removal: .move(edge: .trailing)
@@ -195,9 +240,55 @@ public struct UnifiedDashboardView: View {
             }
             .padding(.horizontal, 12)
 
+            // Temperature strip (from SMC)
+            if model.smcService.cpuTemperature != nil || model.smcService.gpuTemperature != nil {
+                HStack(spacing: 6) {
+                    if let cpuTemp = model.smcService.cpuTemperature {
+                        tempChip(icon: "cpu", label: "CPU", temp: cpuTemp, color: tempColor(cpuTemp))
+                    }
+                    if let gpuTemp = model.smcService.gpuTemperature {
+                        tempChip(icon: "gpu", label: "GPU", temp: gpuTemp, color: tempColor(gpuTemp))
+                    }
+                    if let ssdTemp = model.smcService.ssdTemperature {
+                        tempChip(icon: "internaldrive", label: "SSD", temp: ssdTemp, color: tempColor(ssdTemp))
+                    }
+                }
+                .padding(.horizontal, 12)
+            }
+
             Spacer(minLength: 0)
         }
         .padding(.top, 14)
+    }
+
+    private func tempChip(icon: String, label: String, temp: Double, color: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 14))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 12, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.textTertiary)
+            Text(String(format: "%.0f°C", temp))
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+                .monospacedDigit()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(color.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    private func tempColor(_ temp: Double) -> Color {
+        if temp < 50 { return Theme.accentCyan }
+        if temp < 70 { return Theme.accentGreen }
+        if temp < 85 { return Theme.accentYellow }
+        if temp < 95 { return Theme.accentOrange }
+        return Theme.accentRed
     }
 
     // MARK: - CENTER: Graphs + System Info
@@ -270,26 +361,14 @@ public struct UnifiedDashboardView: View {
                 }
 
                 // Page navigation — touch zone registered
-                HStack(spacing: 10) {
-                    TouchButton(
-                        id: "page1",
-                        label: "PAGE 1",
-                        isActive: model.currentPage == 0,
-                        activeColor: Theme.accentCyan,
-                        registry: model.touchService.zoneRegistry
-                    ) {
-                        withAnimation { model.currentPage = 0 }
-                    }
-
-                    TouchButton(
-                        id: "page2",
-                        label: "PAGE 2",
-                        isActive: model.currentPage == 1,
-                        activeColor: Theme.accentPurple,
-                        registry: model.touchService.zoneRegistry
-                    ) {
-                        withAnimation { model.currentPage = 1 }
-                    }
+                HStack(spacing: 6) {
+                    pageButton(index: 0, label: "SYS", color: Theme.accentCyan)
+                    pageButton(index: 1, label: "NET", color: Theme.accentGreen)
+                    pageButton(index: 2, label: "TEMP", color: Theme.accentOrange)
+                    pageButton(index: 3, label: "DISK", color: Theme.accentBlue)
+                    pageButton(index: 4, label: "MEDIA", color: Theme.accentPurple)
+                    pageButton(index: 5, label: "CONN", color: Theme.accentCyan)
+                    pageButton(index: 6, label: "TIME", color: Theme.accentYellow)
                 }
 
                 // Calibration info
@@ -310,6 +389,18 @@ public struct UnifiedDashboardView: View {
             Spacer(minLength: 0)
         }
         .padding(14)
+    }
+
+    private func pageButton(index: Int, label: String, color: Color) -> some View {
+        TouchButton(
+            id: "page\(index)",
+            label: label,
+            isActive: model.currentPage == index,
+            activeColor: color,
+            registry: model.touchService.zoneRegistry
+        ) {
+            withAnimation { model.currentPage = index }
+        }
     }
 
     // MARK: - Component Helpers

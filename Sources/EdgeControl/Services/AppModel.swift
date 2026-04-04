@@ -11,11 +11,18 @@ public final class AppModel: ObservableObject {
     @Published public var systemMetrics: SystemMetrics?
     @Published public var isDevKitMode = false
     @Published public var currentPage: Int = 0
+    public var metricsPerCore: [CoreUsage] { metricsService.perCoreUsage }
 
     public let weatherService = WeatherDataService()
     public let networkService = NetworkMonitorService()
     public let processService = ProcessMonitorService()
     public let touchService = HardwareTouchService()
+    public let smcService = SMCService()
+    public let diskIOService = DiskIOService()
+    public let nowPlayingService = NowPlayingService()
+    public let audioService = AudioService()
+    public let wifiService = WiFiService()
+    public let bluetoothService = BluetoothService()
 
     private let settingsStore: SettingsStore
     private let displayManager: DisplayManager
@@ -53,6 +60,12 @@ public final class AppModel: ObservableObject {
         weatherService.start()
         networkService.start()
         processService.start()
+        smcService.start()
+        diskIOService.start()
+        nowPlayingService.start()
+        audioService.start()
+        wifiService.start()
+        bluetoothService.start()
         if !isDevKitMode {
             touchService.start()
         }
@@ -65,7 +78,7 @@ public final class AppModel: ObservableObject {
                 guard let self else { return }
                 switch direction {
                 case .left:
-                    if self.currentPage < 1 { self.currentPage += 1 }
+                    if self.currentPage < 6 { self.currentPage += 1 }
                 case .right:
                     if self.currentPage > 0 { self.currentPage -= 1 }
                 }
@@ -80,6 +93,12 @@ public final class AppModel: ObservableObject {
         networkService.stop()
         processService.stop()
         touchService.stop()
+        smcService.stop()
+        diskIOService.stop()
+        nowPlayingService.stop()
+        audioService.stop()
+        wifiService.stop()
+        bluetoothService.stop()
     }
 
     public func refreshDisplays() {
