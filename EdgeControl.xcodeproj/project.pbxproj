@@ -20,6 +20,7 @@
 		5879452341CDA957397EC907 /* DiskIOPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */; };
 		6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722485033F676CCBCFB190DF /* TouchButton.swift */; };
 		8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B9D5B3D367A656132C2A /* SMCService.swift */; };
+		8C0755A24C35AFB483501DB7 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A6227C3F76176844E5F7B3D3 /* AppIcon.icns */; };
 		979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D517F2C5775F62109D1F70 /* WiFiService.swift */; };
 		A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */; };
 		A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */; };
@@ -76,6 +77,7 @@
 		9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMonitorService.swift; sourceTree = "<group>"; };
 		96BA74C71D7F6F2ED713C5FD /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		A033131F227B312B23519B79 /* EdgeControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlApp.swift; sourceTree = "<group>"; };
+		A6227C3F76176844E5F7B3D3 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		B1D517F2C5775F62109D1F70 /* WiFiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiService.swift; sourceTree = "<group>"; };
 		B641FABA26849F495AA4527B /* TouchZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchZone.swift; sourceTree = "<group>"; };
 		B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingPage.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 			children = (
 				AEE5DEEE3222ECCD424E87A8 /* App */,
 				2F002832FE2DEDC7EA75E102 /* Models */,
+				352413D117DBDEC660399BC5 /* Resources */,
 				6C21C94077386850ACCD94BB /* Services */,
 				AF8E0DD490510206AF70E25D /* UI */,
 				54A8008862717EF901595923 /* EdgeControl.entitlements */,
@@ -134,6 +137,14 @@
 				B641FABA26849F495AA4527B /* TouchZone.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		352413D117DBDEC660399BC5 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A6227C3F76176844E5F7B3D3 /* AppIcon.icns */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		6905EFC26997BC740CCB5FA8 /* Products */ = {
@@ -234,6 +245,7 @@
 			buildConfigurationList = ACC7D378811D7666E6ACA783 /* Build configuration list for PBXNativeTarget "EdgeControl" */;
 			buildPhases = (
 				2300285347F0C26FD826A9DC /* Sources */,
+				14B61F55B0ED6477B21CB128 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -280,6 +292,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		14B61F55B0ED6477B21CB128 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8C0755A24C35AFB483501DB7 /* AppIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2300285347F0C26FD826A9DC /* Sources */ = {

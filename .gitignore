@@ -11,3 +11,4 @@ dist/
 *.dSYM
 /.paks
 docs/
+CLAUDE.md

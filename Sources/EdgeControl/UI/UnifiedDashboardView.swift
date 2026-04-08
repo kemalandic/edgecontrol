@@ -294,33 +294,36 @@ public struct UnifiedDashboardView: View {
     // MARK: - CENTER: Graphs + System Info
 
     private func centerPanel(_ m: SystemMetrics, height: CGFloat) -> some View {
-        VStack(spacing: 8) {
-            // CPU graph — takes equal share of available space
-            graphCard(
-                title: "CPU USAGE",
-                currentValue: String(format: "%.1f%%", m.cpuLoadPercent),
-                history: history.cpuHistory,
-                color: Theme.accentCyan
-            )
-            .frame(maxHeight: .infinity)
+        HStack(spacing: 8) {
+            // Left column: graphs + info strip
+            VStack(spacing: 8) {
+                graphCard(
+                    title: "CPU USAGE",
+                    currentValue: String(format: "%.1f%%", m.cpuLoadPercent),
+                    history: history.cpuHistory,
+                    color: Theme.accentCyan
+                )
+                .frame(maxHeight: .infinity)
 
-            // Memory graph — takes equal share of available space
-            graphCard(
-                title: "MEMORY",
-                currentValue: String(format: "%.1f / %.0f GB", m.memoryUsedGB, m.memoryTotalGB),
-                history: history.memoryHistory,
-                color: Theme.accentPurple
-            )
-            .frame(maxHeight: .infinity)
+                graphCard(
+                    title: "MEMORY",
+                    currentValue: String(format: "%.1f / %.0f GB", m.memoryUsedGB, m.memoryTotalGB),
+                    history: history.memoryHistory,
+                    color: Theme.accentPurple
+                )
+                .frame(maxHeight: .infinity)
 
-            // System info strip — fixed height at bottom
-            HStack(spacing: 8) {
-                infoChip(icon: "cpu", label: "CPU", value: abbreviate(m.cpuBrand))
-                infoChip(icon: "gpu", label: "GPU", value: abbreviate(m.gpuName))
-                infoChip(icon: "point.3.filled.connected.trianglepath.dotted", label: "CORES", value: "\(m.performanceCoreCount)P + \(m.efficiencyCoreCount)E")
-                infoChip(icon: "clock.arrow.circlepath", label: "UPTIME", value: formatUptime(m.uptimeSeconds))
+                HStack(spacing: 8) {
+                    infoChip(icon: "cpu", label: "CPU", value: abbreviate(m.cpuBrand))
+                    infoChip(icon: "gpu", label: "GPU", value: abbreviate(m.gpuName))
+                    infoChip(icon: "point.3.filled.connected.trianglepath.dotted", label: "CORES", value: "\(m.performanceCoreCount)P + \(m.efficiencyCoreCount)E")
+                    infoChip(icon: "clock.arrow.circlepath", label: "UPTIME", value: formatUptime(m.uptimeSeconds))
+                }
+                .fixedSize(horizontal: false, vertical: true)
             }
-            .fixedSize(horizontal: false, vertical: true)
+
+            // Right column: media widget
+            mediaWidgetPanel()
         }
         .padding(14)
     }
@@ -460,6 +463,171 @@ public struct UnifiedDashboardView: View {
         .background(Theme.backgroundCard, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Theme.borderSubtle, lineWidth: 1)
+        )
+    }
+
+    // MARK: - Media Widget Panel
+
+    private func mediaWidgetPanel() -> some View {
+        let np = model.nowPlayingService.nowPlaying
+        let artwork = model.nowPlayingService.artworkImage
+
+        return VStack(spacing: 0) {
+            if let np {
+                // Source tabs
+                if model.nowPlayingService.allSources.count > 1 {
+                    HStack(spacing: 6) {
+                        ForEach(Array(model.nowPlayingService.allSources.enumerated()), id: \.offset) { index, source in
+                            TouchButton(
+                                id: "mw_src_\(index)",
+                                label: source.sourceName,
+                                isActive: index == model.nowPlayingService.selectedSourceIndex,
+                                activeColor: Theme.accentPurple,
+                                registry: model.touchService.zoneRegistry
+                            ) {
+                                model.nowPlayingService.selectSource(index)
+                            }
+                        }
+                    }
+                    .padding(.bottom, 4)
+                }
+
+                Spacer(minLength: 0)
+
+                // Artwork
+                if let artwork {
+                    Image(nsImage: artwork)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .shadow(color: Theme.accentPurple.opacity(0.3), radius: 12)
+                        .frame(maxWidth: 200, maxHeight: 200)
+                } else {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(LinearGradient(colors: [Theme.accentPurple.opacity(0.3), Theme.accentCyan.opacity(0.15)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        Image(systemName: "music.note")
+                            .font(.system(size: 44))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+                    .frame(width: 160, height: 160)
+                }
+
+                Spacer(minLength: 8)
+
+                // Title
+                Text(np.title)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+
+                // Artist
+                if !np.artist.isEmpty {
+                    Text(np.artist)
+                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1)
+                        .padding(.top, 2)
+                }
+
+                Spacer(minLength: 6)
+
+                // Progress bar + times
+                if np.duration > 0 {
+                    VStack(spacing: 4) {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.white.opacity(0.10))
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(LinearGradient(colors: [Theme.accentCyan, Theme.accentPurple], startPoint: .leading, endPoint: .trailing))
+                                    .frame(width: geo.size.width * np.progress)
+                            }
+                        }
+                        .frame(height: 6)
+
+                        HStack {
+                            Text(np.elapsedText)
+                            Spacer()
+                            Text(np.durationText)
+                        }
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                        .monospacedDigit()
+                    }
+                    .padding(.horizontal, 4)
+                }
+
+                Spacer(minLength: 6)
+
+                // Control buttons
+                HStack(spacing: 8) {
+                    TouchButton(
+                        id: "mw_prev",
+                        label: "\n",
+                        isActive: false,
+                        activeColor: Theme.accentPurple,
+                        registry: model.touchService.zoneRegistry
+                    ) {
+                        model.nowPlayingService.previousTrack()
+                    }
+                    .overlay {
+                        Text("⏮")
+                            .font(.system(size: 36))
+                            .allowsHitTesting(false)
+                    }
+
+                    TouchButton(
+                        id: "mw_play",
+                        label: "\n",
+                        isActive: np.isPlaying,
+                        activeColor: Theme.accentCyan,
+                        registry: model.touchService.zoneRegistry
+                    ) {
+                        model.nowPlayingService.togglePlayPause()
+                    }
+                    .overlay {
+                        Text(np.isPlaying ? "⏸" : "▶")
+                            .font(.system(size: 36))
+                            .allowsHitTesting(false)
+                    }
+
+                    TouchButton(
+                        id: "mw_next",
+                        label: "\n",
+                        isActive: false,
+                        activeColor: Theme.accentPurple,
+                        registry: model.touchService.zoneRegistry
+                    ) {
+                        model.nowPlayingService.nextTrack()
+                    }
+                    .overlay {
+                        Text("⏭")
+                            .font(.system(size: 36))
+                            .allowsHitTesting(false)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            } else {
+                Spacer()
+                Image(systemName: "music.note")
+                    .font(.system(size: 36))
+                    .foregroundStyle(Theme.textTertiary)
+                Text("NO MEDIA")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .padding(.top, 6)
+                Spacer()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(12)
+        .background(Theme.backgroundCard, in: RoundedRectangle(cornerRadius: Theme.cornerRadiusSmall, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cornerRadiusSmall, style: .continuous)
                 .strokeBorder(Theme.borderSubtle, lineWidth: 1)
         )
     }
