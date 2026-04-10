@@ -4,14 +4,14 @@ import SwiftUI
 
 enum Theme {
 
-    // MARK: Backgrounds
+    // MARK: Default Backgrounds (fallback when no theme is resolved)
     static let backgroundPrimary = Color(red: 0.05, green: 0.05, blue: 0.07)
     static let backgroundWidget = Color(red: 0.10, green: 0.10, blue: 0.14)
     static let backgroundWidgetInner = Color(red: 0.12, green: 0.12, blue: 0.16)
     static let backgroundCard = Color(white: 1, opacity: 0.04)
     static let backgroundCardHover = Color(white: 1, opacity: 0.07)
 
-    // MARK: Accents
+    // MARK: Accents (named colors always available)
     static let accentCyan = Color(red: 0.00, green: 0.90, blue: 1.00)
     static let accentBlue = Color(red: 0.20, green: 0.50, blue: 1.00)
     static let accentPurple = Color(red: 0.55, green: 0.30, blue: 1.00)
@@ -20,7 +20,7 @@ enum Theme {
     static let accentOrange = Color(red: 1.00, green: 0.42, blue: 0.21)
     static let accentRed = Color(red: 1.00, green: 0.18, blue: 0.18)
 
-    // MARK: Text
+    // MARK: Default Text
     static let textPrimary = Color.white.opacity(0.92)
     static let textSecondary = Color.white.opacity(0.58)
     static let textTertiary = Color.white.opacity(0.38)
@@ -30,11 +30,123 @@ enum Theme {
     static let borderMedium = Color.white.opacity(0.14)
     static let shadowColor = Color.black.opacity(0.40)
 
-    // MARK: Sizing
+    // MARK: Sizing (legacy — prefer semantic spacing below)
     static let cornerRadius: CGFloat = 14
     static let cornerRadiusSmall: CGFloat = 10
     static let cardPadding: CGFloat = 16
     static let cardGap: CGFloat = 10
+
+    // MARK: Semantic Spacing
+    /// Standard widget internal padding
+    static let widgetPadding: CGFloat = 14
+    /// Compact mode internal padding
+    static let compactPadding: CGFloat = 8
+    /// Between items in a list/row
+    static let itemSpacing: CGFloat = 8
+    /// Between major sections
+    static let sectionSpacing: CGFloat = 12
+
+    // MARK: - Resolved Theme (from ThemeSettings)
+
+    /// Create a scaled font using theme settings.
+    static func font(size: CGFloat, weight: Font.Weight = .regular, settings: ThemeSettings) -> Font {
+        let scaled = size * settings.fontScale
+        return .system(size: scaled, weight: weight, design: settings.fontFamily.design)
+    }
+
+    // MARK: Semantic Font Levels
+
+    /// Widget headers — "NETWORK", "STORAGE", "CPU USAGE"
+    static func title(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeTitle * ts.fontScale, weight: .heavy, design: ts.fontFamily.design)
+    }
+
+    /// Large displayed values — "23%", "124 KB/s", "9°"
+    static func value(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeValue * ts.fontScale, weight: .bold, design: ts.fontFamily.design)
+    }
+
+    /// Medium labels — "CPU", "DOWN", "READ", column headers
+    static func label(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeLabel * ts.fontScale, weight: .heavy, design: ts.fontFamily.design)
+    }
+
+    /// Small labels — "USED", "FREE", "TOTAL", "Mbps"
+    static func caption(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeCaption * ts.fontScale, weight: .heavy, design: ts.fontFamily.design)
+    }
+
+    /// Normal text — process names, SSID, device names
+    static func body(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeBody * ts.fontScale, weight: .semibold, design: ts.fontFamily.design)
+    }
+
+    /// Smallest text — position info, monospaced details
+    static func micro(_ ts: ThemeSettings) -> Font {
+        .system(size: ts.fontSizeMicro * ts.fontScale, weight: .medium, design: ts.fontFamily.design)
+    }
+
+    /// Resolve accent color from theme settings.
+    static func accent(_ settings: ThemeSettings) -> Color {
+        settings.accentColor.color  // WidgetColor.color returns SwiftUI Color
+    }
+
+    /// Resolve a widget's primary color: user override → widget default.
+    static func widgetPrimary(_ widgetId: String, ts: ThemeSettings, default defaultColor: ThemeColor) -> Color {
+        if let override = ts.widgetColorOverrides[widgetId]?.primary {
+            return override.color
+        }
+        return defaultColor.color
+    }
+
+    /// Resolve a widget's secondary color: user override → widget default.
+    static func widgetSecondary(_ widgetId: String, ts: ThemeSettings, default defaultColor: ThemeColor?) -> Color? {
+        if let override = ts.widgetColorOverrides[widgetId]?.secondary {
+            return override.color
+        }
+        return defaultColor?.color
+    }
+
+    /// Resolve a widget's tertiary color: user override → widget default.
+    static func widgetTertiary(_ widgetId: String, ts: ThemeSettings, default defaultColor: ThemeColor?) -> Color? {
+        if let override = ts.widgetColorOverrides[widgetId]?.tertiary {
+            return override.color
+        }
+        return defaultColor?.color
+    }
+
+    /// Resolve background colors from theme preset.
+    static func backgroundColors(_ settings: ThemeSettings) -> [Color] {
+        settings.resolvedPreset.backgroundColors
+    }
+
+    /// Resolve card background with theme opacity.
+    static func cardBg(_ settings: ThemeSettings) -> Color {
+        Color.white.opacity(settings.widgetOpacity)
+    }
+
+    /// Resolve text colors from theme preset.
+    static func text1(_ settings: ThemeSettings) -> Color {
+        settings.resolvedPreset.textPrimary
+    }
+
+    static func text2(_ settings: ThemeSettings) -> Color {
+        settings.resolvedPreset.textSecondary
+    }
+
+    static func text3(_ settings: ThemeSettings) -> Color {
+        settings.resolvedPreset.textTertiary
+    }
+
+    /// Resolve border color from theme preset.
+    static func border(_ settings: ThemeSettings) -> Color {
+        settings.resolvedPreset.border
+    }
+
+    /// Resolve corner radius from theme settings.
+    static func radius(_ settings: ThemeSettings) -> CGFloat {
+        CGFloat(settings.widgetCornerRadius)
+    }
 
     // MARK: Gradients
 
@@ -128,121 +240,6 @@ struct AnimatedNumberView: View {
     }
 }
 
-// MARK: - Radial Gauge (iCUE-style 270° arc)
-
-struct RadialGaugeView: View {
-    let value: Double
-    let maxValue: Double
-    let label: String
-    let displayValue: String
-    let unit: String
-    let accentColor: Color
-
-    private let lineWidth: CGFloat = 12
-    private let startAngle: Double = 135
-    private let endAngle: Double = 405
-
-    private var progress: Double {
-        min(max(value / maxValue, 0), 1)
-    }
-
-    private var gaugeColor: Color {
-        if progress < 0.5 { return Theme.accentCyan }
-        if progress < 0.75 { return Theme.accentYellow }
-        return Theme.accentRed
-    }
-
-    var body: some View {
-        VStack(spacing: 6) {
-            ZStack {
-                // Background glow
-                Circle()
-                    .fill(Theme.glowGradient(gaugeColor))
-                    .scaleEffect(1.3)
-                    .opacity(0.4)
-
-                // Track arc
-                ArcShape(startAngle: startAngle, endAngle: endAngle)
-                    .stroke(Color.white.opacity(0.08), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-
-                // Value arc with gradient
-                ArcShape(startAngle: startAngle, endAngle: startAngle + (endAngle - startAngle) * progress)
-                    .stroke(
-                        AngularGradient(
-                            stops: [
-                                .init(color: Theme.accentCyan, location: 0.0),
-                                .init(color: gaugeColor, location: 1.0)
-                            ],
-                            center: .center,
-                            startAngle: .degrees(startAngle),
-                            endAngle: .degrees(startAngle + (endAngle - startAngle) * progress)
-                        ),
-                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
-                    )
-
-                // Center value
-                VStack(spacing: 3) {
-                    Text(displayValue)
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .contentTransition(.numericText())
-                        .minimumScaleFactor(0.5)
-                    if !unit.isEmpty {
-                        Text(unit)
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
-                            .textCase(.uppercase)
-                            .minimumScaleFactor(0.4)
-                            .lineLimit(1)
-                    }
-                }
-            }
-            .aspectRatio(1, contentMode: .fit)
-
-            Text(label)
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.textSecondary)
-                .textCase(.uppercase)
-                .lineLimit(1)
-        }
-    }
-}
-
-// MARK: - Live Clock Widget
-
-struct ClockWidgetView: View {
-    @State private var now = Date()
-
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
-    var body: some View {
-        VStack(spacing: 6) {
-            Text(timeString)
-                .font(.system(size: 72, weight: .light, design: .rounded))
-                .foregroundStyle(.white)
-                .monospacedDigit()
-                .minimumScaleFactor(0.5)
-            Text(dateString)
-                .font(.system(size: 22, weight: .semibold, design: .rounded))
-                .foregroundStyle(Theme.textSecondary)
-                .textCase(.uppercase)
-                .minimumScaleFactor(0.5)
-        }
-        .onReceive(timer) { now = $0 }
-    }
-
-    private var timeString: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss"
-        return f.string(from: now)
-    }
-
-    private var dateString: String {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE, d MMMM yyyy"
-        return f.string(from: now)
-    }
-}
 
 // MARK: - Arc Shape
 

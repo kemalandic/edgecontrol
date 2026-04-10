@@ -6,6 +6,6 @@ final class AppSettingsTests: XCTestCase {
         let settings = AppSettings()
         XCTAssertTrue(settings.kioskMode)
         XCTAssertFalse(settings.debugMode)
-        XCTAssertNil(settings.selectedDisplayID)
+        XCTAssertNil(settings.selectedDisplayName)
     }
 }

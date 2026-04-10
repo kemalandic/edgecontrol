@@ -35,8 +35,8 @@ public final class DisplayManager {
     }
 
     public func selectedScreen(for settings: AppSettings) -> NSScreen? {
-        if let id = settings.selectedDisplayID {
-            return NSScreen.screens.first { $0.displayIdentifier == id }
+        if let name = settings.selectedDisplayName {
+            return NSScreen.screens.first { $0.localizedName == name }
         }
         return xeneonScreen()
     }

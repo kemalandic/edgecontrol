@@ -12,3 +12,5 @@ dist/
 /.paks
 docs/
 CLAUDE.md
+.superpowers/
+*.profraw

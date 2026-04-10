@@ -20,8 +20,8 @@ public enum WindowPlacement {
         guard kioskMode else { return }
 
         let targetScreen = NSScreen.screens.first { screen in
-            guard let displayID = display?.id else { return false }
-            return screen.displayIdentifier == displayID
+            guard let displayName = display?.name else { return false }
+            return screen.localizedName == displayName
         } ?? NSScreen.screens.first { screen in
             let name = screen.localizedName.lowercased()
             return name.contains("xeneon")

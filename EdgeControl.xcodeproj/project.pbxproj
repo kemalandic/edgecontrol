@@ -7,40 +7,83 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0192DB6530FF2E560DB47C03 /* TimeInfoPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */; };
+		00675BBB018816692ECC3E16 /* ClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4178FEFA30A50AD9F77F78F1 /* ClockWidget.swift */; };
+		00A55DEED54FE9263D330C8D /* WeatherWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */; };
+		067C54301124CFF84023C648 /* MemoryGaugeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */; };
 		06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322BB0E114232C4FC2E95B0A /* BluetoothService.swift */; };
 		110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */; };
-		147366BCAE8B82B11A9342A3 /* TemperaturePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */; };
-		1AA79646711793558B63A2DC /* ConnectivityPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */; };
+		166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */; };
+		1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */; };
+		2B9FB008D975D1517133A10C /* WidgetHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */; };
+		2C38CAA3A0A9801AD204BD67 /* NowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */; };
+		2C6E44D33BE7F001DFE0ADCF /* PluginWebWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731EE950D6B7EEE03E8A988E /* PluginWebWidget.swift */; };
+		363607DB5872724C501A3B0A /* CPUGaugeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32692E5006C0EA34FF14A484 /* CPUGaugeWidget.swift */; };
+		3778753DC6875CC5218F99FA /* LayoutEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF99821322AE802740C36545 /* LayoutEngine.swift */; };
 		3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */; };
-		3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */; };
 		3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D6B0E686C7958948D5F219 /* DiskIOService.swift */; };
+		3E24A63B4725D72110F46442 /* DiskIOWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A306CDC5CBF2677EFDAEE996 /* DiskIOWidget.swift */; };
+		3E71A468398FAC4E09C8FBA3 /* TempHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA125AE17E85D450F6A00DD1 /* TempHistoryWidget.swift */; };
+		3F726B83AB924EAB2D56E621 /* WidgetCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F362EA8761C591EFC0F589D5 /* WidgetCatalogView.swift */; };
+		42EDBB02D49153CE4FEC6F4A /* PerCoreTempWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13E1E34BE98DBAD8EAD506EE /* PerCoreTempWidget.swift */; };
+		44B0C7044DE4CF8DD657D82F /* WidgetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373F6477D7980572608AD571 /* WidgetProtocol.swift */; };
 		450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */; };
+		51C2DCC5F262CB019E7D1BF3 /* LayoutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */; };
+		52D5BE720F097A4EB813179B /* GitHubService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788E53003A6A8077ED66E83A /* GitHubService.swift */; };
 		576555CB0A1ECA090B945198 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59A086B0AFB78148E786B8D /* WeatherService.swift */; };
-		5879452341CDA957397EC907 /* DiskIOPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */; };
+		5767982D0BF8C63F5E5F6124 /* PluginDataBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */; };
+		5A6AFB8CD86F45A91DCA5CFA /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECA20ADC942310310D2C811 /* PluginManager.swift */; };
+		5C8ECF6DC06FF87352563E91 /* DashboardShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A61687864BFA022B4F4D44 /* DashboardShell.swift */; };
+		69B8C3CBF6982B6FE821A527 /* GridPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18C869626E48E882115BBEF /* GridPageView.swift */; };
+		6B428F8C3D8786FC9A3A0DAD /* StorageBarsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81313B953FFCE2D1E233EA47 /* StorageBarsWidget.swift */; };
+		6DBC308D7714AE68649D56B5 /* MemoryPressureWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042338F13B17D31814212BE6 /* MemoryPressureWidget.swift */; };
 		6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722485033F676CCBCFB190DF /* TouchButton.swift */; };
+		75EB907352D0BF0EC1954A5F /* WorldClocksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */; };
+		7969AD59663208973EE2D54B /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889153D44C024953157FD491 /* ThemeSettingsView.swift */; };
+		7E017066085F7359B6603574 /* ThemeEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */; };
+		7F9DC2CF3A63DAAB9A3363C1 /* MetricsHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */; };
+		7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */; };
+		814C3B299B4CDDDCA0C4BD4C /* SSDTempWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */; };
+		8A5B816079D770AF77A7D5A9 /* DayProgressWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C405C399C83734FEF0840A72 /* DayProgressWidget.swift */; };
 		8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF86B9D5B3D367A656132C2A /* SMCService.swift */; };
 		8C0755A24C35AFB483501DB7 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A6227C3F76176844E5F7B3D3 /* AppIcon.icns */; };
+		8D5E5222B55F195D788A6C1F /* LayoutConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83DA180C040E418D3393B87 /* LayoutConfig.swift */; };
+		8FCFC8603BA87F1A1C036633 /* PageManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12281DDDF4B06A76D53203CF /* PageManagerView.swift */; };
+		94FE718562DC7C587DCBE999 /* CPUHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46AD90FFFBC4B61FCFAD5E40 /* CPUHistoryWidget.swift */; };
 		979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D517F2C5775F62109D1F70 /* WiFiService.swift */; };
+		989AEADBBF2579571F89F293 /* WidgetConfigEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4EEA4076FD3656673148B2 /* WidgetConfigEditor.swift */; };
+		98C3A0C7BD110CF4249BE2C0 /* DisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */; };
+		A226D21D04E9530DC0EB8500 /* AudioDevicesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A955201FA0E26CA2A945138B /* AudioDevicesWidget.swift */; };
 		A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */; };
 		A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */; };
+		A930352AA228A2C41251A6D3 /* ThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7720050FD9B5CBA078892D0 /* ThemeSettings.swift */; };
 		A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A033131F227B312B23519B79 /* EdgeControlApp.swift */; };
+		AA67089D28BA104E142FBAD7 /* CICDRunsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */; };
 		AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E4388008C822687930052 /* HardwareTouchService.swift */; };
+		B0DC0DE2B4686BD868A4A150 /* RadialGaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */; };
 		B11C45705B8FD14749D3EF34 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96BA74C71D7F6F2ED713C5FD /* AudioService.swift */; };
 		B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B32F73BCB42D4A717959D3 /* AppModel.swift */; };
 		B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */; };
+		B819009E7CB727ED41402886 /* MoonPhaseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */; };
 		BA56436DBA4478A4C76D2F50 /* TouchZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = B641FABA26849F495AA4527B /* TouchZone.swift */; };
-		C42344CFBE8775C1CD04E871 /* WeatherWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F39536CB6D73EF154EE97C1 /* WeatherWidgetView.swift */; };
-		C47C29C6EBE5A4DD26D5014B /* NowPlayingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */; };
+		C2418CFE9BB9A03196699319 /* MemoryHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */; };
+		C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */; };
+		CA451229F99B09583CFC76E2 /* PluginManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C08C5CA9435270274DCC6A /* PluginManagerView.swift */; };
 		CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */; };
+		D2071582ECF24AB6A1E64DCB /* NetworkStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A236891EC8BDFE75D1B7BFF /* NetworkStatsWidget.swift */; };
 		D253C27941895562CE75D2FF /* NowPlayingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */; };
 		D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FEAAA8B09E3342724D9B5C /* Theme.swift */; };
+		DF34A826FE02DBE0E38977E2 /* CPUTempWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AA37AAAC3548F1665817A7 /* CPUTempWidget.swift */; };
 		E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC949C865B9083B7AA95480E /* DisplayManager.swift */; };
-		EE88D2207F764F4AE26A8AC3 /* SecondPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */; };
+		E087BB0CE2AFC3F84F70DB09 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */; };
+		E6A5BA8FC1C2DB8724EE69FB /* WiFiInfoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */; };
+		EE048F1FD1E1DA49AC106EFE /* HistoryGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87274D193465714FC7B8338 /* HistoryGraphView.swift */; };
 		F1867A3A7E2C2E16B323838A /* TouchRuntimeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */; };
 		F35D84161A1E0DBA97F7F4FC /* NetworkMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */; };
+		F50463096338541B3E45D5F8 /* PluginManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A31F77F590D4841CFD1D2EF /* PluginManifest.swift */; };
 		FA2DC89A27E123C170BF4422 /* CalibrationSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */; };
+		FB74AECEAF33600374255AB1 /* CPUCoresWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0767B29DAAC84B79B106EC3A /* CPUCoresWidget.swift */; };
 		FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */; };
+		FFFBC9806B8378794277B5D9 /* ProcessListWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC03653F00774E1E25D2C87 /* ProcessListWidget.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,47 +97,100 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0F39536CB6D73EF154EE97C1 /* WeatherWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidgetView.swift; sourceTree = "<group>"; };
+		042338F13B17D31814212BE6 /* MemoryPressureWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPressureWidget.swift; sourceTree = "<group>"; };
+		0767B29DAAC84B79B106EC3A /* CPUCoresWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUCoresWidget.swift; sourceTree = "<group>"; };
+		0ECA20ADC942310310D2C811 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
+		1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
 		121E4388008C822687930052 /* HardwareTouchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareTouchService.swift; sourceTree = "<group>"; };
+		12281DDDF4B06A76D53203CF /* PageManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageManagerView.swift; sourceTree = "<group>"; };
+		13E1E34BE98DBAD8EAD506EE /* PerCoreTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerCoreTempWidget.swift; sourceTree = "<group>"; };
 		1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDRunsWidget.swift; sourceTree = "<group>"; };
+		212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiInfoWidget.swift; sourceTree = "<group>"; };
 		24BE41E2E67F43326209F5A9 /* EdgeControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EdgeControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		28B32F73BCB42D4A717959D3 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
-		30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeInfoPage.swift; sourceTree = "<group>"; };
 		322BB0E114232C4FC2E95B0A /* BluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothService.swift; sourceTree = "<group>"; };
+		32692E5006C0EA34FF14A484 /* CPUGaugeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUGaugeWidget.swift; sourceTree = "<group>"; };
+		373F6477D7980572608AD571 /* WidgetProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetProtocol.swift; sourceTree = "<group>"; };
+		3A236891EC8BDFE75D1B7BFF /* NetworkStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatsWidget.swift; sourceTree = "<group>"; };
 		3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		4178FEFA30A50AD9F77F78F1 /* ClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockWidget.swift; sourceTree = "<group>"; };
 		45F6663A2EB2FF9A47DB4D19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		46AD90FFFBC4B61FCFAD5E40 /* CPUHistoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUHistoryWidget.swift; sourceTree = "<group>"; };
+		48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutStore.swift; sourceTree = "<group>"; };
+		4A31F77F590D4841CFD1D2EF /* PluginManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManifest.swift; sourceTree = "<group>"; };
 		4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsService.swift; sourceTree = "<group>"; };
 		511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySettingsView.swift; sourceTree = "<group>"; };
+		54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryHistoryWidget.swift; sourceTree = "<group>"; };
 		54A8008862717EF901595923 /* EdgeControl.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EdgeControl.entitlements; sourceTree = "<group>"; };
+		662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeEnvironment.swift; sourceTree = "<group>"; };
+		67C08C5CA9435270274DCC6A /* PluginManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManagerView.swift; sourceTree = "<group>"; };
 		70FEAAA8B09E3342724D9B5C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothWidget.swift; sourceTree = "<group>"; };
 		71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
 		722485033F676CCBCFB190DF /* TouchButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchButton.swift; sourceTree = "<group>"; };
-		8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperaturePage.swift; sourceTree = "<group>"; };
+		731EE950D6B7EEE03E8A988E /* PluginWebWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWebWidget.swift; sourceTree = "<group>"; };
+		788E53003A6A8077ED66E83A /* GitHubService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubService.swift; sourceTree = "<group>"; };
+		81313B953FFCE2D1E233EA47 /* StorageBarsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBarsWidget.swift; sourceTree = "<group>"; };
 		85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
-		8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityPage.swift; sourceTree = "<group>"; };
-		8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecondPageView.swift; sourceTree = "<group>"; };
+		889153D44C024953157FD491 /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
+		8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryGaugeWidget.swift; sourceTree = "<group>"; };
 		9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitorService.swift; sourceTree = "<group>"; };
+		926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralSettingsView.swift; sourceTree = "<group>"; };
+		941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadialGaugeView.swift; sourceTree = "<group>"; };
 		9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMonitorService.swift; sourceTree = "<group>"; };
 		96BA74C71D7F6F2ED713C5FD /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		A033131F227B312B23519B79 /* EdgeControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlApp.swift; sourceTree = "<group>"; };
+		A306CDC5CBF2677EFDAEE996 /* DiskIOWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOWidget.swift; sourceTree = "<group>"; };
 		A6227C3F76176844E5F7B3D3 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
+		A6A61687864BFA022B4F4D44 /* DashboardShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardShell.swift; sourceTree = "<group>"; };
+		A83DA180C040E418D3393B87 /* LayoutConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConfig.swift; sourceTree = "<group>"; };
+		A955201FA0E26CA2A945138B /* AudioDevicesWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDevicesWidget.swift; sourceTree = "<group>"; };
+		AA125AE17E85D450F6A00DD1 /* TempHistoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempHistoryWidget.swift; sourceTree = "<group>"; };
 		B1D517F2C5775F62109D1F70 /* WiFiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiService.swift; sourceTree = "<group>"; };
 		B641FABA26849F495AA4527B /* TouchZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchZone.swift; sourceTree = "<group>"; };
-		B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingPage.swift; sourceTree = "<group>"; };
+		BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		BB4EEA4076FD3656673148B2 /* WidgetConfigEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigEditor.swift; sourceTree = "<group>"; };
+		BF99821322AE802740C36545 /* LayoutEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutEngine.swift; sourceTree = "<group>"; };
+		C405C399C83734FEF0840A72 /* DayProgressWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayProgressWidget.swift; sourceTree = "<group>"; };
 		C59A086B0AFB78148E786B8D /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
+		C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClocksWidget.swift; sourceTree = "<group>"; };
 		D0D6B0E686C7958948D5F219 /* DiskIOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOService.swift; sourceTree = "<group>"; };
 		D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationSupport.swift; sourceTree = "<group>"; };
 		D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetrics.swift; sourceTree = "<group>"; };
 		DC949C865B9083B7AA95480E /* DisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayManager.swift; sourceTree = "<group>"; };
+		DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSDTempWidget.swift; sourceTree = "<group>"; };
 		DF86B9D5B3D367A656132C2A /* SMCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCService.swift; sourceTree = "<group>"; };
+		E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingWidget.swift; sourceTree = "<group>"; };
+		E18C869626E48E882115BBEF /* GridPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridPageView.swift; sourceTree = "<group>"; };
+		E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDataBridge.swift; sourceTree = "<group>"; };
+		E7720050FD9B5CBA078892D0 /* ThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
+		E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsHistory.swift; sourceTree = "<group>"; };
+		E87274D193465714FC7B8338 /* HistoryGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryGraphView.swift; sourceTree = "<group>"; };
+		E8AA37AAAC3548F1665817A7 /* CPUTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUTempWidget.swift; sourceTree = "<group>"; };
+		ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidget.swift; sourceTree = "<group>"; };
 		EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EdgeControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchRuntimeState.swift; sourceTree = "<group>"; };
+		EFC03653F00774E1E25D2C87 /* ProcessListWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessListWidget.swift; sourceTree = "<group>"; };
 		F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDescriptor.swift; sourceTree = "<group>"; };
-		F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedDashboardView.swift; sourceTree = "<group>"; };
-		FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOPage.swift; sourceTree = "<group>"; };
+		F362EA8761C591EFC0F589D5 /* WidgetCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetCatalogView.swift; sourceTree = "<group>"; };
+		F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPhaseWidget.swift; sourceTree = "<group>"; };
+		FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHeader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		181391E74ED6E74D44F5E096 /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */,
+				3A236891EC8BDFE75D1B7BFF /* NetworkStatsWidget.swift */,
+				212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */,
+			);
+			path = Network;
+			sourceTree = "<group>";
+		};
 		19B7C1EF711C04AE3F750513 /* EdgeControl */ = {
 			isa = PBXGroup;
 			children = (
@@ -103,6 +199,7 @@
 				352413D117DBDEC660399BC5 /* Resources */,
 				6C21C94077386850ACCD94BB /* Services */,
 				AF8E0DD490510206AF70E25D /* UI */,
+				A924DA8C12A963ED6006A54A /* Widgets */,
 				54A8008862717EF901595923 /* EdgeControl.entitlements */,
 				45F6663A2EB2FF9A47DB4D19 /* Info.plist */,
 			);
@@ -132,9 +229,13 @@
 				1E0FE9C9A7A05A60B76EF1EA /* AppSettings.swift */,
 				D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */,
 				F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */,
+				A83DA180C040E418D3393B87 /* LayoutConfig.swift */,
+				4A31F77F590D4841CFD1D2EF /* PluginManifest.swift */,
 				D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */,
+				E7720050FD9B5CBA078892D0 /* ThemeSettings.swift */,
 				EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */,
 				B641FABA26849F495AA4527B /* TouchZone.swift */,
+				373F6477D7980572608AD571 /* WidgetProtocol.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -145,6 +246,38 @@
 				A6227C3F76176844E5F7B3D3 /* AppIcon.icns */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		4F344FFE367932C19785F0C6 /* System */ = {
+			isa = PBXGroup;
+			children = (
+				0767B29DAAC84B79B106EC3A /* CPUCoresWidget.swift */,
+				32692E5006C0EA34FF14A484 /* CPUGaugeWidget.swift */,
+				46AD90FFFBC4B61FCFAD5E40 /* CPUHistoryWidget.swift */,
+				A306CDC5CBF2677EFDAEE996 /* DiskIOWidget.swift */,
+				8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */,
+				54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */,
+				042338F13B17D31814212BE6 /* MemoryPressureWidget.swift */,
+				EFC03653F00774E1E25D2C87 /* ProcessListWidget.swift */,
+				81313B953FFCE2D1E233EA47 /* StorageBarsWidget.swift */,
+			);
+			path = System;
+			sourceTree = "<group>";
+		};
+		61BE116F930CBA4ABBE3ADD3 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */,
+				926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */,
+				12281DDDF4B06A76D53203CF /* PageManagerView.swift */,
+				67C08C5CA9435270274DCC6A /* PluginManagerView.swift */,
+				FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */,
+				BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */,
+				889153D44C024953157FD491 /* ThemeSettingsView.swift */,
+				F362EA8761C591EFC0F589D5 /* WidgetCatalogView.swift */,
+				BB4EEA4076FD3656673148B2 /* WidgetConfigEditor.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		6905EFC26997BC740CCB5FA8 /* Products */ = {
@@ -164,17 +297,43 @@
 				322BB0E114232C4FC2E95B0A /* BluetoothService.swift */,
 				D0D6B0E686C7958948D5F219 /* DiskIOService.swift */,
 				DC949C865B9083B7AA95480E /* DisplayManager.swift */,
+				788E53003A6A8077ED66E83A /* GitHubService.swift */,
 				121E4388008C822687930052 /* HardwareTouchService.swift */,
+				BF99821322AE802740C36545 /* LayoutEngine.swift */,
+				48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */,
 				9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */,
 				85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */,
+				E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */,
+				0ECA20ADC942310310D2C811 /* PluginManager.swift */,
 				9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */,
 				3C8CAD92DB14AD265C2F3580 /* SettingsStore.swift */,
 				DF86B9D5B3D367A656132C2A /* SMCService.swift */,
 				4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */,
 				C59A086B0AFB78148E786B8D /* WeatherService.swift */,
+				1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */,
 				B1D517F2C5775F62109D1F70 /* WiFiService.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		7519EA74D0DFE7F1B73466A2 /* Plugin */ = {
+			isa = PBXGroup;
+			children = (
+				731EE950D6B7EEE03E8A988E /* PluginWebWidget.swift */,
+			);
+			path = Plugin;
+			sourceTree = "<group>";
+		};
+		7C1AE5439B2281BFDB7175CD /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				E87274D193465714FC7B8338 /* HistoryGraphView.swift */,
+				E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */,
+				941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */,
+				662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */,
+				FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		806D9CBB4F1F337B653462E0 /* EdgeControlTests */ = {
@@ -183,6 +342,20 @@
 				511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */,
 			);
 			path = EdgeControlTests;
+			sourceTree = "<group>";
+		};
+		A924DA8C12A963ED6006A54A /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				E74029E62494375F1310937B /* DevTools */,
+				F645C04D81339688C55CBDEC /* Info */,
+				D050F41E394A47855A281F50 /* Media */,
+				181391E74ED6E74D44F5E096 /* Network */,
+				7519EA74D0DFE7F1B73466A2 /* Plugin */,
+				4F344FFE367932C19785F0C6 /* System */,
+				B932F8DCCF79EE8F5B105817 /* Temperature */,
+			);
+			path = Widgets;
 			sourceTree = "<group>";
 		};
 		AEE5DEEE3222ECCD424E87A8 /* App */ = {
@@ -197,16 +370,12 @@
 		AF8E0DD490510206AF70E25D /* UI */ = {
 			isa = PBXGroup;
 			children = (
-				8A6C343BD11195B046CCB8A3 /* ConnectivityPage.swift */,
-				FCB41C4769CEF7C19680E230 /* DiskIOPage.swift */,
-				B7060DCBD0A05E3694BF598D /* NowPlayingPage.swift */,
-				8C67D25CF88FB8447E8E1BBB /* SecondPageView.swift */,
-				8347EAFE9D74EC91F40C7F53 /* TemperaturePage.swift */,
+				7C1AE5439B2281BFDB7175CD /* Components */,
+				61BE116F930CBA4ABBE3ADD3 /* Settings */,
+				A6A61687864BFA022B4F4D44 /* DashboardShell.swift */,
+				E18C869626E48E882115BBEF /* GridPageView.swift */,
 				70FEAAA8B09E3342724D9B5C /* Theme.swift */,
-				30F815439F9F045A3CEBD4A0 /* TimeInfoPage.swift */,
 				722485033F676CCBCFB190DF /* TouchButton.swift */,
-				F74245A7595CCA277974EFE6 /* UnifiedDashboardView.swift */,
-				0F39536CB6D73EF154EE97C1 /* WeatherWidgetView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -217,6 +386,46 @@
 				19B7C1EF711C04AE3F750513 /* EdgeControl */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		B932F8DCCF79EE8F5B105817 /* Temperature */ = {
+			isa = PBXGroup;
+			children = (
+				E8AA37AAAC3548F1665817A7 /* CPUTempWidget.swift */,
+				13E1E34BE98DBAD8EAD506EE /* PerCoreTempWidget.swift */,
+				DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */,
+				AA125AE17E85D450F6A00DD1 /* TempHistoryWidget.swift */,
+			);
+			path = Temperature;
+			sourceTree = "<group>";
+		};
+		D050F41E394A47855A281F50 /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				A955201FA0E26CA2A945138B /* AudioDevicesWidget.swift */,
+				E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */,
+			);
+			path = Media;
+			sourceTree = "<group>";
+		};
+		E74029E62494375F1310937B /* DevTools */ = {
+			isa = PBXGroup;
+			children = (
+				209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */,
+			);
+			path = DevTools;
+			sourceTree = "<group>";
+		};
+		F645C04D81339688C55CBDEC /* Info */ = {
+			isa = PBXGroup;
+			children = (
+				4178FEFA30A50AD9F77F78F1 /* ClockWidget.swift */,
+				C405C399C83734FEF0840A72 /* DayProgressWidget.swift */,
+				F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */,
+				ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */,
+				C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */,
+			);
+			path = Info;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -311,36 +520,79 @@
 			files = (
 				B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */,
 				A398C0BC123052F6DD0E1556 /* AppSettings.swift in Sources */,
+				A226D21D04E9530DC0EB8500 /* AudioDevicesWidget.swift in Sources */,
 				B11C45705B8FD14749D3EF34 /* AudioService.swift in Sources */,
 				06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */,
+				1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */,
+				AA67089D28BA104E142FBAD7 /* CICDRunsWidget.swift in Sources */,
+				FB74AECEAF33600374255AB1 /* CPUCoresWidget.swift in Sources */,
+				363607DB5872724C501A3B0A /* CPUGaugeWidget.swift in Sources */,
+				94FE718562DC7C587DCBE999 /* CPUHistoryWidget.swift in Sources */,
+				DF34A826FE02DBE0E38977E2 /* CPUTempWidget.swift in Sources */,
 				FA2DC89A27E123C170BF4422 /* CalibrationSupport.swift in Sources */,
-				1AA79646711793558B63A2DC /* ConnectivityPage.swift in Sources */,
-				5879452341CDA957397EC907 /* DiskIOPage.swift in Sources */,
+				00675BBB018816692ECC3E16 /* ClockWidget.swift in Sources */,
+				5C8ECF6DC06FF87352563E91 /* DashboardShell.swift in Sources */,
+				8A5B816079D770AF77A7D5A9 /* DayProgressWidget.swift in Sources */,
 				3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */,
+				3E24A63B4725D72110F46442 /* DiskIOWidget.swift in Sources */,
 				B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */,
 				E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */,
+				98C3A0C7BD110CF4249BE2C0 /* DisplaySettingsView.swift in Sources */,
 				A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */,
+				7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */,
+				52D5BE720F097A4EB813179B /* GitHubService.swift in Sources */,
+				69B8C3CBF6982B6FE821A527 /* GridPageView.swift in Sources */,
 				AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */,
+				EE048F1FD1E1DA49AC106EFE /* HistoryGraphView.swift in Sources */,
+				8D5E5222B55F195D788A6C1F /* LayoutConfig.swift in Sources */,
+				3778753DC6875CC5218F99FA /* LayoutEngine.swift in Sources */,
+				51C2DCC5F262CB019E7D1BF3 /* LayoutStore.swift in Sources */,
+				067C54301124CFF84023C648 /* MemoryGaugeWidget.swift in Sources */,
+				C2418CFE9BB9A03196699319 /* MemoryHistoryWidget.swift in Sources */,
+				6DBC308D7714AE68649D56B5 /* MemoryPressureWidget.swift in Sources */,
+				7F9DC2CF3A63DAAB9A3363C1 /* MetricsHistory.swift in Sources */,
+				B819009E7CB727ED41402886 /* MoonPhaseWidget.swift in Sources */,
 				F35D84161A1E0DBA97F7F4FC /* NetworkMonitorService.swift in Sources */,
-				C47C29C6EBE5A4DD26D5014B /* NowPlayingPage.swift in Sources */,
+				D2071582ECF24AB6A1E64DCB /* NetworkStatsWidget.swift in Sources */,
 				D253C27941895562CE75D2FF /* NowPlayingService.swift in Sources */,
+				2C38CAA3A0A9801AD204BD67 /* NowPlayingWidget.swift in Sources */,
+				8FCFC8603BA87F1A1C036633 /* PageManagerView.swift in Sources */,
+				42EDBB02D49153CE4FEC6F4A /* PerCoreTempWidget.swift in Sources */,
+				5767982D0BF8C63F5E5F6124 /* PluginDataBridge.swift in Sources */,
+				5A6AFB8CD86F45A91DCA5CFA /* PluginManager.swift in Sources */,
+				CA451229F99B09583CFC76E2 /* PluginManagerView.swift in Sources */,
+				F50463096338541B3E45D5F8 /* PluginManifest.swift in Sources */,
+				2C6E44D33BE7F001DFE0ADCF /* PluginWebWidget.swift in Sources */,
+				FFFBC9806B8378794277B5D9 /* ProcessListWidget.swift in Sources */,
 				450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */,
+				B0DC0DE2B4686BD868A4A150 /* RadialGaugeView.swift in Sources */,
 				8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */,
-				EE88D2207F764F4AE26A8AC3 /* SecondPageView.swift in Sources */,
+				814C3B299B4CDDDCA0C4BD4C /* SSDTempWidget.swift in Sources */,
 				A306E8619D1CE532DDF0A206 /* SettingsStore.swift in Sources */,
+				C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */,
+				166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */,
+				6B428F8C3D8786FC9A3A0DAD /* StorageBarsWidget.swift in Sources */,
 				FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */,
 				3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */,
-				147366BCAE8B82B11A9342A3 /* TemperaturePage.swift in Sources */,
+				3E71A468398FAC4E09C8FBA3 /* TempHistoryWidget.swift in Sources */,
 				D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */,
-				0192DB6530FF2E560DB47C03 /* TimeInfoPage.swift in Sources */,
+				7E017066085F7359B6603574 /* ThemeEnvironment.swift in Sources */,
+				A930352AA228A2C41251A6D3 /* ThemeSettings.swift in Sources */,
+				7969AD59663208973EE2D54B /* ThemeSettingsView.swift in Sources */,
 				6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */,
 				F1867A3A7E2C2E16B323838A /* TouchRuntimeState.swift in Sources */,
 				BA56436DBA4478A4C76D2F50 /* TouchZone.swift in Sources */,
-				3B32DCFD317611584487DE20 /* UnifiedDashboardView.swift in Sources */,
 				576555CB0A1ECA090B945198 /* WeatherService.swift in Sources */,
-				C42344CFBE8775C1CD04E871 /* WeatherWidgetView.swift in Sources */,
+				00A55DEED54FE9263D330C8D /* WeatherWidget.swift in Sources */,
+				E6A5BA8FC1C2DB8724EE69FB /* WiFiInfoWidget.swift in Sources */,
 				979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */,
+				3F726B83AB924EAB2D56E621 /* WidgetCatalogView.swift in Sources */,
+				989AEADBBF2579571F89F293 /* WidgetConfigEditor.swift in Sources */,
+				2B9FB008D975D1517133A10C /* WidgetHeader.swift in Sources */,
+				44B0C7044DE4CF8DD657D82F /* WidgetProtocol.swift in Sources */,
+				E087BB0CE2AFC3F84F70DB09 /* WidgetRegistry.swift in Sources */,
 				CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */,
+				75EB907352D0BF0EC1954A5F /* WorldClocksWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

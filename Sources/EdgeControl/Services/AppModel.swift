@@ -23,10 +23,11 @@ public final class AppModel: ObservableObject {
     public let audioService = AudioService()
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
+    public let githubService = GitHubService()
 
     private let settingsStore: SettingsStore
     private let displayManager: DisplayManager
-    private let metricsService: SystemMetricsService
+    public let metricsService: SystemMetricsService
     private var hasStarted = false
     private var cancellables: Set<AnyCancellable> = []
 
@@ -66,11 +67,13 @@ public final class AppModel: ObservableObject {
         audioService.start()
         wifiService.start()
         bluetoothService.start()
+        githubService.start()
         if !isDevKitMode {
             touchService.start()
         }
 
         // React to touch swipes for page changes
+        // Note: maxPage is synced from LayoutEngine via DashboardShell
         touchService.$swipeDirection
             .compactMap { $0 }
             .receive(on: RunLoop.main)
@@ -78,7 +81,7 @@ public final class AppModel: ObservableObject {
                 guard let self else { return }
                 switch direction {
                 case .left:
-                    if self.currentPage < 6 { self.currentPage += 1 }
+                    self.currentPage += 1
                 case .right:
                     if self.currentPage > 0 { self.currentPage -= 1 }
                 }
@@ -106,13 +109,17 @@ public final class AppModel: ObservableObject {
         let xeneonScreen = displayManager.xeneonScreen()
         isDevKitMode = xeneonScreen == nil
 
-        let selected = displayManager.selectedScreen(for: settings)
-        let selectedID = selected?.displayIdentifier
-        selectedDisplay = availableDisplays.first { $0.id == selectedID }
-
-        if settings.selectedDisplayID == nil, !isDevKitMode {
-            settings.selectedDisplayID = selectedDisplay?.id
-            saveSettings()
+        // Always prefer Xeneon Edge when connected
+        if let xeneon = xeneonScreen {
+            let xeneonName = xeneon.localizedName
+            selectedDisplay = availableDisplays.first { $0.name == xeneonName }
+            if settings.selectedDisplayName != xeneonName {
+                settings.selectedDisplayName = xeneonName
+                saveSettings()
+            }
+        } else {
+            let selected = displayManager.selectedScreen(for: settings)
+            selectedDisplay = availableDisplays.first { $0.name == selected?.localizedName }
         }
     }
 
