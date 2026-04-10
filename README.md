@@ -6,47 +6,78 @@
 
 **A native macOS dashboard for the CORSAIR XENEON EDGE touchscreen display.**
 
-Built from scratch in Swift & SwiftUI — no third-party dependencies. Designed specifically for the 2560×720 form factor with full touch support.
+Built from scratch in Swift & SwiftUI — no third-party dependencies. Designed specifically for the 2560x720 form factor with full touch support.
 
 ![EdgeControl Dashboard](screenshots/dashboard.png)
 
 ## Why I Built This
 
-I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own. What you see here is just the beginning — system monitoring and media controls are the foundation, but the plan is much bigger. I'm working on CI/CD monitoring, app-specific widgets, developer tools, and even local AI model interactions to make the dashboard feel more alive and context-aware. This isn't a concept or a demo; it's something I use every single day, and it keeps getting better.
+I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
+
+What started as a basic system monitor has grown into a fully modular dashboard with 25 widgets, a dynamic grid layout system, complete theme customization, and plugin support. This isn't a concept or a demo; it's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
-EdgeControl turns your XENEON EDGE into a fully functional system dashboard with 7 swipeable pages:
+EdgeControl turns any external display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a 20x6 grid, resize them, and configure everything from colors to fonts.
 
-**System Monitor** — CPU, Memory, Storage & Pressure gauges with live graphs and SMC temperatures
+### 25 Built-in Widgets
 
-**Now Playing** — Controls media playing in Safari (YouTube, YouTube Music, SoundCloud). Album art, progress bar, play/pause/next/prev — all touch-enabled
+**System (9)** — CPU Gauge, Memory Gauge, CPU History, Memory History, Process List, Disk I/O, Storage Bars, Memory Pressure, CPU Cores (per-core usage)
 
-**Network & Processes** — Real-time upload/download speeds, top processes by CPU & memory
+**Temperature (5)** — CPU Temp, GPU Temp, SSD Temp, Temperature History, Per-Core Temp (P-core/E-core breakdown)
 
-**Temperatures** — Per-core CPU temps, GPU, SSD, fan speeds with history graphs
+**Network (3)** — Network Stats (up/down speeds), WiFi Info (SSID, signal, channel), Bluetooth Devices
 
-**Disk I/O** — Read/write speeds, per-disk breakdown
+**Media (2)** — Now Playing (controls, artwork, progress), Audio Devices (output, volume)
 
-**Connectivity** — Wi-Fi signal & details, Bluetooth devices, system volume control
+**Info (5)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase
 
-**World Clocks** — Multiple timezones, day progress, moon phase
+**DevTools (1)** — CI/CD Runs (GitHub Actions across all repos)
+
+### Dynamic Grid Layout
+
+- 20x6 grid (2560x720) — drag to move, corner handles to resize
+- Unlimited pages with swipe navigation
+- Each widget adapts its layout to its size (compact, bar, chart, full)
+- Edit mode with collision detection and visual guides
+
+### Full Theme Customization
+
+- **8 presets**: Default Dark, OLED Black, Midnight Blue, Neon Cyan, Neon Purple, Arctic, Ember, Terminal
+- **Custom color scheme**: individually set all 8 scheme colors (backgrounds, text, borders)
+- **Accent color**: 9 presets + native color picker for any color
+- **Per-widget colors**: primary/secondary/tertiary color overrides with native color picker
+- **Font system**: 4 font families, global scale, 6 individually adjustable font levels
+- **Widget appearance**: opacity, corner radius, gap
+
+### Clock Widget — 10 Themes
+
+Digital, Analog, LCD Retro, Minimal, Split, Rings, Day Bar, Neon, Binary, Dot Matrix
+
+### Plugin System
+
+Extend EdgeControl with custom HTML/JS widgets:
+
+- `.ecplugin` bundle format with manifest.json
+- WKWebView rendering with JavaScript SDK
+- Permission-based data access (system metrics, temperature, network, etc.)
+- Install from zip, enable/disable, hot reload
 
 ## Screenshots
 
-| Network & Processes | Temperatures | Disk I/O |
+| System Monitor | Temperatures | Media Control |
 |:-:|:-:|:-:|
-| ![Network](screenshots/network.png) | ![Temps](screenshots/temps.png) | ![Disk](screenshots/disk.png) |
+| ![System](screenshots/dashboard.png) | ![Temps](screenshots/temps.png) | ![Media](screenshots/media.png) |
 
-| Media Control | Connectivity | World Clocks |
+| Network | Settings — Theme | Settings — Pages |
 |:-:|:-:|:-:|
-| ![Media](screenshots/media.png) | ![Connectivity](screenshots/connectivity.png) | ![Clocks](screenshots/clocks.png) |
+| ![Network](screenshots/network.png) | ![Theme](screenshots/theme.png) | ![Pages](screenshots/pages.png) |
 
 ## Install
 
-Download the latest `.dmg` from [**Releases**](https://github.com/pakslab/EdgeControl/releases), open it, and drag EdgeControl to Applications.
+Download the latest `.dmg` from [**Releases**](https://github.com/kemalandic/edgecontrol/releases), open it, and drag EdgeControl to Applications.
 
-> Requires macOS 14.0 or later. Works on any display but optimized for the XENEON EDGE (2560×720).
+> Requires macOS 14.0 or later. Works on any display but optimized for the XENEON EDGE (2560x720).
 
 ## Build from Source
 
@@ -61,6 +92,28 @@ open EdgeControl.xcodeproj
 ## Touch Support
 
 EdgeControl has native HID touch input support for the XENEON EDGE touchscreen. Every button and control works with both mouse clicks and direct touch taps. The touch system auto-calibrates to your display positioning.
+
+## Architecture
+
+```
+Sources/EdgeControl/
+├── App/            # Entry point, window placement
+├── Models/         # WidgetProtocol, LayoutConfig, ThemeSettings, SystemMetrics
+├── Services/       # AppModel, LayoutEngine, WidgetRegistry, PluginManager
+├── UI/
+│   ├── Components/ # RadialGauge, HistoryGraph, ThemeEnvironment, WidgetHeader
+│   ├── Settings/   # 6-tab settings window (Pages, Widgets, Theme, Plugins, Display, General)
+│   ├── DashboardShell.swift  # Main dashboard container
+│   └── GridPageView.swift    # Widget grid renderer with edit mode
+└── Widgets/
+    ├── System/       # CPU, Memory, Storage, Pressure, Cores, DiskIO, ProcessList
+    ├── Temperature/  # CPU/GPU/SSD Temp, TempHistory, PerCoreTemp
+    ├── Network/      # NetworkStats, WiFiInfo, Bluetooth
+    ├── Media/        # NowPlaying, AudioDevices
+    ├── Info/         # Weather, Clock, WorldClocks, DayProgress, MoonPhase
+    ├── DevTools/     # CICDRuns
+    └── Plugin/       # PluginWebWidget (WKWebView renderer)
+```
 
 ## Permissions
 
