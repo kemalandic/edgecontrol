@@ -6,6 +6,7 @@ public final class NetworkStatsWidget: DashboardWidget {
     public let description = "Real-time download/upload speeds and total transferred data"
     public let iconName = "network"
     public let category: WidgetCategory = .network
+    public let requiredServices: Set<ServiceKey> = [.network]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

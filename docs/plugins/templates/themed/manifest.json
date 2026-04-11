@@ -1,0 +1,21 @@
+{
+  "id": "com.example.themed-template",
+  "name": "Themed Template",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A fully theme-aware plugin",
+  "icon": "paintpalette",
+  "permissions": ["system-metrics"],
+  "widgets": [
+    {
+      "id": "themed",
+      "name": "Themed Widget",
+      "description": "Demonstrates full CSS variable usage",
+      "icon": "paintpalette",
+      "htmlFile": "widget.html",
+      "supportedSizes": { "min": [3, 2], "max": [6, 4] },
+      "defaultSize": [4, 3],
+      "refreshInterval": 2.0
+    }
+  ]
+}

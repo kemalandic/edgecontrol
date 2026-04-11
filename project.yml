@@ -27,7 +27,8 @@ targets:
         INFOPLIST_FILE: Sources/EdgeControl/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sources/EdgeControl/EdgeControl.entitlements
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: CNRZ47Y629
+        DEVELOPMENT_TEAM: CNRZ47Y629 # Contributors: replace with your own Apple Developer Team ID
+        ENABLE_HARDENED_RUNTIME: true
         GENERATE_INFOPLIST_FILE: false
         SWIFT_STRICT_CONCURRENCY: complete
     dependencies: []

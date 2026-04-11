@@ -68,7 +68,7 @@ public final class BluetoothService: ObservableObject {
             }
 
             return BTDevice(
-                id: device.addressString ?? UUID().uuidString,
+                id: device.addressString ?? "bt-\(name.hashValue)",
                 name: name,
                 isConnected: device.isConnected(),
                 deviceType: deviceType,

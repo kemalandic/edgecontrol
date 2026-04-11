@@ -6,6 +6,7 @@ public final class DiskIOWidget: DashboardWidget {
     public let description = "Real-time disk read and write speeds"
     public let iconName = "internaldrive"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.diskIO]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

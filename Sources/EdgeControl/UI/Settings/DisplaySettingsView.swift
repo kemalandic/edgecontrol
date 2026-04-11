@@ -21,11 +21,12 @@ struct DisplaySettingsView: View {
                     .foregroundStyle(Theme.textTertiary)
 
                 ForEach(model.availableDisplays) { display in
-                    let isSelected = layoutEngine.document.globalSettings.selectedDisplayName == display.name
+                    let isSelected = model.selectedDisplay?.name == display.name
                     Button {
                         var gs = layoutEngine.document.globalSettings
                         gs.selectedDisplayName = display.name
                         layoutEngine.updateGlobalSettings(gs)
+                        model.selectedDisplayName = display.name
                         model.refreshDisplays()
                     } label: {
                         HStack(spacing: 10) {

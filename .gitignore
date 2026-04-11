@@ -10,7 +10,9 @@ dist/
 *.dSYM.zip
 *.dSYM
 /.paks
-docs/
+.internal/
 CLAUDE.md
 .superpowers/
 *.profraw
+*.log
+TestPlugins/

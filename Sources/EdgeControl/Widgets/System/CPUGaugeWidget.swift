@@ -6,6 +6,7 @@ public final class CPUGaugeWidget: DashboardWidget {
     public let description = "Radial gauge showing current CPU load percentage"
     public let iconName = "cpu"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

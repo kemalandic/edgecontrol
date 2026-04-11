@@ -6,6 +6,7 @@ public final class BluetoothWidget: DashboardWidget {
     public let description = "Connected Bluetooth devices with battery levels"
     public let iconName = "wave.3.right"
     public let category: WidgetCategory = .network
+    public let requiredServices: Set<ServiceKey> = [.bluetooth]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

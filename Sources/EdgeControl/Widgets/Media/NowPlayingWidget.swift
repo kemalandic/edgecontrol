@@ -7,6 +7,7 @@ public final class NowPlayingWidget: DashboardWidget {
     public let description = "Media player with artwork, controls, progress bar, and source tabs"
     public let iconName = "play.circle"
     public let category: WidgetCategory = .media
+    public let requiredServices: Set<ServiceKey> = [.nowPlaying]
     public let supportedSizes = WidgetSizeRange(min: .size(6, 3), max: .size(12, 6))
     public let defaultSize = WidgetSize.size(8, 4)
 
@@ -37,11 +38,14 @@ public final class NowPlayingWidget: DashboardWidget {
 
 private struct NowPlayingWidgetView: View {
     @ObservedObject var service: NowPlayingService
+    @EnvironmentObject private var model: AppModel
     @Environment(\.themeSettings) private var ts
     let showControls: Bool
     let showArtwork: Bool
     let showProgress: Bool
     let isCompact: Bool
+
+    private var touchRegistry: TouchZoneRegistry { model.touchService.zoneRegistry }
 
     private var primary: Color { Theme.widgetPrimary("now-playing", ts: ts, default: .purple) }
     private var secondary: Color { Theme.widgetSecondary("now-playing", ts: ts, default: .cyan) ?? Theme.accentCyan }
@@ -54,21 +58,19 @@ private struct NowPlayingWidgetView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 6) {
                             ForEach(Array(service.allSources.enumerated()), id: \.offset) { index, source in
-                                Button {
-                                    service.selectSource(index)
-                                } label: {
-                                    Text(source.sourceName)
-                                        .font(Theme.label(ts))
-                                        .foregroundStyle(index == service.selectedSourceIndex ? .white : Theme.text3(ts))
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 5)
-                                        .background(
-                                            index == service.selectedSourceIndex ?
-                                            primary.opacity(0.3) : Color.white.opacity(0.05),
-                                            in: Capsule()
-                                        )
-                                }
-                                .buttonStyle(.plain)
+                                Text(source.sourceName)
+                                    .font(Theme.label(ts))
+                                    .foregroundStyle(index == service.selectedSourceIndex ? .white : Theme.text3(ts))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        index == service.selectedSourceIndex ?
+                                        primary.opacity(0.3) : Color.white.opacity(0.05),
+                                        in: Capsule()
+                                    )
+                                    .touchTappable(id: "np-source-\(index)", registry: touchRegistry) {
+                                        Task { @MainActor in service.selectSource(index) }
+                                    }
                             }
                         }
                     }
@@ -87,7 +89,7 @@ private struct NowPlayingWidgetView: View {
             } else {
                 Spacer()
                 Image(systemName: "music.note")
-                    .font(.system(size: 36))
+                    .font(.system(size: 36 * ts.fontScale))
                     .foregroundStyle(Theme.text3(ts))
                 Text("NO MEDIA")
                     .font(Theme.body(ts))
@@ -181,7 +183,7 @@ private struct NowPlayingWidgetView: View {
                         startPoint: .topLeading, endPoint: .bottomTrailing
                     ))
                 Image(systemName: "music.note")
-                    .font(.system(size: 32))
+                    .font(.system(size: 32 * ts.fontScale))
                     .foregroundStyle(Theme.text3(ts))
             }
             .frame(width: min(maxSize, 120), height: min(maxSize, 120))
@@ -218,26 +220,29 @@ private struct NowPlayingWidgetView: View {
 
     private func controlButtons(fontSize: CGFloat) -> some View {
         HStack(spacing: 16) {
-            Button { service.previousTrack() } label: {
-                Image(systemName: "backward.fill")
-                    .font(.system(size: fontSize * 0.6))
-                    .foregroundStyle(Theme.text2(ts))
-            }
-            .buttonStyle(.plain)
+            Image(systemName: "backward.fill")
+                .font(.system(size: fontSize * 0.6 * ts.fontScale))
+                .foregroundStyle(Theme.text2(ts))
+                .frame(width: fontSize * 1.5, height: fontSize * 1.5)
+                .touchTappable(id: "np-prev", registry: touchRegistry) {
+                    Task { @MainActor in service.previousTrack() }
+                }
 
-            Button { service.togglePlayPause() } label: {
-                Image(systemName: service.nowPlaying?.isPlaying == true ? "pause.fill" : "play.fill")
-                    .font(.system(size: fontSize))
-                    .foregroundStyle(Theme.text1(ts))
-            }
-            .buttonStyle(.plain)
+            Image(systemName: service.nowPlaying?.isPlaying == true ? "pause.fill" : "play.fill")
+                .font(.system(size: fontSize * ts.fontScale))
+                .foregroundStyle(Theme.text1(ts))
+                .frame(width: fontSize * 1.5, height: fontSize * 1.5)
+                .touchTappable(id: "np-playpause", registry: touchRegistry) {
+                    Task { @MainActor in service.togglePlayPause() }
+                }
 
-            Button { service.nextTrack() } label: {
-                Image(systemName: "forward.fill")
-                    .font(.system(size: fontSize * 0.6))
-                    .foregroundStyle(Theme.text2(ts))
-            }
-            .buttonStyle(.plain)
+            Image(systemName: "forward.fill")
+                .font(.system(size: fontSize * 0.6 * ts.fontScale))
+                .foregroundStyle(Theme.text2(ts))
+                .frame(width: fontSize * 1.5, height: fontSize * 1.5)
+                .touchTappable(id: "np-next", registry: touchRegistry) {
+                    Task { @MainActor in service.nextTrack() }
+                }
         }
     }
 }

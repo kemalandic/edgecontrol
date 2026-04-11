@@ -1,4 +1,5 @@
 import Foundation
+import IOKit
 
 @MainActor
 public final class DiskIOService: ObservableObject {
@@ -50,43 +51,31 @@ public final class DiskIOService: ObservableObject {
         hasPrevious = true
     }
 
+    /// Read cumulative disk I/O bytes via IOKit (no subprocess).
     private func readDiskCounters() -> (UInt64, UInt64) {
-        let pipe = Pipe()
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/iostat")
-        process.arguments = ["-d", "-c", "1"]
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
+        var totalRead: UInt64 = 0
+        var totalWrite: UInt64 = 0
 
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
+        var iter: io_iterator_t = 0
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("IOBlockStorageDriver"), &iter) == KERN_SUCCESS else {
             return (previousRead, previousWrite)
         }
+        defer { IOObjectRelease(iter) }
 
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        guard let output = String(data: data, encoding: .utf8) else {
-            return (previousRead, previousWrite)
+        var disk = IOIteratorNext(iter)
+        while disk != 0 {
+            defer { IOObjectRelease(disk); disk = IOIteratorNext(iter) }
+
+            var propsRef: Unmanaged<CFMutableDictionary>?
+            guard IORegistryEntryCreateCFProperties(disk, &propsRef, kCFAllocatorDefault, 0) == KERN_SUCCESS,
+                  let props = propsRef?.takeRetainedValue() as? [String: Any],
+                  let stats = props["Statistics"] as? [String: Any] else { continue }
+
+            if let read = stats["Bytes (Read)"] as? UInt64 { totalRead += read }
+            if let write = stats["Bytes (Write)"] as? UInt64 { totalWrite += write }
         }
 
-        // Parse iostat output — KB/t, tps, MB/s columns
-        let lines = output.components(separatedBy: "\n").filter { !$0.isEmpty }
-        guard lines.count >= 3 else { return (previousRead, previousWrite) }
-
-        let dataLine = lines.last ?? ""
-        let parts = dataLine.trimmingCharacters(in: .whitespaces)
-            .split(separator: " ", omittingEmptySubsequences: true)
-
-        // iostat -d: KB/t  tps  MB/s
-        guard parts.count >= 3 else { return (previousRead, previousWrite) }
-
-        let mbPerSec = Double(parts[2]) ?? 0
-        // Approximate read vs write — iostat -d doesn't split them
-        // Use total as read estimate, write comes from delta
-        let totalBytes = UInt64(mbPerSec * 1024 * 1024 * 2) // 2 second interval
-
-        return (previousRead + totalBytes / 2, previousWrite + totalBytes / 2)
+        return (totalRead, totalWrite)
     }
 
     public static func formatSpeed(_ bytesPerSec: Double) -> String {

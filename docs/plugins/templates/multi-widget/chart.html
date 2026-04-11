@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    padding: 12px;
+    background: transparent;
+    font-family: var(--ec-font-family);
+    color: var(--ec-text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .label {
+    font-size: var(--ec-font-caption);
+    font-weight: 700;
+    color: var(--ec-text-tertiary);
+    text-transform: uppercase;
+  }
+  .current {
+    font-size: var(--ec-font-body);
+    font-weight: bold;
+    color: var(--ec-widget-primary);
+  }
+  canvas {
+    flex: 1;
+    margin-top: 8px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <span class="label">CPU TEMP</span>
+    <span class="current" id="current">--</span>
+  </div>
+  <canvas id="chart"></canvas>
+
+  <script>
+    var canvas = document.getElementById('chart');
+    var ctx = canvas.getContext('2d');
+
+    function draw(history) {
+      var w = canvas.clientWidth;
+      var h = canvas.clientHeight;
+      canvas.width = w * 2;
+      canvas.height = h * 2;
+      ctx.scale(2, 2);
+
+      if (!history || history.length < 2) return;
+
+      var min = Math.min.apply(null, history) - 5;
+      var max = Math.max.apply(null, history) + 5;
+      var range = max - min || 1;
+
+      // Get widget primary color from CSS variable
+      var style = getComputedStyle(document.documentElement);
+      var color = style.getPropertyValue('--ec-widget-primary').trim() || '#00E5FF';
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.beginPath();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+
+      for (var i = 0; i < history.length; i++) {
+        var x = (i / (history.length - 1)) * w;
+        var y = h - ((history[i] - min) / range) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    edgecontrol.on('update', function(data) {
+      if (!data.temperature) return;
+      if (data.temperature.cpu !== undefined) {
+        document.getElementById('current').textContent =
+          Math.round(data.temperature.cpu) + '°C';
+      }
+      draw(data.temperature.cpuHistory);
+    });
+  </script>
+</body>
+</html>

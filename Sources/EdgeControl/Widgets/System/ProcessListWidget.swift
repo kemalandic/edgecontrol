@@ -7,6 +7,7 @@ public final class ProcessListWidget: DashboardWidget {
     public let description = "Top processes sorted by CPU or memory usage"
     public let iconName = "list.bullet.rectangle"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.process]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 3), max: .size(10, 6))
     public let defaultSize = WidgetSize.size(6, 4)
 
@@ -84,7 +85,7 @@ private struct ProcessListWidgetView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             } else {
                 Image(systemName: "app.fill")
-                    .font(.system(size: 18))
+                    .font(.system(size: 18 * ts.fontScale))
                     .foregroundStyle(Theme.text3(ts))
                     .frame(width: 26, height: 26)
             }

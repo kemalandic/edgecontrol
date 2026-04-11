@@ -14,9 +14,19 @@ private enum TouchLogger {
         return directory.appendingPathComponent("touch.log")
     }()
 
+    nonisolated(unsafe) private static let formatter: ISO8601DateFormatter = {
+        let f = ISO8601DateFormatter()
+        f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return f
+    }()
+    private static let maxLogSize = 5_242_880 // 5 MB
+
     static func log(_ message: String) {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        // Rotate if exceeds 5 MB
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: logURL.path),
+           let size = attrs[.size] as? UInt64, size > maxLogSize {
+            try? FileManager.default.removeItem(at: logURL)
+        }
         let line = "[\(formatter.string(from: Date()))] \(message)\n"
         guard let data = line.data(using: .utf8) else { return }
         if FileManager.default.fileExists(atPath: logURL.path),
@@ -229,10 +239,9 @@ public final class HardwareTouchService: ObservableObject {
         source.start()
         touchSource = source
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.tickCalibration(delta: 1.0 / 30.0)
-            }
+        // Start calibration timer only if calibration is still needed
+        if dwellCalibration.activeCorner != nil {
+            startCalibrationTimer()
         }
         refreshState()
     }
@@ -261,6 +270,7 @@ public final class HardwareTouchService: ObservableObject {
         calibration = CalibrationModel()
         dwellCalibration = DwellCalibrationState()
         try? CalibrationPersistence.clear()
+        startCalibrationTimer()
         refreshState()
     }
 
@@ -312,6 +322,22 @@ public final class HardwareTouchService: ObservableObject {
         refreshState()
     }
 
+    /// Start the 30fps calibration timer (only runs during active calibration).
+    private func startCalibrationTimer() {
+        guard timer == nil else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.tickCalibration(delta: 1.0 / 30.0)
+            }
+        }
+    }
+
+    /// Stop the calibration timer when calibration is complete or idle.
+    private func stopCalibrationTimer() {
+        timer?.invalidate()
+        timer = nil
+    }
+
     private func tickCalibration(delta: TimeInterval) {
         if let corner = dwellCalibration.activeCorner {
             let rawPoint = CGPoint(x: latestSample.x, y: latestSample.y)
@@ -321,6 +347,9 @@ public final class HardwareTouchService: ObservableObject {
                 dwellCalibration.advance()
             }
             refreshState()
+        } else {
+            // Calibration complete or idle — stop the timer
+            stopCalibrationTimer()
         }
     }
 

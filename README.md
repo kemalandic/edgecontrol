@@ -59,9 +59,14 @@ Digital, Analog, LCD Retro, Minimal, Split, Rings, Day Bar, Neon, Binary, Dot Ma
 Extend EdgeControl with custom HTML/JS widgets:
 
 - `.ecplugin` bundle format with manifest.json
-- WKWebView rendering with JavaScript SDK
-- Permission-based data access (system metrics, temperature, network, etc.)
+- WKWebView rendering with full JavaScript SDK
+- 14 permissions: 9 data (system metrics, temperature, network, etc.) + 5 actions (notifications, clipboard, storage, URL, network access)
+- Dynamic theme integration — CSS custom properties (`--ec-*`) auto-injected and live-updated
+- Persistent key-value storage per plugin
+- Network sandbox with domain whitelisting
+- Lifecycle events: resize, theme change, visibility
 - Install from zip, enable/disable, hot reload
+- [Plugin Developer Documentation](docs/plugins/getting-started.md)
 
 ## Screenshots
 
@@ -69,9 +74,9 @@ Extend EdgeControl with custom HTML/JS widgets:
 |:-:|:-:|:-:|
 | ![System](screenshots/dashboard.png) | ![Temps](screenshots/temps.png) | ![Media](screenshots/media.png) |
 
-| Network | Settings — Theme | Settings — Pages |
+| Network | Clocks | Connectivity |
 |:-:|:-:|:-:|
-| ![Network](screenshots/network.png) | ![Theme](screenshots/theme.png) | ![Pages](screenshots/pages.png) |
+| ![Network](screenshots/network.png) | ![Clocks](screenshots/clocks.png) | ![Connectivity](screenshots/connectivity.png) |
 
 ## Install
 
@@ -98,8 +103,8 @@ EdgeControl has native HID touch input support for the XENEON EDGE touchscreen. 
 ```
 Sources/EdgeControl/
 ├── App/            # Entry point, window placement
-├── Models/         # WidgetProtocol, LayoutConfig, ThemeSettings, SystemMetrics
-├── Services/       # AppModel, LayoutEngine, WidgetRegistry, PluginManager
+├── Models/         # WidgetProtocol, LayoutConfig, ThemeSettings, PluginManifest, SystemMetrics
+├── Services/       # AppModel, LayoutEngine, WidgetRegistry, PluginManager, PluginDataBridge, PluginStorageService
 ├── UI/
 │   ├── Components/ # RadialGauge, HistoryGraph, ThemeEnvironment, WidgetHeader
 │   ├── Settings/   # 6-tab settings window (Pages, Widgets, Theme, Plugins, Display, General)
@@ -112,7 +117,7 @@ Sources/EdgeControl/
     ├── Media/        # NowPlaying, AudioDevices
     ├── Info/         # Weather, Clock, WorldClocks, DayProgress, MoonPhase
     ├── DevTools/     # CICDRuns
-    └── Plugin/       # PluginWebWidget (WKWebView renderer)
+    └── Plugin/       # PluginWebWidget (WKWebView renderer + JS SDK)
 ```
 
 ## Permissions

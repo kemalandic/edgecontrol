@@ -40,6 +40,19 @@ public final class WidgetRegistry: ObservableObject {
         return WidgetCategory.allCases.filter { present.contains($0) }
     }
 
+    /// Collect all required services for widgets currently placed in the layout.
+    public func requiredServices(for document: LayoutDocument) -> Set<ServiceKey> {
+        var services = Set<ServiceKey>()
+        for page in document.pages {
+            for placement in page.widgets {
+                if let widget = widgets[placement.widgetId] {
+                    services.formUnion(widget.requiredServices)
+                }
+            }
+        }
+        return services
+    }
+
     /// Returns widget metadata without needing the full widget instance.
     public func metadata(for widgetId: String) -> WidgetMetadata? {
         guard let w = widgets[widgetId] else { return nil }
@@ -108,7 +121,8 @@ public final class WidgetRegistry: ObservableObject {
                 pluginId: plugin.manifest.id,
                 widgetDef: widgetDef,
                 permissions: plugin.manifest.permissions,
-                bundlePath: plugin.bundlePath
+                bundlePath: plugin.bundlePath,
+                allowedDomains: plugin.manifest.allowedDomains
             )
             register(pluginWidget)
         }

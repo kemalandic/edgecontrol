@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <span class="title">SYSTEM</span>
+    <span class="badge" id="uptime">--</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">CPU</div>
+      <div class="stat-value" id="cpu">--</div>
+      <div class="bar"><div class="bar-fill primary" id="cpu-bar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">MEMORY</div>
+      <div class="stat-value" id="mem">--</div>
+      <div class="bar"><div class="bar-fill accent" id="mem-bar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">STORAGE</div>
+      <div class="stat-value" id="storage">--</div>
+      <div class="stat-detail" id="storage-detail"></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">THERMAL</div>
+      <div class="stat-value" id="thermal">--</div>
+      <div class="stat-detail" id="cores"></div>
+    </div>
+  </div>
+
+  <script>
+    function formatUptime(seconds) {
+      var h = Math.floor(seconds / 3600);
+      var m = Math.floor((seconds % 3600) / 60);
+      return h + 'h ' + m + 'm';
+    }
+
+    edgecontrol.on('update', function(data) {
+      if (!data.system) return;
+      var s = data.system;
+
+      document.getElementById('cpu').textContent = Math.round(s.cpuPercent) + '%';
+      document.getElementById('cpu-bar').style.width = s.cpuPercent + '%';
+
+      document.getElementById('mem').textContent = Math.round(s.memoryPercent) + '%';
+      document.getElementById('mem-bar').style.width = s.memoryPercent + '%';
+
+      document.getElementById('storage').textContent = Math.round(s.storagePercent) + '%';
+      document.getElementById('storage-detail').textContent =
+        Math.round(s.storageUsedGB) + ' / ' + Math.round(s.storageTotalGB) + ' GB';
+
+      document.getElementById('thermal').textContent = s.thermalState;
+      document.getElementById('cores').textContent =
+        s.performanceCores + 'P + ' + s.efficiencyCores + 'E';
+
+      document.getElementById('uptime').textContent = formatUptime(s.uptimeSeconds);
+    });
+
+    // Respond to resize events
+    edgecontrol.on('resize', function(size) {
+      // Adapt layout based on available space
+      var stats = document.querySelector('.stats');
+      if (size.width <= 3) {
+        stats.style.gridTemplateColumns = '1fr';
+      } else {
+        stats.style.gridTemplateColumns = '1fr 1fr';
+      }
+    });
+  </script>
+</body>
+</html>

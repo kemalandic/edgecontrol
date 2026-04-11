@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    padding: 12px;
+    background: transparent;
+    font-family: var(--ec-font-family);
+    color: var(--ec-text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .label {
+    font-size: var(--ec-font-caption);
+    font-weight: 700;
+    color: var(--ec-text-tertiary);
+    text-transform: uppercase;
+  }
+  .bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--ec-border);
+    border-radius: 4px;
+    margin-top: 8px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--ec-widget-primary);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .value {
+    font-size: var(--ec-font-value);
+    font-weight: bold;
+    color: var(--ec-widget-primary);
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+  <div class="label">CPU</div>
+  <div class="bar-bg"><div class="bar-fill" id="fill" style="width:0%"></div></div>
+  <div class="value" id="value">--</div>
+
+  <script>
+    edgecontrol.on('update', function(data) {
+      if (!data.system) return;
+      var pct = Math.round(data.system.cpuPercent);
+      document.getElementById('fill').style.width = pct + '%';
+      document.getElementById('value').textContent = pct + '%';
+    });
+  </script>
+</body>
+</html>

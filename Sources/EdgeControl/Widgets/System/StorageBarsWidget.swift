@@ -6,6 +6,7 @@ public final class StorageBarsWidget: DashboardWidget {
     public let description = "Disk usage with circular gauge showing used/free/total"
     public let iconName = "externaldrive"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

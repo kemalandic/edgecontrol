@@ -6,6 +6,7 @@ public final class TempHistoryWidget: DashboardWidget {
     public let description = "Multi-sensor temperature history graph (CPU, GPU, SSD)"
     public let iconName = "chart.line.uptrend.xyaxis"
     public let category: WidgetCategory = .temperature
+    public let requiredServices: Set<ServiceKey> = [.smc]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 2), max: .size(10, 4))
     public let defaultSize = WidgetSize.size(6, 3)
 

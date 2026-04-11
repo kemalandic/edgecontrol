@@ -6,6 +6,7 @@ public final class WeatherWidget: DashboardWidget {
     public let description = "Current conditions and multi-day forecast"
     public let iconName = "cloud.sun"
     public let category: WidgetCategory = .info
+    public let requiredServices: Set<ServiceKey> = [.weather]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 4), max: .size(10, 6))
     public let defaultSize = WidgetSize.size(6, 6)
 
@@ -44,7 +45,7 @@ private struct WeatherWidgetBody: View {
                 todayRow(w)
 
                 if showForecast && !service.dailyForecast.isEmpty {
-                    Divider().background(Theme.borderSubtle)
+                    Divider().background(Theme.border(ts))
                     forecastRow()
                 }
             }
@@ -59,6 +60,7 @@ private struct WeatherWidgetBody: View {
                     .foregroundStyle(Theme.text2(ts))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .widgetCard()
         } else {
             VStack(spacing: 8) {
                 ProgressView().tint(Theme.widgetPrimary("weather", ts: ts, default: .cyan))
@@ -67,6 +69,7 @@ private struct WeatherWidgetBody: View {
                     .foregroundStyle(Theme.text3(ts))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .widgetCard()
         }
     }
 
@@ -127,7 +130,7 @@ private struct WeatherWidgetBody: View {
                     .frame(maxWidth: .infinity)
                 if index < service.dailyForecast.count - 1 {
                     Rectangle()
-                        .fill(Theme.borderSubtle)
+                        .fill(Theme.border(ts))
                         .frame(width: 1)
                         .padding(.vertical, 8)
                 }

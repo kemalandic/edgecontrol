@@ -7,6 +7,7 @@ public final class CICDRunsWidget: DashboardWidget {
     public let description = "GitHub Actions workflow runs with status indicators"
     public let iconName = "arrow.triangle.branch"
     public let category: WidgetCategory = .devtools
+    public let requiredServices: Set<ServiceKey> = [.github]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 2), max: .size(10, 6))
     public let defaultSize = WidgetSize.size(6, 4)
 
@@ -27,8 +28,11 @@ public final class CICDRunsWidget: DashboardWidget {
 
 private struct CICDRunsWidgetView: View {
     @ObservedObject var service: GitHubService
+    @EnvironmentObject private var model: AppModel
     @Environment(\.themeSettings) private var ts
     let maxRuns: Int
+
+    private var touchRegistry: TouchZoneRegistry { model.touchService.zoneRegistry }
 
     var body: some View {
         VStack(spacing: 6) {
@@ -66,33 +70,33 @@ private struct CICDRunsWidgetView: View {
     }
 
     private func runRow(_ run: WorkflowRun) -> some View {
-        Button {
-            if let url = URL(string: run.url) { NSWorkspace.shared.open(url) }
-        } label: {
-            HStack(spacing: 8) {
-                Circle().fill(statusColor(run)).frame(width: 10, height: 10)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(run.repoName)
-                        .font(Theme.label(ts))
-                        .foregroundStyle(Theme.text3(ts))
-                    Text(run.displayTitle)
-                        .font(Theme.body(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .lineLimit(1)
-                }
-                Spacer()
-                Text(statusLabel(run))
+        HStack(spacing: 8) {
+            Circle().fill(statusColor(run)).frame(width: 10, height: 10)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(run.repoName)
                     .font(Theme.label(ts))
-                    .foregroundStyle(statusColor(run))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(statusColor(run).opacity(0.15), in: Capsule())
+                    .foregroundStyle(Theme.text3(ts))
+                Text(run.displayTitle)
+                    .font(Theme.body(ts))
+                    .foregroundStyle(Theme.text1(ts))
+                    .lineLimit(1)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(Color.white.opacity(0.02), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Spacer()
+            Text(statusLabel(run))
+                .font(Theme.label(ts))
+                .foregroundStyle(statusColor(run))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(statusColor(run).opacity(0.15), in: Capsule())
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color.white.opacity(0.02), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .touchTappable(id: "cicd-\(run.id)", registry: touchRegistry) {
+            if let url = URL(string: run.url) {
+                Task { @MainActor in NSWorkspace.shared.open(url) }
+            }
+        }
     }
 
     private func statusColor(_ run: WorkflowRun) -> Color {

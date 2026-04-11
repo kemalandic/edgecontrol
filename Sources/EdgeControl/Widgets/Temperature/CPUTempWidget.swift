@@ -6,6 +6,7 @@ public final class CPUTempWidget: DashboardWidget {
     public let description = "CPU temperature gauge with color-coded warning levels"
     public let iconName = "cpu"
     public let category: WidgetCategory = .temperature
+    public let requiredServices: Set<ServiceKey> = [.smc]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(5, 4))
     public let defaultSize = WidgetSize.size(3, 3)
 
@@ -42,6 +43,7 @@ public final class GPUTempWidget: DashboardWidget {
     public let description = "GPU temperature gauge with color-coded warning levels"
     public let iconName = "gpu"
     public let category: WidgetCategory = .temperature
+    public let requiredServices: Set<ServiceKey> = [.smc]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(5, 4))
     public let defaultSize = WidgetSize.size(3, 3)
 

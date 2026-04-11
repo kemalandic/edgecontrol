@@ -6,6 +6,7 @@ public final class SSDTempWidget: DashboardWidget {
     public let description = "SSD temperature gauge with color-coded warning levels"
     public let iconName = "internaldrive"
     public let category: WidgetCategory = .temperature
+    public let requiredServices: Set<ServiceKey> = [.smc]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(5, 4))
     public let defaultSize = WidgetSize.size(3, 3)
 

@@ -21,6 +21,7 @@ public final class SystemMetricsService: ObservableObject {
     private var hasPreviousCPUInfo = false
     private var previousPerCore: [processor_cpu_load_info]?
     private var timer: Timer?
+    private let hostPort = mach_host_self()
 
     public init() {
         self.cpuBrand = Self.readStringSysctl("machdep.cpu.brand_string") ?? "Unknown CPU"
@@ -75,7 +76,7 @@ public final class SystemMetricsService: ObservableObject {
         var info = host_cpu_load_info()
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
-                host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, $0, &size)
+                host_statistics(hostPort, HOST_CPU_LOAD_INFO, $0, &size)
             }
         }
         guard result == KERN_SUCCESS else { return latest?.cpuLoadPercent ?? 0 }
@@ -98,13 +99,13 @@ public final class SystemMetricsService: ObservableObject {
 
     private func currentMemorySnapshot() -> (usedPercent: Double, usedGB: Double, pressurePercent: Double, swapUsedMB: Double) {
         var rawPageSize: vm_size_t = 0
-        host_page_size(mach_host_self(), &rawPageSize)
+        host_page_size(hostPort, &rawPageSize)
         let pageSize = Double(rawPageSize)
         var stats = vm_statistics64()
         var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.stride / MemoryLayout<integer_t>.stride)
         let result = withUnsafeMutablePointer(to: &stats) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+                host_statistics64(hostPort, HOST_VM_INFO64, $0, &count)
             }
         }
 
@@ -178,7 +179,7 @@ public final class SystemMetricsService: ObservableObject {
         var cpuInfo: processor_info_array_t?
         var numCPUs: natural_t = 0
 
-        let result = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &numCPUs, &cpuInfo, &cpuInfoCount)
+        let result = host_processor_info(hostPort, PROCESSOR_CPU_LOAD_INFO, &numCPUs, &cpuInfo, &cpuInfoCount)
         guard result == KERN_SUCCESS, let info = cpuInfo else { return [] }
 
         defer {

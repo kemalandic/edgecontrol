@@ -6,6 +6,7 @@ public final class MemoryGaugeWidget: DashboardWidget {
     public let description = "Radial gauge showing memory usage with used/total GB"
     public let iconName = "memorychip"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

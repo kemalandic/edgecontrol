@@ -6,6 +6,7 @@ public final class CPUHistoryWidget: DashboardWidget {
     public let description = "Time-series graph of CPU usage over the last few minutes"
     public let iconName = "chart.xyaxis.line"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(10, 4))
     public let defaultSize = WidgetSize.size(6, 3)
 

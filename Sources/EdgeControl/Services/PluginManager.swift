@@ -61,9 +61,21 @@ public final class PluginManager: ObservableObject {
             return
         }
 
-        // Validate widgets have HTML files
+        // Validate plugin ID is safe for filesystem use (no path traversal)
+        let isValidId = manifest.id.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "-" || $0 == "_") }
+        guard isValidId, !manifest.id.isEmpty else {
+            errors[bundlePath.lastPathComponent] = "Invalid plugin ID: must contain only letters, numbers, dots, hyphens, underscores"
+            return
+        }
+
+        // Validate widgets have HTML files (with path traversal check)
+        let bundleStd = bundlePath.standardizedFileURL.path
         for widgetDef in manifest.widgets {
-            let htmlURL = bundlePath.appendingPathComponent(widgetDef.htmlFile)
+            let htmlURL = bundlePath.appendingPathComponent(widgetDef.htmlFile).standardizedFileURL
+            guard htmlURL.path.hasPrefix(bundleStd) else {
+                errors[manifest.id] = "Invalid widget HTML path: \(widgetDef.htmlFile)"
+                return
+            }
             if !FileManager.default.fileExists(atPath: htmlURL.path) {
                 errors[manifest.id] = "Missing widget HTML: \(widgetDef.htmlFile)"
                 return
@@ -102,25 +114,26 @@ public final class PluginManager: ObservableObject {
         if plugin.isEnabled { disablePlugin(id: id) } else { enablePlugin(id: id) }
     }
 
-    /// Remove a plugin bundle from disk.
+    /// Remove a plugin bundle from disk and clean up its storage.
     public func removePlugin(id: String) {
         guard let index = plugins.firstIndex(where: { $0.id == id }) else { return }
         let plugin = plugins[index]
         try? FileManager.default.removeItem(at: plugin.bundlePath)
+        PluginStorageService.shared.removeAll(pluginId: id)
         plugins.remove(at: index)
         savedState.enabledPlugins.removeValue(forKey: id)
         saveState()
     }
 
-    /// Install a plugin from a URL — supports both .ecplugin directories and .zip files.
-    public func installPlugin(from sourceURL: URL) -> Bool {
+    /// Install a plugin from a local URL — supports both .ecplugin directories and .zip files.
+    /// For zip files, extraction runs in the background to avoid blocking the main thread.
+    /// Important: `sourceURL` must be a trusted local file path (e.g., from NSOpenPanel).
+    public func installPlugin(from sourceURL: URL, completion: (@Sendable (Bool) -> Void)? = nil) {
         if sourceURL.pathExtension == "zip" {
-            return installFromZip(sourceURL)
-        } else if sourceURL.pathExtension == "ecplugin" {
-            return installFromDirectory(sourceURL)
+            installFromZip(sourceURL, completion: completion ?? { _ in })
         } else {
-            // Try as directory anyway
-            return installFromDirectory(sourceURL)
+            let result = installFromDirectory(sourceURL)
+            completion?(result)
         }
     }
 
@@ -139,45 +152,66 @@ public final class PluginManager: ObservableObject {
         }
     }
 
-    private func installFromZip(_ zipURL: URL) -> Bool {
+    private func installFromZip(_ zipURL: URL, completion: @escaping @Sendable (Bool) -> Void) {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         do {
             try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-            defer { try? FileManager.default.removeItem(at: tempDir) }
-
-            // Unzip using ditto (built-in macOS)
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
-            process.arguments = ["-xk", zipURL.path, tempDir.path]
-            try process.run()
-            process.waitUntilExit()
-
-            guard process.terminationStatus == 0 else {
-                errors["install"] = "Failed to extract zip file"
-                return false
-            }
-
-            // Find .ecplugin directory in extracted contents
-            let contents = try FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil)
-            guard let pluginDir = contents.first(where: { $0.pathExtension == "ecplugin" }) else {
-                // Maybe the zip contains the plugin contents directly (no wrapper dir)
-                // Check if manifest.json exists in tempDir
-                let directManifest = tempDir.appendingPathComponent("manifest.json")
-                if FileManager.default.fileExists(atPath: directManifest.path) {
-                    // Wrap in .ecplugin directory
-                    let name = zipURL.deletingPathExtension().lastPathComponent
-                    let wrappedDir = tempDir.appendingPathComponent("\(name).ecplugin")
-                    try FileManager.default.moveItem(at: tempDir, to: wrappedDir)
-                    return installFromDirectory(wrappedDir)
-                }
-                errors["install"] = "No .ecplugin bundle found in zip"
-                return false
-            }
-
-            return installFromDirectory(pluginDir)
         } catch {
             errors["install"] = "Install failed: \(error.localizedDescription)"
-            return false
+            completion(false)
+            return
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+        process.arguments = ["-xk", zipURL.path, tempDir.path]
+        process.terminationHandler = { [weak self] proc in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                defer { try? FileManager.default.removeItem(at: tempDir) }
+
+                guard proc.terminationStatus == 0 else {
+                    self.errors["install"] = "Failed to extract zip file"
+                    completion(false)
+                    return
+                }
+
+                guard let contents = try? FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil) else {
+                    self.errors["install"] = "Failed to read extracted contents"
+                    completion(false)
+                    return
+                }
+
+                if let pluginDir = contents.first(where: { $0.pathExtension == "ecplugin" }) {
+                    completion(self.installFromDirectory(pluginDir))
+                } else {
+                    let directManifest = tempDir.appendingPathComponent("manifest.json")
+                    if FileManager.default.fileExists(atPath: directManifest.path) {
+                        let name = zipURL.deletingPathExtension().lastPathComponent
+                        let wrapperParent = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+                        let wrappedDir = wrapperParent.appendingPathComponent("\(name).ecplugin")
+                        do {
+                            try FileManager.default.createDirectory(at: wrapperParent, withIntermediateDirectories: true)
+                            try FileManager.default.copyItem(at: tempDir, to: wrappedDir)
+                            let result = self.installFromDirectory(wrappedDir)
+                            try? FileManager.default.removeItem(at: wrapperParent)
+                            completion(result)
+                        } catch {
+                            self.errors["install"] = "Install failed: \(error.localizedDescription)"
+                            completion(false)
+                        }
+                    } else {
+                        self.errors["install"] = "No .ecplugin bundle found in zip"
+                        completion(false)
+                    }
+                }
+            }
+        }
+        do {
+            try process.run()
+        } catch {
+            errors["install"] = "Install failed: \(error.localizedDescription)"
+            completion(false)
         }
     }
 

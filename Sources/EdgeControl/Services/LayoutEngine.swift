@@ -5,6 +5,8 @@ import Foundation
 public final class LayoutEngine: ObservableObject {
     @Published public var document: LayoutDocument
     @Published public var currentPageIndex: Int = 0
+    /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
+    @Published public var layoutVersion: Int = 0
 
     private let store: LayoutStore
 
@@ -215,8 +217,23 @@ public final class LayoutEngine: ObservableObject {
 
     // MARK: - Persistence
 
+    private var saveScheduled = false
+
     public func save() {
+        layoutVersion += 1
+        guard !saveScheduled else { return }
+        saveScheduled = true
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            self.saveScheduled = false
+            self.store.save(self.document)
+        }
+    }
+
+    /// Immediately save pending changes (called on app quit).
+    public func flushSave() {
         store.save(document)
+        saveScheduled = false
     }
 
     public func reload() {

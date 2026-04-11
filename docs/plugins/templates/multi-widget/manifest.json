@@ -1,0 +1,31 @@
+{
+  "id": "com.example.multi-widget-template",
+  "name": "Multi Widget Template",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A plugin with two widgets",
+  "icon": "square.grid.2x2",
+  "permissions": ["system-metrics", "temperature"],
+  "widgets": [
+    {
+      "id": "cpu-gauge",
+      "name": "CPU Gauge",
+      "description": "CPU usage as a progress bar",
+      "icon": "cpu",
+      "htmlFile": "gauge.html",
+      "supportedSizes": { "min": [2, 2], "max": [4, 4] },
+      "defaultSize": [3, 2],
+      "refreshInterval": 2.0
+    },
+    {
+      "id": "temp-chart",
+      "name": "Temp Chart",
+      "description": "CPU temperature history",
+      "icon": "thermometer.medium",
+      "htmlFile": "chart.html",
+      "supportedSizes": { "min": [3, 2], "max": [8, 4] },
+      "defaultSize": [4, 2],
+      "refreshInterval": 2.0
+    }
+  ]
+}

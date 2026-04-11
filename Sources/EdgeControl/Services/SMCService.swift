@@ -195,6 +195,8 @@ public final class SMCService: ObservableObject {
     private var smc: SMCConnection?
     private var timer: Timer?
     private let maxHistory = 60
+    /// Cache of SMC keys that returned valid values on first scan — avoids re-trying dead keys.
+    private var validKeyCache: [String: [String]] = [:]
 
     // Apple Silicon M-series temperature keys
     private let cpuKeys = [
@@ -263,17 +265,40 @@ public final class SMCService: ObservableObject {
         if let t = ssdTemperature { appendHistory(&ssdTempHistory, value: t) }
         if let t = memoryTemperature { appendHistory(&memTempHistory, value: t) }
 
-        // Per-core temperatures
+        // Per-core temperatures (with key caching)
         var cores: [CoreTemp] = []
-        for (key, label) in pCoreKeys {
+        let pKeys: [(String, String)]
+        if let cached = validKeyCache["pCore"] {
+            pKeys = cached.compactMap { k in pCoreKeys.first { $0.0 == k } }
+        } else {
+            pKeys = pCoreKeys
+        }
+        var workingPKeys: [String] = []
+        for (key, label) in pKeys {
             if let temp = smc.getValue(key), temp > 0, temp < 130 {
                 cores.append(CoreTemp(id: label, label: label, temperature: temp, isPerformance: true))
+                workingPKeys.append(key)
             }
         }
-        for (key, label) in eCoreKeys {
+        if validKeyCache["pCore"] == nil, !workingPKeys.isEmpty {
+            validKeyCache["pCore"] = workingPKeys
+        }
+
+        let eKeys: [(String, String)]
+        if let cached = validKeyCache["eCore"] {
+            eKeys = cached.compactMap { k in eCoreKeys.first { $0.0 == k } }
+        } else {
+            eKeys = eCoreKeys
+        }
+        var workingEKeys: [String] = []
+        for (key, label) in eKeys {
             if let temp = smc.getValue(key), temp > 0, temp < 130 {
                 cores.append(CoreTemp(id: label, label: label, temperature: temp, isPerformance: false))
+                workingEKeys.append(key)
             }
+        }
+        if validKeyCache["eCore"] == nil, !workingEKeys.isEmpty {
+            validKeyCache["eCore"] = workingEKeys
         }
         cpuCoreTemps = cores
 
@@ -292,8 +317,30 @@ public final class SMCService: ObservableObject {
     }
 
     private func averageTemp(smc: SMCConnection, keys: [String]) -> Double? {
-        let values = keys.compactMap { smc.getValue($0) }.filter { $0 > 0 && $0 < 130 }
+        let cacheKey = keys.first ?? ""
+        let keysToTry: [String]
+        if let cached = validKeyCache[cacheKey], !cached.isEmpty {
+            keysToTry = cached
+        } else {
+            keysToTry = keys
+        }
+
+        // Single pass: read values and build cache simultaneously
+        var values: [Double] = []
+        var workingKeys: [String] = []
+        for key in keysToTry {
+            if let v = smc.getValue(key), v > 0, v < 130 {
+                values.append(v)
+                workingKeys.append(key)
+            }
+        }
         guard !values.isEmpty else { return nil }
+
+        // Cache valid keys after first scan (avoids re-trying dead keys)
+        if validKeyCache[cacheKey] == nil, !workingKeys.isEmpty {
+            validKeyCache[cacheKey] = workingKeys
+        }
+
         return values.reduce(0, +) / Double(values.count)
     }
 }

@@ -1,4 +1,28 @@
 import Foundation
+import SwiftUI
+
+// MARK: - Shared Color Helpers
+
+enum PluginColorHelpers {
+    static func hexString(_ wc: WidgetColor) -> String {
+        let r = Int(wc.red * 255)
+        let g = Int(wc.green * 255)
+        let b = Int(wc.blue * 255)
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
+
+    static func colorToCSS(_ color: Color) -> String {
+        let resolved = color.resolve(in: EnvironmentValues())
+        let r = Int(resolved.red * 255)
+        let g = Int(resolved.green * 255)
+        let b = Int(resolved.blue * 255)
+        let a = resolved.opacity
+        if a < 1.0 {
+            return "rgba(\(r),\(g),\(b),\(String(format: "%.2f", a)))"
+        }
+        return String(format: "#%02X%02X%02X", r, g, b)
+    }
+}
 
 /// Collects system data and serializes it for plugin JS bridge.
 /// Only includes data the plugin has permission to access.
@@ -11,11 +35,16 @@ public final class PluginDataBridge {
     }
 
     /// Build a JSON dictionary of system data based on granted permissions.
-    public func buildDataPayload(permissions: [PluginPermission], widgetConfig: WidgetConfig) -> [String: Any] {
+    public func buildDataPayload(
+        permissions: [PluginPermission],
+        widgetConfig: WidgetConfig,
+        themeSettings: ThemeSettings,
+        widgetId: String
+    ) -> [String: Any] {
         var data: [String: Any] = [:]
 
-        // Always include theme colors
-        data["theme"] = themeData()
+        // Live theme data from ThemeSettings
+        data["theme"] = liveThemeData(ts: themeSettings, widgetId: widgetId)
 
         // Always include widget config
         data["config"] = configToDict(widgetConfig)
@@ -129,27 +158,50 @@ public final class PluginDataBridge {
                     "readBytesPerSec": model.diskIOService.readBytesPerSec,
                     "writeBytesPerSec": model.diskIOService.writeBytesPerSec
                 ]
+
+            // v2 action permissions — no data payload, handled via JS→native actions
+            case .notifications, .openURL, .clipboard, .storage, .networkAccess:
+                break
             }
         }
 
         return data
     }
 
-    private func themeData() -> [String: String] {
-        [
-            "cyan": "#00E5FF",
-            "blue": "#3380FF",
-            "purple": "#8C4DFF",
-            "green": "#33E680",
-            "yellow": "#F5C517",
-            "orange": "#FF6B36",
-            "red": "#FF2E2E",
-            "textPrimary": "rgba(255,255,255,0.92)",
-            "textSecondary": "rgba(255,255,255,0.58)",
-            "textTertiary": "rgba(255,255,255,0.38)",
-            "backgroundCard": "rgba(255,255,255,0.04)",
-            "border": "rgba(255,255,255,0.08)"
-        ]
+    // MARK: - Live Theme Data (from ThemeSettings)
+
+    /// Build the theme JS object from live ThemeSettings. Used by both data push and themeChange events.
+    func liveThemeData(ts: ThemeSettings, widgetId: String) -> [String: Any] {
+        let preset = ts.resolvedPreset
+        let wp = ts.widgetColorOverrides[widgetId]?.primary ?? WidgetColor(ThemeColor.cyan)
+        let ws = ts.widgetColorOverrides[widgetId]?.secondary
+        let wt = ts.widgetColorOverrides[widgetId]?.tertiary
+
+        var dict: [String: Any] = [:]
+        dict["accent"] = PluginColorHelpers.hexString(ts.accentColor)
+        dict["background1"] = PluginColorHelpers.colorToCSS(preset.backgroundColors.first ?? .black)
+        dict["background2"] = PluginColorHelpers.colorToCSS(preset.backgroundColors.dropFirst().first ?? .black)
+        dict["background3"] = PluginColorHelpers.colorToCSS(preset.backgroundColors.last ?? .black)
+        dict["cardBackground"] = PluginColorHelpers.colorToCSS(preset.cardBackground)
+        dict["textPrimary"] = PluginColorHelpers.colorToCSS(preset.textPrimary)
+        dict["textSecondary"] = PluginColorHelpers.colorToCSS(preset.textSecondary)
+        dict["textTertiary"] = PluginColorHelpers.colorToCSS(preset.textTertiary)
+        dict["border"] = PluginColorHelpers.colorToCSS(preset.border)
+        dict["widgetPrimary"] = PluginColorHelpers.hexString(wp)
+        dict["widgetSecondary"] = ws.map { PluginColorHelpers.hexString($0) } as Any
+        dict["widgetTertiary"] = wt.map { PluginColorHelpers.hexString($0) } as Any
+        dict["fontScale"] = ts.fontScale
+        dict["fontFamily"] = ts.fontFamily.rawValue
+        dict["fontSizeTitle"] = ts.fontSizeTitle * ts.fontScale
+        dict["fontSizeValue"] = ts.fontSizeValue * ts.fontScale
+        dict["fontSizeLabel"] = ts.fontSizeLabel * ts.fontScale
+        dict["fontSizeCaption"] = ts.fontSizeCaption * ts.fontScale
+        dict["fontSizeBody"] = ts.fontSizeBody * ts.fontScale
+        dict["fontSizeMicro"] = ts.fontSizeMicro * ts.fontScale
+        dict["widgetOpacity"] = ts.widgetOpacity
+        dict["widgetCornerRadius"] = ts.widgetCornerRadius
+        dict["widgetGap"] = ts.widgetGap
+        return dict
     }
 
     private func configToDict(_ config: WidgetConfig) -> [String: Any] {

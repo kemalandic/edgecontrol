@@ -26,7 +26,7 @@ final class DashboardWindowController {
                         .environmentObject(history)
                 )
             )
-            let created = NSWindow(contentViewController: hosting)
+            let created = KioskWindow(contentViewController: hosting)
             created.title = "EdgeControl"
             created.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             created.isReleasedWhenClosed = false
@@ -100,6 +100,8 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         model.stop()
+        // Flush any pending debounced layout save
+        layoutEngine.flushSave()
     }
 
     @objc private func quitApp(_ sender: Any?) {
@@ -124,17 +126,12 @@ enum EdgeControlExecutable {
     static func main() {
         signal(SIGPIPE, SIG_IGN)
 
-        let model = AppModel()
-        model.startIfNeeded()
-
         let store = LayoutStore()
         let layoutEngine = LayoutEngine(store: store)
 
-        // Migrate globalSettings to model if needed
-        let gs = layoutEngine.document.globalSettings
-        if let displayName = gs.selectedDisplayName {
-            model.settings.selectedDisplayName = displayName
-        }
+        // Single source of truth: GlobalSettings in layout.json
+        let model = AppModel(selectedDisplayName: layoutEngine.document.globalSettings.selectedDisplayName)
+        model.startIfNeeded()
 
         let pluginManager = PluginManager()
         pluginManager.discoverAndLoad()
@@ -144,6 +141,10 @@ enum EdgeControlExecutable {
         let registry = WidgetRegistry()
         registry.registerNativeWidgets(model: model, history: history)
         registry.registerPluginWidgets(pluginManager: pluginManager)
+
+        // Activate only services needed by widgets currently in the layout
+        let neededServices = registry.requiredServices(for: layoutEngine.document)
+        model.updateActiveServices(neededServices: neededServices)
 
         let app = NSApplication.shared
         let delegate = EdgeControlAppDelegate(

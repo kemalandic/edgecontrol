@@ -37,6 +37,12 @@ public enum WindowPlacement {
     }
 }
 
+/// Borderless window that accepts key status — required for mouse/touch event handling in kiosk mode.
+class KioskWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
 struct WindowAccessor: NSViewRepresentable {
     let callback: (NSWindow?) -> Void
 

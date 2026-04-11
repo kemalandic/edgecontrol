@@ -6,6 +6,7 @@ public final class MemoryPressureWidget: DashboardWidget {
     public let description = "Memory pressure gauge with swap usage indicator"
     public let iconName = "gauge.with.dots.needle.33percent"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(2, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

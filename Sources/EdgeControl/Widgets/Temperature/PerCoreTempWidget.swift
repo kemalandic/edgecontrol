@@ -6,6 +6,7 @@ public final class PerCoreTempWidget: DashboardWidget {
     public let description = "Individual CPU core temperatures with P/E core distinction"
     public let iconName = "cpu"
     public let category: WidgetCategory = .temperature
+    public let requiredServices: Set<ServiceKey> = [.smc]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 3), max: .size(10, 6))
     public let defaultSize = WidgetSize.size(8, 6)
 

@@ -6,6 +6,7 @@ public final class CPUCoresWidget: DashboardWidget {
     public let description = "Individual CPU core usage with per-core load bars"
     public let iconName = "cpu"
     public let category: WidgetCategory = .system
+    public let requiredServices: Set<ServiceKey> = [.metrics]
     public let supportedSizes = WidgetSizeRange(min: .size(4, 3), max: .size(10, 6))
     public let defaultSize = WidgetSize.size(8, 6)
 

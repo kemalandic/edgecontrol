@@ -7,8 +7,9 @@ struct PluginManagerView: View {
 
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var pluginManager: PluginManager
-    @State private var showInstallPanel = false
     @State private var selectedPluginId: String?
+    @State private var showRemoveConfirm = false
+    @State private var showClearStorageConfirm = false
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -24,7 +25,7 @@ struct PluginManagerView: View {
                         .foregroundStyle(.white)
                     Spacer()
                     Button {
-                        showInstallPanel = true
+                        installPlugin()
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 20))
@@ -79,6 +80,7 @@ struct PluginManagerView: View {
                     Button {
                         pluginManager.reload()
                         registry.registerPluginWidgets(pluginManager: pluginManager)
+                        cleanupOrphanedWidgets()
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "arrow.clockwise")
@@ -132,19 +134,28 @@ struct PluginManagerView: View {
             pluginManager.discoverAndLoad()
             registry.registerPluginWidgets(pluginManager: pluginManager)
         }
-        .onChange(of: showInstallPanel) { _, show in
-            if show {
-                showInstallPanel = false
-                let panel = NSOpenPanel()
-                panel.title = "Install Plugin"
-                panel.message = "Select a .ecplugin folder or .zip file"
-                panel.allowedContentTypes = [.zip, .folder]
-                panel.allowsMultipleSelection = false
-                panel.canChooseDirectories = true
-                panel.canChooseFiles = true
-                if panel.runModal() == .OK, let url = panel.url {
-                    if pluginManager.installPlugin(from: url) {
-                        registry.registerPluginWidgets(pluginManager: pluginManager)
+    }
+
+    // MARK: - Install Plugin
+
+    private func installPlugin() {
+        DispatchQueue.main.async {
+            let panel = NSOpenPanel()
+            panel.title = "Install Plugin"
+            panel.message = "Select a .ecplugin folder or .zip file"
+            panel.allowedContentTypes = [.zip, .folder]
+            panel.allowsMultipleSelection = false
+            panel.canChooseDirectories = true
+            panel.canChooseFiles = true
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                Task { @MainActor [pluginManager, registry] in
+                    pluginManager.installPlugin(from: url) { success in
+                        Task { @MainActor in
+                            if success {
+                                registry.registerPluginWidgets(pluginManager: pluginManager)
+                            }
+                        }
                     }
                 }
             }
@@ -157,9 +168,10 @@ struct PluginManagerView: View {
         let isSelected = selectedPluginId == plugin.id
 
         return HStack(spacing: 8) {
-            Circle()
-                .fill(plugin.isEnabled ? Theme.accentGreen : Theme.textTertiary)
-                .frame(width: 8, height: 8)
+            Image(systemName: plugin.manifest.icon ?? "puzzlepiece.extension")
+                .font(.system(size: 14))
+                .foregroundStyle(plugin.isEnabled ? accent : Theme.textTertiary)
+                .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(plugin.manifest.name)
@@ -190,21 +202,39 @@ struct PluginManagerView: View {
     // MARK: - Plugin Detail
 
     private func pluginDetail(_ plugin: LoadedPlugin) -> some View {
+        ScrollView(.vertical, showsIndicators: false) {
         VStack(alignment: .leading, spacing: 14) {
             // Header
             HStack {
+                Image(systemName: plugin.manifest.icon ?? "puzzlepiece.extension")
+                    .font(.system(size: 24))
+                    .foregroundStyle(accent)
+                    .frame(width: 32)
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(plugin.manifest.name)
                         .font(.system(size: 20, weight: .heavy, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("by \(plugin.manifest.author)")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(Theme.textSecondary)
+                    HStack(spacing: 8) {
+                        Text("by \(plugin.manifest.author)")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.textSecondary)
+                        if let homepage = plugin.manifest.homepage, let url = URL(string: homepage) {
+                            Button {
+                                NSWorkspace.shared.open(url)
+                            } label: {
+                                Image(systemName: "link")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { plugin.isEnabled },
-                    set: { _ in pluginManager.togglePlugin(id: plugin.id); registry.registerPluginWidgets(pluginManager: pluginManager) }
+                    set: { _ in pluginManager.togglePlugin(id: plugin.id); registry.registerPluginWidgets(pluginManager: pluginManager); cleanupOrphanedWidgets() }
                 ))
                 .toggleStyle(.switch)
                 .tint(accent)
@@ -251,6 +281,24 @@ struct PluginManagerView: View {
                 }
             }
 
+            // Allowed domains (if network-access permission)
+            if let domains = plugin.manifest.allowedDomains, !domains.isEmpty {
+                Text("ALLOWED DOMAINS")
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+
+                FlowLayout(spacing: 6) {
+                    ForEach(domains, id: \.self) { domain in
+                        Text(domain)
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(accent)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(accent.opacity(0.1), in: Capsule())
+                    }
+                }
+            }
+
             Divider().background(Theme.borderSubtle)
 
             // Widgets list
@@ -259,29 +307,67 @@ struct PluginManagerView: View {
                 .foregroundStyle(Theme.textTertiary)
 
             ForEach(plugin.manifest.widgets) { widgetDef in
-                HStack(spacing: 8) {
-                    Image(systemName: widgetDef.icon ?? "puzzlepiece")
-                        .font(.system(size: 14))
-                        .foregroundStyle(accent)
-                    Text(widgetDef.name)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Text("\(widgetDef.defaultSize[safe: 0] ?? 0)x\(widgetDef.defaultSize[safe: 1] ?? 0)")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Theme.textTertiary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: widgetDef.icon ?? "puzzlepiece")
+                            .font(.system(size: 14))
+                            .foregroundStyle(accent)
+                        Text(widgetDef.name)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Spacer()
+                        Text("\(widgetDef.defaultSize[safe: 0] ?? 0)x\(widgetDef.defaultSize[safe: 1] ?? 0)")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Theme.textTertiary)
+                    }
+                    if let desc = widgetDef.description, !desc.isEmpty {
+                        Text(desc)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                            .padding(.leading, 22)
+                    }
                 }
                 .padding(8)
                 .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
             }
 
-            Spacer()
+            Spacer(minLength: 8)
+
+            // Storage info
+            if let storageSize = pluginStorageSize(pluginId: plugin.id) {
+                HStack(spacing: 8) {
+                    Text("STORAGE")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                    Text(storageSize)
+                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    Button {
+                        showClearStorageConfirm = true
+                    } label: {
+                        Text("Clear")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Theme.accentOrange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Theme.accentOrange.opacity(0.1), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .alert("Clear Storage", isPresented: $showClearStorageConfirm) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Clear", role: .destructive) {
+                            PluginStorageService.shared.removeAll(pluginId: plugin.id)
+                        }
+                    } message: {
+                        Text("Clear all stored data for this plugin? This cannot be undone.")
+                    }
+                }
+            }
 
             // Remove button
             Button {
-                pluginManager.removePlugin(id: plugin.id)
-                registry.registerPluginWidgets(pluginManager: pluginManager)
-                selectedPluginId = nil
+                showRemoveConfirm = true
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "trash")
@@ -294,9 +380,33 @@ struct PluginManagerView: View {
                 .background(Theme.accentRed.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
             .buttonStyle(.plain)
+            .alert("Remove Plugin", isPresented: $showRemoveConfirm) {
+                Button("Cancel", role: .cancel) {}
+                Button("Remove", role: .destructive) {
+                    pluginManager.removePlugin(id: plugin.id)
+                    registry.registerPluginWidgets(pluginManager: pluginManager)
+                    cleanupOrphanedWidgets()
+                    selectedPluginId = nil
+                }
+            } message: {
+                Text("Remove \"\(plugin.manifest.name)\" and all its data? This cannot be undone.")
+            }
         }
         .padding(14)
+        }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    // MARK: - Storage Size
+
+    private func pluginStorageSize(pluginId: String) -> String? {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let storageFile = support.appendingPathComponent("EdgeControl/PluginData/\(pluginId)/storage.json")
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: storageFile.path),
+              let size = attrs[.size] as? UInt64, size > 0 else { return nil }
+        if size < 1024 { return "\(size) B" }
+        if size < 1024 * 1024 { return "\(size / 1024) KB" }
+        return String(format: "%.1f MB", Double(size) / (1024 * 1024))
     }
 
     private func infoTag(_ label: String, value: String) -> some View {
@@ -307,6 +417,19 @@ struct PluginManagerView: View {
             Text(value)
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundStyle(Theme.textSecondary)
+        }
+    }
+    // MARK: - Orphan Cleanup
+
+    /// Remove widget placements from layout that reference widget IDs no longer in the registry.
+    private func cleanupOrphanedWidgets() {
+        for pageIndex in layoutEngine.document.pages.indices {
+            let orphans = layoutEngine.document.pages[pageIndex].widgets.filter { placement in
+                registry.widget(for: placement.widgetId) == nil
+            }
+            for orphan in orphans {
+                layoutEngine.removeWidget(pageId: layoutEngine.document.pages[pageIndex].id, instanceId: orphan.instanceId)
+            }
         }
     }
 }

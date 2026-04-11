@@ -1,0 +1,21 @@
+{
+  "id": "com.example.basic-template",
+  "name": "Basic Template",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A basic single-widget plugin",
+  "icon": "star.fill",
+  "permissions": ["system-metrics"],
+  "widgets": [
+    {
+      "id": "main",
+      "name": "System Info",
+      "description": "Shows basic system info",
+      "icon": "cpu",
+      "htmlFile": "widget.html",
+      "supportedSizes": { "min": [2, 2], "max": [6, 4] },
+      "defaultSize": [3, 2],
+      "refreshInterval": 2.0
+    }
+  ]
+}

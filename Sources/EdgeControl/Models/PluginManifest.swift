@@ -12,12 +12,16 @@ public struct PluginManifest: Codable, Identifiable, Sendable {
     public let minAppVersion: String?
     public let permissions: [PluginPermission]
     public let widgets: [PluginWidgetDef]
+    public let icon: String?                 // SF Symbol for plugin list (e.g. "bolt.fill")
+    public let allowedDomains: [String]?     // Whitelisted domains for network-access permission
 
     public init(
         id: String, name: String, version: String, author: String,
         description: String? = nil, homepage: String? = nil,
         minAppVersion: String? = nil, permissions: [PluginPermission] = [],
-        widgets: [PluginWidgetDef] = []
+        widgets: [PluginWidgetDef] = [],
+        icon: String? = nil,
+        allowedDomains: [String]? = nil
     ) {
         self.id = id
         self.name = name
@@ -28,12 +32,15 @@ public struct PluginManifest: Codable, Identifiable, Sendable {
         self.minAppVersion = minAppVersion
         self.permissions = permissions
         self.widgets = widgets
+        self.icon = icon
+        self.allowedDomains = allowedDomains
     }
 }
 
 // MARK: - Plugin Permission
 
 public enum PluginPermission: String, Codable, CaseIterable, Sendable {
+    // Data permissions (v1)
     case systemMetrics = "system-metrics"  // CPU, memory, storage, uptime
     case temperature                        // CPU/GPU/SSD temps
     case network                            // Network speed, WiFi info
@@ -43,6 +50,13 @@ public enum PluginPermission: String, Codable, CaseIterable, Sendable {
     case audio                              // Audio devices, volume
     case weather                            // Weather data
     case diskIO = "disk-io"                // Disk read/write speeds
+
+    // Action/access permissions (v2)
+    case notifications                      // Send macOS notifications
+    case openURL = "open-url"              // Open URLs in default browser
+    case clipboard                          // Write to system clipboard
+    case storage                            // Persistent key-value storage
+    case networkAccess = "network-access"  // External network requests (restricted to allowedDomains)
 
     public var displayName: String {
         switch self {
@@ -55,6 +69,11 @@ public enum PluginPermission: String, Codable, CaseIterable, Sendable {
         case .audio: "Audio Devices"
         case .weather: "Weather Data"
         case .diskIO: "Disk I/O"
+        case .notifications: "Notifications"
+        case .openURL: "Open URLs"
+        case .clipboard: "Clipboard"
+        case .storage: "Persistent Storage"
+        case .networkAccess: "Network Access"
         }
     }
 
@@ -69,6 +88,11 @@ public enum PluginPermission: String, Codable, CaseIterable, Sendable {
         case .audio: "speaker.wave.2"
         case .weather: "cloud.sun"
         case .diskIO: "internaldrive"
+        case .notifications: "bell.badge"
+        case .openURL: "safari"
+        case .clipboard: "doc.on.clipboard"
+        case .storage: "externaldrive"
+        case .networkAccess: "globe"
         }
     }
 }

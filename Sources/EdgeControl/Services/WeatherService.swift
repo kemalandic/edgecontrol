@@ -96,8 +96,8 @@ public final class WeatherDataService: ObservableObject {
                 do {
                     location = try await locationManager.currentLocation()
                 } catch {
-                    // Fallback: Istanbul
-                    location = CLLocation(latitude: 41.0082, longitude: 28.9784)
+                    // Fallback: London (neutral default)
+                    location = CLLocation(latitude: 51.5074, longitude: -0.1278)
                 }
 
                 let lat = location.coordinate.latitude
@@ -209,6 +209,10 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate, @unchecked Se
            location.timestamp.timeIntervalSinceNow > -300 {
             return location
         }
+        // Cancel any pending continuation before creating a new one
+        continuation?.resume(throwing: CancellationError())
+        continuation = nil
+
         manager.requestWhenInUseAuthorization()
         return try await withCheckedThrowingContinuation { continuation in
             self.continuation = continuation

@@ -47,8 +47,7 @@ struct DashboardShell: View {
                             }
                         }
                     }
-                    .contentShape(Rectangle())
-                    .highPriorityGesture(
+                    .gesture(
                         editMode ? nil : DragGesture(minimumDistance: 60)
                             .onEnded { value in
                                 guard abs(value.translation.width) > abs(value.translation.height) else { return }
@@ -117,6 +116,11 @@ struct DashboardShell: View {
             if model.currentPage != newIndex {
                 model.currentPage = newIndex
             }
+        }
+        // Update active services when layout changes (widget add/remove)
+        .onChange(of: layoutEngine.layoutVersion) { _, _ in
+            let needed = registry.requiredServices(for: layoutEngine.document)
+            model.updateActiveServices(neededServices: needed)
         }
     }
 

@@ -249,6 +249,24 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case colorPicker
 }
 
+// MARK: - Service Key
+
+/// Identifies a system service that widgets can depend on.
+/// Used for lazy service activation — services only run when a widget needs them.
+public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
+    case metrics        // SystemMetricsService
+    case smc            // SMCService (temperatures)
+    case network        // NetworkMonitorService
+    case wifi           // WiFiService
+    case bluetooth      // BluetoothService
+    case nowPlaying     // NowPlayingService
+    case audio          // AudioService
+    case weather        // WeatherService
+    case diskIO         // DiskIOService
+    case process        // ProcessMonitorService
+    case github         // GitHubService
+}
+
 // MARK: - Dashboard Widget Protocol
 
 public protocol DashboardWidget: Identifiable where ID == String {
@@ -261,8 +279,9 @@ public protocol DashboardWidget: Identifiable where ID == String {
     var defaultSize: WidgetSize { get }
     var isConfigurable: Bool { get }
     var configSchema: [ConfigSchemaEntry] { get }
-
     var defaultColors: WidgetColors { get }
+    /// Services this widget requires. Empty = self-contained (no external data).
+    var requiredServices: Set<ServiceKey> { get }
 
     @MainActor @ViewBuilder
     func body(size: WidgetSize, config: WidgetConfig) -> any View
@@ -278,6 +297,8 @@ extension DashboardWidget {
     public var defaultColors: WidgetColors {
         WidgetColors(primary: .cyan)
     }
+
+    public var requiredServices: Set<ServiceKey> { [] }
 
     public func settingsBody(config: Binding<WidgetConfig>) -> any View {
         EmptyView()

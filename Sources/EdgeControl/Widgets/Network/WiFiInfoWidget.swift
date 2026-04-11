@@ -6,6 +6,7 @@ public final class WiFiInfoWidget: DashboardWidget {
     public let description = "WiFi connection status, SSID, signal strength, and speed"
     public let iconName = "wifi"
     public let category: WidgetCategory = .network
+    public let requiredServices: Set<ServiceKey> = [.wifi]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

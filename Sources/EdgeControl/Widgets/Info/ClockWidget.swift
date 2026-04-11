@@ -75,7 +75,7 @@ private struct ClockContainer: View {
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
-    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
     var primary: Color { Theme.widgetPrimary("clock", ts: ts, default: .cyan) }
     var cal: Calendar { Calendar.current }
@@ -114,11 +114,17 @@ private struct ClockContainer: View {
     // MARK: - Date Helpers
 
     var shortDate: String {
-        let f = DateFormatter(); f.dateFormat = "EEE, d MMM"; return f.string(from: now)
+        Self.shortDateFormatter.string(from: now)
     }
     var fullDate: String {
-        let f = DateFormatter(); f.dateFormat = "EEEE, d MMMM yyyy"; return f.string(from: now)
+        Self.fullDateFormatter.string(from: now)
     }
+    private static let shortDateFormatter: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "EEE, d MMM"; return f
+    }()
+    private static let fullDateFormatter: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "EEEE, d MMMM yyyy"; return f
+    }()
     var dayNames: [String] { ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

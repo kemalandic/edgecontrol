@@ -6,6 +6,7 @@ public final class AudioDevicesWidget: DashboardWidget {
     public let description = "Current audio output device with volume control"
     public let iconName = "speaker.wave.2"
     public let category: WidgetCategory = .media
+    public let requiredServices: Set<ServiceKey> = [.audio]
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 

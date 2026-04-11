@@ -1,0 +1,97 @@
+/* Fully theme-aware styles using EdgeControl CSS variables */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    padding: 14px;
+    background: transparent;
+    font-family: var(--ec-font-family);
+    color: var(--ec-text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: var(--ec-font-caption);
+    font-weight: 700;
+    color: var(--ec-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge {
+    font-size: var(--ec-font-micro);
+    font-weight: 600;
+    color: var(--ec-widget-primary);
+    background: var(--ec-card-bg);
+    border: 1px solid var(--ec-border);
+    border-radius: calc(var(--ec-corner-radius) * 0.5);
+    padding: 2px 8px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ec-widget-gap);
+    flex: 1;
+}
+
+.stat-card {
+    background: var(--ec-card-bg);
+    border: 1px solid var(--ec-border);
+    border-radius: var(--ec-corner-radius);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-label {
+    font-size: var(--ec-font-micro);
+    font-weight: 700;
+    color: var(--ec-text-tertiary);
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: var(--ec-font-value);
+    font-weight: bold;
+    color: var(--ec-widget-primary);
+    margin-top: 2px;
+}
+
+.stat-card:nth-child(2) .stat-value {
+    color: var(--ec-widget-secondary, var(--ec-accent));
+}
+
+.stat-detail {
+    font-size: var(--ec-font-micro);
+    color: var(--ec-text-secondary);
+    margin-top: 2px;
+}
+
+.bar {
+    width: 100%;
+    height: 4px;
+    background: var(--ec-border);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.bar-fill.primary { background: var(--ec-widget-primary); }
+.bar-fill.accent { background: var(--ec-accent); }

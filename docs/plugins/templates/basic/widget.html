@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    padding: 12px;
+    background: transparent;
+    font-family: var(--ec-font-family);
+    color: var(--ec-text-primary);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .label {
+    font-size: var(--ec-font-caption);
+    font-weight: 700;
+    color: var(--ec-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .value {
+    font-size: var(--ec-font-value);
+    font-weight: bold;
+    color: var(--ec-widget-primary);
+    margin-top: 4px;
+  }
+  .detail {
+    font-size: var(--ec-font-label);
+    color: var(--ec-text-secondary);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="label">CPU USAGE</div>
+  <div class="value" id="value">--</div>
+  <div class="detail" id="detail"></div>
+
+  <script>
+    edgecontrol.on('update', function(data) {
+      if (!data.system) return;
+      document.getElementById('value').textContent =
+        Math.round(data.system.cpuPercent) + '%';
+      document.getElementById('detail').textContent =
+        data.system.cpuBrand;
+    });
+  </script>
+</body>
+</html>
