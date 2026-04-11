@@ -28,7 +28,7 @@ EdgeControl turns any external display into a fully customizable system dashboar
 
 **Network (3)** — Network Stats (up/down speeds), WiFi Info (SSID, signal, channel), Bluetooth Devices
 
-**Media (2)** — Now Playing (controls, artwork, progress), Audio Devices (output, volume)
+**Media (2)** — Now Playing (Safari, Chrome, Edge, Spotify, Apple Music — controls, artwork, progress), Audio Devices (output, volume)
 
 **Info (5)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase
 
