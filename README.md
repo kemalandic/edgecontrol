@@ -4,9 +4,9 @@
 [![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**A native macOS dashboard for the CORSAIR XENEON EDGE touchscreen display.**
+**A native macOS system dashboard that turns any display into a fully customizable monitoring station.**
 
-Built from scratch in Swift & SwiftUI — no third-party dependencies. Designed specifically for the 2560x720 form factor with full touch support.
+Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on any screen: ultrawide monitors, iPads via Sidecar, vertical displays, TVs, or the CORSAIR XENEON EDGE. Includes macOS desktop widgets and full touch support.
 
 ![EdgeControl Dashboard](screenshots/dashboard.png)
 
@@ -14,11 +14,11 @@ Built from scratch in Swift & SwiftUI — no third-party dependencies. Designed 
 
 I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
 
-What started as a basic system monitor has grown into a fully modular dashboard with 25 widgets, a dynamic grid layout system, complete theme customization, and plugin support. This isn't a concept or a demo; it's something I use every single day, and it keeps getting better.
+What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 25 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. It's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
-EdgeControl turns any external display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a 20x6 grid, resize them, and configure everything from colors to fonts.
+EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor.
 
 ### 25 Built-in Widgets
 
@@ -36,10 +36,12 @@ EdgeControl turns any external display into a fully customizable system dashboar
 
 ### Dynamic Grid Layout
 
-- 20x6 grid (2560x720) — drag to move, corner handles to resize
+- Grid adapts to any screen: 6x4 to 24x12 cells, ~120px per cell
+- Works on any display — XENEON EDGE (20x6), 1080p monitor (16x9), iPad Sidecar (10x7), vertical screens, TVs
+- Kiosk mode (full-screen borderless) or window mode (resizable)
+- Drag to move, corner handles to resize, collision detection
 - Unlimited pages with swipe navigation
 - Each widget adapts its layout to its size (compact, bar, chart, full)
-- Edit mode with collision detection and visual guides
 
 ### Full Theme Customization
 
@@ -53,6 +55,18 @@ EdgeControl turns any external display into a fully customizable system dashboar
 ### Clock Widget — 10 Themes
 
 Digital, Analog, LCD Retro, Minimal, Split, Rings, Day Bar, Neon, Binary, Dot Matrix
+
+### macOS Desktop Widgets
+
+EdgeControl provides native macOS desktop widgets via WidgetKit — add system metrics directly to your desktop without opening the app.
+
+- **System Monitor** — CPU and memory gauges (small/medium)
+- **Temperature** — CPU, GPU, SSD temps with color coding (small/medium)
+- **Disk I/O** — Read/write speeds (small/medium)
+- **Network** — Upload/download speeds (small/medium)
+- **WiFi Info** — SSID, signal strength, channel (small/medium)
+- **CI/CD** — GitHub Actions run status (small/medium/large)
+- **Plugin Widget** — Any plugin with `desktopWidget` support rendered as a desktop widget
 
 ### Plugin System
 
@@ -82,7 +96,7 @@ Extend EdgeControl with custom HTML/JS widgets:
 
 Download the latest `.dmg` from [**Releases**](https://github.com/kemalandic/edgecontrol/releases), open it, and drag EdgeControl to Applications.
 
-> Requires macOS 14.0 or later. Works on any display but optimized for the XENEON EDGE (2560x720).
+> Requires macOS 14.0 or later. Works on any display — the grid adapts automatically to your screen resolution.
 
 ## Build from Source
 
@@ -96,19 +110,19 @@ open EdgeControl.xcodeproj
 
 ## Touch Support
 
-EdgeControl has native HID touch input support for the XENEON EDGE touchscreen. Every button and control works with both mouse clicks and direct touch taps. The touch system auto-calibrates to your display positioning.
+EdgeControl has native HID touch input support for touchscreen displays (including the CORSAIR XENEON EDGE). Every button and control works with both mouse clicks and direct touch taps. The touch system auto-calibrates to your display positioning. On non-touch displays, all controls work with standard mouse input.
 
 ## Architecture
 
 ```
 Sources/EdgeControl/
 ├── App/            # Entry point, window placement
-├── Models/         # WidgetProtocol, LayoutConfig, ThemeSettings, PluginManifest, SystemMetrics
-├── Services/       # AppModel, LayoutEngine, WidgetRegistry, PluginManager, PluginDataBridge, PluginStorageService
+├── Models/         # WidgetProtocol, DynamicGrid, LayoutConfig, ThemeSettings, PluginManifest, WidgetData
+├── Services/       # AppModel, LayoutEngine, WidgetRegistry, PluginManager, WidgetDataBridge, PluginWidgetRenderer
 ├── UI/
 │   ├── Components/ # RadialGauge, HistoryGraph, ThemeEnvironment, WidgetHeader
 │   ├── Settings/   # 6-tab settings window (Pages, Widgets, Theme, Plugins, Display, General)
-│   ├── DashboardShell.swift  # Main dashboard container
+│   ├── DashboardShell.swift  # Main dashboard container with dynamic grid
 │   └── GridPageView.swift    # Widget grid renderer with edit mode
 └── Widgets/
     ├── System/       # CPU, Memory, Storage, Pressure, Cores, DiskIO, ProcessList
@@ -118,6 +132,10 @@ Sources/EdgeControl/
     ├── Info/         # Weather, Clock, WorldClocks, DayProgress, MoonPhase
     ├── DevTools/     # CICDRuns
     └── Plugin/       # PluginWebWidget (WKWebView renderer + JS SDK)
+
+Sources/EdgeControlWidgets/   # macOS Desktop Widget Extension (WidgetKit)
+├── Providers/     # TimelineProviders for each widget type
+└── Views/         # SwiftUI widget views + shared styles
 ```
 
 ## Permissions

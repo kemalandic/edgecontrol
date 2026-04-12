@@ -146,7 +146,9 @@ private struct PluginWebWidgetView: View {
             size: size,
             config: config,
             model: model,
-            themeSettings: ts
+            themeSettings: ts,
+            cellWidth: layoutEngine.currentGrid.cellWidth,
+            cellHeight: layoutEngine.currentGrid.cellHeight
         )
         .widgetCard()
     }
@@ -160,9 +162,11 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
     let config: WidgetConfig
     let model: AppModel
     let themeSettings: ThemeSettings
+    let cellWidth: CGFloat
+    let cellHeight: CGFloat
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(widget: widget, model: model)
+        Coordinator(widget: widget, model: model, cellWidth: cellWidth, cellHeight: cellHeight)
     }
 
     func makeNSView(context: Context) -> WKWebView {
@@ -185,8 +189,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
         userContentController.addUserScript(cssScript)
 
         // Inject initial widget size + theme data so they're available at ready time
-        let pixelW = size.width * Int(GridConstants.cellWidth)
-        let pixelH = size.height * Int(GridConstants.cellHeight)
+        let pixelW = size.width * Int(cellWidth)
+        let pixelH = size.height * Int(cellHeight)
 
         let dataBridge = PluginDataBridge(model: model)
         let themeDict = dataBridge.liveThemeData(ts: themeSettings, widgetId: widget.widgetId)
@@ -585,6 +589,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
     class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         let widget: PluginWebWidget
         let model: AppModel
+        var cellWidth: CGFloat
+        var cellHeight: CGFloat
         weak var webView: WKWebView?
         private var timer: Timer?
         private lazy var dataBridge = PluginDataBridge(model: model)
@@ -594,9 +600,11 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
         var isVisible = true
         private var isCrashed = false
 
-        init(widget: PluginWebWidget, model: AppModel) {
+        init(widget: PluginWebWidget, model: AppModel, cellWidth: CGFloat, cellHeight: CGFloat) {
             self.widget = widget
             self.model = model
+            self.cellWidth = cellWidth
+            self.cellHeight = cellHeight
         }
 
         func cleanup() {
@@ -652,8 +660,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
         func pushResize(size: WidgetSize) {
             guard !isCrashed else { return }
-            let pixelW = size.width * Int(GridConstants.cellWidth)
-            let pixelH = size.height * Int(GridConstants.cellHeight)
+            let pixelW = size.width * Int(cellWidth)
+            let pixelH = size.height * Int(cellHeight)
             let js = "window.edgecontrol._onResize({width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)});"
             webView?.evaluateJavaScript(js)
         }
@@ -676,8 +684,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
         private func pushWidgetSizeUpdate(size: WidgetSize) {
             guard !isCrashed else { return }
-            let pixelW = size.width * Int(GridConstants.cellWidth)
-            let pixelH = size.height * Int(GridConstants.cellHeight)
+            let pixelW = size.width * Int(cellWidth)
+            let pixelH = size.height * Int(cellHeight)
             let js = "window.edgecontrol._widgetSize = {width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)};"
             webView?.evaluateJavaScript(js)
         }

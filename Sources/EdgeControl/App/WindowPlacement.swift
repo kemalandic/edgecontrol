@@ -5,27 +5,23 @@ public enum WindowPlacement {
     @MainActor public static func configure(
         _ window: NSWindow?,
         display: DisplayDescriptor?,
-        kioskMode: Bool,
-        isDevKit: Bool
+        kioskMode: Bool
     ) {
         guard let window else { return }
 
-        if isDevKit {
+        if !kioskMode {
+            // Window mode: standard resizable window
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.level = .normal
             window.collectionBehavior = []
             return
         }
 
-        guard kioskMode else { return }
-
+        // Kiosk mode: full-screen borderless on selected display
         let targetScreen = NSScreen.screens.first { screen in
             guard let displayName = display?.name else { return false }
             return screen.localizedName == displayName
-        } ?? NSScreen.screens.first { screen in
-            let name = screen.localizedName.lowercased()
-            return name.contains("xeneon")
-        }
+        } ?? NSScreen.screens.first { $0 != NSScreen.main } ?? NSScreen.main
 
         guard let screen = targetScreen else { return }
 

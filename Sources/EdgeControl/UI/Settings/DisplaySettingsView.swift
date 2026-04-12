@@ -30,7 +30,7 @@ struct DisplaySettingsView: View {
                         model.refreshDisplays()
                     } label: {
                         HStack(spacing: 10) {
-                            Image(systemName: display.isXenonEdge ? "rectangle.split.1x2" : "display")
+                            Image(systemName: "display")
                                 .font(.system(size: 16))
                                 .foregroundStyle(isSelected ? accent : Theme.textTertiary)
 

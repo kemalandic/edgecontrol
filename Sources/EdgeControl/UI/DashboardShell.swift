@@ -15,7 +15,17 @@ struct DashboardShell: View {
 
     var body: some View {
         GeometryReader { geo in
+            let grid = DynamicGrid.calculate(width: geo.size.width, height: geo.size.height)
+
             ZStack {
+                // Sync dynamic grid to LayoutEngine
+                Color.clear.onAppear {
+                    layoutEngine.currentGrid = grid
+                }
+                .onChange(of: grid) { _, newGrid in
+                    layoutEngine.currentGrid = newGrid
+                }
+                .frame(width: 0, height: 0)
                 // Background gradient — themed
                 LinearGradient(
                     colors: Theme.backgroundColors(layoutEngine.document.globalSettings.theme),
@@ -24,7 +34,19 @@ struct DashboardShell: View {
                 )
                 .ignoresSafeArea()
 
-                if model.systemMetrics != nil {
+                if geo.size.width < DynamicGrid.minimumWidth || geo.size.height < DynamicGrid.minimumHeight {
+                    VStack(spacing: 12) {
+                        Image(systemName: "rectangle.expand.vertical")
+                            .font(.system(size: 40))
+                            .foregroundStyle(.secondary)
+                        Text("Display too small")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+                        Text("Minimum \(Int(DynamicGrid.minimumWidth))×\(Int(DynamicGrid.minimumHeight)) points required")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                } else if model.systemMetrics != nil {
                     // Current page content
                     let pages = layoutEngine.sortedPages
 
@@ -34,8 +56,8 @@ struct DashboardShell: View {
                                 GridPageView(
                                     page: page,
                                     registry: registry,
-                                    gridColumns: layoutEngine.document.grid.columns,
-                                    gridRows: layoutEngine.document.grid.rows,
+                                    gridColumns: grid.columns,
+                                    gridRows: grid.rows,
                                     editMode: $editMode,
                                     layoutEngine: layoutEngine
                                 )
@@ -92,8 +114,7 @@ struct DashboardShell: View {
             WindowPlacement.configure(
                 window,
                 display: model.selectedDisplay,
-                kioskMode: layoutEngine.document.globalSettings.kioskMode,
-                isDevKit: model.isDevKitMode
+                kioskMode: layoutEngine.document.globalSettings.kioskMode
             )
         })
         .onAppear {

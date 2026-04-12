@@ -3,8 +3,6 @@ import Foundation
 
 @MainActor
 public final class DisplayManager {
-    private let xeneonNames = ["xeneon", "xeneon edge"]
-
     public func availableDisplays() -> [DisplayDescriptor] {
         NSScreen.screens.map { screen in
             let id = screen.displayIdentifier
@@ -22,22 +20,11 @@ public final class DisplayManager {
         }
     }
 
-    public func xeneonScreen() -> NSScreen? {
-        NSScreen.screens.first { screen in
-            let name = screen.localizedName.lowercased()
-            if xeneonNames.contains(where: { name.contains($0) }) { return true }
-            let frame = screen.frame
-            let scale = screen.backingScaleFactor
-            let w = Int(frame.width * scale)
-            let h = Int(frame.height * scale)
-            return w == 2560 && h == 720
-        }
-    }
-
     public func selectedScreen(name: String?) -> NSScreen? {
-        if let name {
-            return NSScreen.screens.first { $0.localizedName == name }
+        guard let name else {
+            // Fallback: prefer first non-main display, then main
+            return NSScreen.screens.first { $0 != NSScreen.main } ?? NSScreen.main
         }
-        return xeneonScreen()
+        return NSScreen.screens.first { $0.localizedName == name }
     }
 }

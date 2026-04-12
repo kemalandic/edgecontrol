@@ -14,6 +14,7 @@ public struct PluginManifest: Codable, Identifiable, Sendable {
     public let widgets: [PluginWidgetDef]
     public let icon: String?                 // SF Symbol for plugin list (e.g. "bolt.fill")
     public let allowedDomains: [String]?     // Whitelisted domains for network-access permission
+    public let desktopWidget: PluginDesktopWidgetConfig?  // macOS desktop widget support
 
     public init(
         id: String, name: String, version: String, author: String,
@@ -21,7 +22,8 @@ public struct PluginManifest: Codable, Identifiable, Sendable {
         minAppVersion: String? = nil, permissions: [PluginPermission] = [],
         widgets: [PluginWidgetDef] = [],
         icon: String? = nil,
-        allowedDomains: [String]? = nil
+        allowedDomains: [String]? = nil,
+        desktopWidget: PluginDesktopWidgetConfig? = nil
     ) {
         self.id = id
         self.name = name
@@ -34,6 +36,7 @@ public struct PluginManifest: Codable, Identifiable, Sendable {
         self.widgets = widgets
         self.icon = icon
         self.allowedDomains = allowedDomains
+        self.desktopWidget = desktopWidget
     }
 }
 
@@ -174,6 +177,25 @@ public struct LoadedPlugin: Identifiable, Sendable {
     public var isEnabled: Bool
 
     public var id: String { manifest.id }
+}
+
+// MARK: - Desktop Widget Config
+
+public struct PluginDesktopWidgetConfig: Codable, Sendable {
+    public let enabled: Bool
+    public let sizes: [String]?          // ["small", "medium", "large"] — nil = all
+    public let refreshInterval: Double?  // seconds between snapshots, default 300 (5 min)
+
+    public var effectiveRefreshInterval: Double {
+        max(60, refreshInterval ?? 300) // minimum 1 minute
+    }
+
+    /// Convert size strings to WidgetKit family names
+    public var supportedFamilies: Set<String> {
+        let all: Set<String> = ["small", "medium", "large"]
+        guard let sizes else { return all }
+        return all.intersection(sizes.map { $0.lowercased() })
+    }
 }
 
 // MARK: - Safe Array Subscript

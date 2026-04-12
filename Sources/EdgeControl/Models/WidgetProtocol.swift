@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Grid Constants
+// MARK: - Grid Constants (legacy defaults)
 
 public enum GridConstants {
     public static let columns = 20
@@ -9,6 +9,55 @@ public enum GridConstants {
     public static let cellHeight: CGFloat = 120
     public static let gap: CGFloat = 8
     public static let padding: CGFloat = 16
+}
+
+// MARK: - Dynamic Grid
+
+/// Dynamically computed grid based on available screen/window size.
+/// Replaces hardcoded GridConstants for grid dimensions.
+public struct DynamicGrid: Equatable, Sendable {
+    public let columns: Int
+    public let rows: Int
+    public let cellWidth: CGFloat
+    public let cellHeight: CGFloat
+    public let totalWidth: CGFloat
+    public let totalHeight: CGFloat
+
+    private static let targetCellSize: CGFloat = 120
+    private static let minCellSize: CGFloat = 100
+    private static let maxCellSize: CGFloat = 160
+    private static let minColumns = 6
+    private static let maxColumns = 24
+    private static let minRows = 4
+    private static let maxRows = 12
+
+    /// Minimum screen size to display a grid
+    public static let minimumWidth: CGFloat = CGFloat(minColumns) * minCellSize   // 600
+    public static let minimumHeight: CGFloat = CGFloat(minRows) * minCellSize     // 400
+
+    /// Calculate grid dimensions for a given available size.
+    public static func calculate(width: CGFloat, height: CGFloat) -> DynamicGrid {
+        let rawCols = Int(width / targetCellSize)
+        let rawRows = Int(height / targetCellSize)
+
+        let cols = min(max(rawCols, minColumns), maxColumns)
+        let rows = min(max(rawRows, minRows), maxRows)
+
+        let cellW = width / CGFloat(cols)
+        let cellH = height / CGFloat(rows)
+
+        return DynamicGrid(
+            columns: cols,
+            rows: rows,
+            cellWidth: cellW,
+            cellHeight: cellH,
+            totalWidth: width,
+            totalHeight: height
+        )
+    }
+
+    /// Default grid for XENEON EDGE (2560x720)
+    public static let xeneonDefault = DynamicGrid.calculate(width: 2560, height: 720)
 }
 
 // MARK: - Widget Size

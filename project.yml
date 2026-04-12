@@ -31,6 +31,33 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
         GENERATE_INFOPLIST_FILE: false
         SWIFT_STRICT_CONCURRENCY: complete
+    dependencies:
+      - target: EdgeControlWidgets
+
+  EdgeControlWidgets:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Sources/EdgeControlWidgets
+      - path: Sources/EdgeControl/Models/WidgetData.swift
+        createIntermediateGroups: false
+    info:
+      path: Sources/EdgeControlWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: EdgeControl Widgets
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol.widgets
+        PRODUCT_NAME: EdgeControlWidgets
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: CNRZ47Y629
+        SWIFT_STRICT_CONCURRENCY: complete
+        CODE_SIGN_ENTITLEMENTS: Sources/EdgeControlWidgets/EdgeControlWidgets.entitlements
+        SKIP_INSTALL: true
+        ENABLE_HARDENED_RUNTIME: true
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     dependencies: []
 
   EdgeControlTests:

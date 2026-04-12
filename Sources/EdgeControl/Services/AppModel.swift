@@ -9,7 +9,6 @@ public final class AppModel: ObservableObject {
     @Published public var selectedDisplay: DisplayDescriptor?
     @Published public var selectedDisplayName: String?
     @Published public var systemMetrics: SystemMetrics?
-    @Published public var isDevKitMode = false
     @Published public var currentPage: Int = 0
     public var metricsPerCore: [CoreUsage] { metricsService.perCoreUsage }
 
@@ -24,7 +23,8 @@ public final class AppModel: ObservableObject {
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
     public let githubService = GitHubService()
-
+    public var widgetDataBridge: WidgetDataBridge?
+    public var pluginWidgetRenderer: PluginWidgetRenderer?
     private let displayManager: DisplayManager
     public let metricsService: SystemMetricsService
     private var hasStarted = false
@@ -63,9 +63,7 @@ public final class AppModel: ObservableObject {
 
         // Always start metrics (needed for system health) and touch (needed for input)
         metricsService.start()
-        if !isDevKitMode {
-            touchService.start()
-        }
+        touchService.start()
 
         // React to touch swipes for page changes
         touchService.$swipeDirection
@@ -150,18 +148,14 @@ public final class AppModel: ObservableObject {
 
     public func refreshDisplays() {
         availableDisplays = displayManager.availableDisplays()
-        let xeneonScreen = displayManager.xeneonScreen()
-        isDevKitMode = xeneonScreen == nil
 
-        // Always prefer Xeneon Edge when connected
-        if let xeneon = xeneonScreen {
-            let xeneonName = xeneon.localizedName
-            selectedDisplay = availableDisplays.first { $0.name == xeneonName }
-            selectedDisplayName = xeneonName
-        } else {
-            let selected = displayManager.selectedScreen(name: selectedDisplayName)
-            selectedDisplay = availableDisplays.first { $0.name == selected?.localizedName }
+        // Select display: prefer saved name, fallback to first non-main, then main
+        let selected = displayManager.selectedScreen(name: selectedDisplayName)
+        selectedDisplay = availableDisplays.first { $0.name == selected?.localizedName }
+        if selectedDisplay == nil {
+            selectedDisplay = availableDisplays.first
         }
+        selectedDisplayName = selectedDisplay?.name
     }
 }
 

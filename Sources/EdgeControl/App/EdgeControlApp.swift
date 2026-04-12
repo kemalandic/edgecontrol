@@ -48,8 +48,7 @@ final class DashboardWindowController {
         WindowPlacement.configure(
             dashboardWindow,
             display: model.selectedDisplay,
-            kioskMode: layoutEngine.document.globalSettings.kioskMode,
-            isDevKit: model.isDevKitMode
+            kioskMode: layoutEngine.document.globalSettings.kioskMode
         )
 
         dashboardWindow.orderFrontRegardless()
@@ -99,6 +98,7 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        model.widgetDataBridge?.flush()
         model.stop()
         // Flush any pending debounced layout save
         layoutEngine.flushSave()
@@ -145,6 +145,16 @@ enum EdgeControlExecutable {
         // Activate only services needed by widgets currently in the layout
         let neededServices = registry.requiredServices(for: layoutEngine.document)
         model.updateActiveServices(neededServices: neededServices)
+
+        // Bridge: write metrics to shared container for desktop widgets
+        let widgetBridge = WidgetDataBridge(model: model)
+        widgetBridge.start()
+        model.widgetDataBridge = widgetBridge
+
+        // Plugin desktop widget renderer: headless WKWebView snapshots
+        let pluginRenderer = PluginWidgetRenderer(pluginManager: pluginManager, model: model)
+        pluginRenderer.start()
+        model.pluginWidgetRenderer = pluginRenderer
 
         let app = NSApplication.shared
         let delegate = EdgeControlAppDelegate(

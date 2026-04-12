@@ -7,6 +7,8 @@ public final class LayoutEngine: ObservableObject {
     @Published public var currentPageIndex: Int = 0
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
+    /// Current dynamic grid — updated from DashboardShell's GeometryReader.
+    @Published public var currentGrid: DynamicGrid = .xeneonDefault
 
     private let store: LayoutStore
 
@@ -80,7 +82,7 @@ public final class LayoutEngine: ObservableObject {
         guard let pageIdx = pageIndex(for: pageId) else { return nil }
 
         let rect = GridRect(col: col, row: row, width: width, height: height)
-        guard rect.fitsInGrid(columns: document.grid.columns, rows: document.grid.rows) else { return nil }
+        guard rect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return nil }
 
         let existing = document.pages[pageIdx].widgets
         guard !existing.contains(where: { $0.gridRect.intersects(rect) }) else { return nil }
@@ -114,7 +116,7 @@ public final class LayoutEngine: ObservableObject {
         let widget = document.pages[pageIdx].widgets[widgetIdx]
         let newRect = GridRect(col: toCol, row: toRow, width: widget.width, height: widget.height)
 
-        guard newRect.fitsInGrid(columns: document.grid.columns, rows: document.grid.rows) else { return false }
+        guard newRect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return false }
 
         // Check collision with all other widgets on the page
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
@@ -135,7 +137,7 @@ public final class LayoutEngine: ObservableObject {
         let widget = document.pages[pageIdx].widgets[widgetIdx]
         let newRect = GridRect(col: widget.col, row: widget.row, width: newWidth, height: newHeight)
 
-        guard newRect.fitsInGrid(columns: document.grid.columns, rows: document.grid.rows) else { return false }
+        guard newRect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return false }
 
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
         guard !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
@@ -174,8 +176,8 @@ public final class LayoutEngine: ObservableObject {
     public func availablePositions(pageId: String, width: Int, height: Int) -> [GridCell] {
         let occupied = occupiedCells(pageId: pageId)
         var positions: [GridCell] = []
-        let cols = document.grid.columns
-        let rows = document.grid.rows
+        let cols = currentGrid.columns
+        let rows = currentGrid.rows
 
         for c in 0...(cols - width) {
             for r in 0...(rows - height) {
@@ -202,7 +204,7 @@ public final class LayoutEngine: ObservableObject {
         guard let pageIdx = pageIndex(for: pageId) else { return false }
 
         let rect = GridRect(col: col, row: row, width: width, height: height)
-        guard rect.fitsInGrid(columns: document.grid.columns, rows: document.grid.rows) else { return false }
+        guard rect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return false }
 
         let widgets = document.pages[pageIdx].widgets.filter { $0.instanceId != excludeInstanceId }
         return !widgets.contains(where: { $0.gridRect.intersects(rect) })
