@@ -4,6 +4,8 @@
 [![Swift](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+> If you find EdgeControl useful, consider giving it a star — it helps the project show up in search results and reach platforms like Homebrew. No ads, no premium tiers, just a tool I built for myself and wanted to share.
+
 **A native macOS system dashboard that turns any display into a fully customizable monitoring station.**
 
 Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on any screen: ultrawide monitors, iPads via Sidecar, vertical displays, TVs, or the CORSAIR XENEON EDGE. Includes macOS desktop widgets and full touch support.
@@ -151,6 +153,15 @@ Sources/EdgeControlWidgets/   # macOS Desktop Widget Extension (WidgetKit)
 
 - **Location** — weather data (Open-Meteo, free API)
 - **Bluetooth** — connected device list
+
+## Community & Support
+
+- **Questions & Help** — [Discussions (Q&A)](https://github.com/kemalandic/edgecontrol/discussions/categories/q-a)
+- **Feature Ideas** — [Discussions (Ideas)](https://github.com/kemalandic/edgecontrol/discussions/categories/ideas)
+- **Bug Reports** — [Issues](https://github.com/kemalandic/edgecontrol/issues)
+- **Show Your Setup** — [Discussions (Show and Tell)](https://github.com/kemalandic/edgecontrol/discussions/categories/show-and-tell)
+
+Contributions welcome — see [Build from Source](#build-from-source) to get started.
 
 ## License
 
