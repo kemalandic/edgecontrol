@@ -94,6 +94,15 @@ Extend EdgeControl with custom HTML/JS widgets:
 
 ## Install
 
+### Homebrew
+
+```bash
+brew tap kemalandic/edgecontrol
+brew install --cask edgecontrol
+```
+
+### Manual
+
 Download the latest `.dmg` from [**Releases**](https://github.com/kemalandic/edgecontrol/releases), open it, and drag EdgeControl to Applications.
 
 > Requires macOS 14.0 or later. Works on any display — the grid adapts automatically to your screen resolution.
