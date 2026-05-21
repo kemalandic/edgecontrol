@@ -119,6 +119,14 @@ public struct GlobalSettings: Codable, Sendable {
     public var kioskMode: Bool
     public var launchAtLogin: Bool
     public var debugMode: Bool
+    /// When true, the kiosk window NEVER falls back to NSScreen.main if
+    /// the configured selectedDisplayName isn't currently enumerated
+    /// (e.g. the secondary display is asleep, unplugged, or still
+    /// re-handshaking after wake). Instead the window stays parked
+    /// off-screen until the target reappears. Default false preserves
+    /// the existing fallback-to-non-main-then-main chain in
+    /// WindowPlacement.configure.
+    public var strictMonitorAffinity: Bool
     public var theme: ThemeSettings
 
     public init(
@@ -126,12 +134,43 @@ public struct GlobalSettings: Codable, Sendable {
         kioskMode: Bool = true,
         launchAtLogin: Bool = false,
         debugMode: Bool = false,
+        strictMonitorAffinity: Bool = false,
         theme: ThemeSettings = ThemeSettings()
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
         self.launchAtLogin = launchAtLogin
         self.debugMode = debugMode
+        self.strictMonitorAffinity = strictMonitorAffinity
         self.theme = theme
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case selectedDisplayName, kioskMode, launchAtLogin, debugMode
+        case strictMonitorAffinity, theme
+    }
+
+    // Custom Decodable so existing layout.json files (which don't carry
+    // strictMonitorAffinity) keep decoding. Synthesized Decodable would
+    // throw on a missing key even with a struct-field default. Other
+    // fields keep their normal decoding behavior.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        selectedDisplayName = try c.decodeIfPresent(String.self, forKey: .selectedDisplayName)
+        kioskMode = try c.decodeIfPresent(Bool.self, forKey: .kioskMode) ?? true
+        launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
+        debugMode = try c.decodeIfPresent(Bool.self, forKey: .debugMode) ?? false
+        strictMonitorAffinity = try c.decodeIfPresent(Bool.self, forKey: .strictMonitorAffinity) ?? false
+        theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(selectedDisplayName, forKey: .selectedDisplayName)
+        try c.encode(kioskMode, forKey: .kioskMode)
+        try c.encode(launchAtLogin, forKey: .launchAtLogin)
+        try c.encode(debugMode, forKey: .debugMode)
+        try c.encode(strictMonitorAffinity, forKey: .strictMonitorAffinity)
+        try c.encode(theme, forKey: .theme)
     }
 }
