@@ -84,6 +84,7 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     private let history: MetricsHistory
     private let pluginManager: PluginManager
     private let dashboardWindowController = DashboardWindowController()
+    private var statusItem: NSStatusItem?
 
     init(model: AppModel, layoutEngine: LayoutEngine, registry: WidgetRegistry, history: MetricsHistory, pluginManager: PluginManager) {
         self.model = model
@@ -94,8 +95,12 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.regular)
-        NSApp.mainMenu = buildMainMenu()
+        // Accessory policy: no Dock icon, no Cmd-Tab entry. EdgeControl
+        // is a kiosk dashboard living on a secondary display; the
+        // menu-bar status item below is the primary user-facing
+        // affordance on the main Mac.
+        NSApp.setActivationPolicy(.accessory)
+        installMenuBarItem()
         // Pre-configure SettingsWindowController with all dependencies
         SettingsWindowController.shared.configure(
             model: model,
@@ -238,6 +243,48 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
         return mainMenu
+    }
+
+    // MARK: - Menu bar status item
+
+    private func installMenuBarItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = item.button {
+            // square.grid.2x2.fill reads instantly as "dashboard" and
+            // doesn't clash visually with chart-flavored neighbors in
+            // the menu bar. Explicit 16pt + .semibold matches the
+            // visual weight of common status items (filled glyphs in
+            // a 16pt frame would otherwise render small).
+            let config = NSImage.SymbolConfiguration(
+                pointSize: 16,
+                weight: .semibold
+            )
+            let image = NSImage(
+                systemSymbolName: "square.grid.2x2.fill",
+                accessibilityDescription: "EdgeControl"
+            )?.withSymbolConfiguration(config)
+            image?.isTemplate = true
+            button.image = image
+        }
+        item.menu = buildStatusMenu()
+        statusItem = item
+    }
+
+    private func buildStatusMenu() -> NSMenu {
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(
+            title: "Settings…",
+            action: #selector(openSettings(_:)),
+            keyEquivalent: ","
+        ))
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: "Quit EdgeControl", action: #selector(quitApp(_:)), keyEquivalent: "q")
+        menu.addItem(quit)
+        return menu
+    }
+
+    @objc private func openSettings(_ sender: Any?) {
+        SettingsWindowController.shared.show()
     }
 }
 
