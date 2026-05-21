@@ -29,6 +29,18 @@ public final class BluetoothService: ObservableObject {
 
     private var timer: Timer?
 
+    /// Dedicated utility-QoS queue for IOBluetooth calls. `IOBluetoothDevice
+    /// .pairedDevices()` is synchronous and can block for several seconds —
+    /// most painfully on the first call after wake/unlock, when
+    /// `IOBluetoothCoreBluetoothCoordinator init` parks on a semaphore until
+    /// CoreBluetooth finishes bringing the subsystem back up. Calling it on
+    /// the main actor froze the UI = beachball-on-hover the user reported
+    /// 2026-05-21. Keep IOBluetooth strictly on this queue.
+    private static let bluetoothQueue = DispatchQueue(
+        label: "dev.imaznation.edgecontrol.bluetooth",
+        qos: .utility
+    )
+
     public init() {}
 
     public func start() {
@@ -47,13 +59,28 @@ public final class BluetoothService: ObservableObject {
     }
 
     private func sample() {
-        guard let pairedDevices = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] else {
-            isAvailable = false
-            return
+        Self.bluetoothQueue.async {
+            // collectPairedDevices is nonisolated + returns Sendable values;
+            // safe to call from a background dispatch queue, and the result
+            // hops back to the main actor for the @Published assignment.
+            let snapshot = Self.collectPairedDevices()
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.isAvailable = snapshot.available
+                self.devices = snapshot.devices
+            }
         }
+    }
 
-        isAvailable = true
-        devices = pairedDevices.compactMap { device in
+    /// Background-thread helper: calls the blocking IOBluetooth API and
+    /// extracts Sendable BTDevice values so nothing non-Sendable crosses
+    /// actor boundaries. nonisolated so the enclosing @MainActor class
+    /// doesn't pull this back onto the main thread.
+    nonisolated private static func collectPairedDevices() -> (available: Bool, devices: [BTDevice]) {
+        guard let pairedDevices = IOBluetoothDevice.pairedDevices() as? [IOBluetoothDevice] else {
+            return (false, [])
+        }
+        let list = pairedDevices.compactMap { device -> BTDevice? in
             guard let name = device.name, !name.isEmpty else { return nil }
 
             let deviceClass = device.deviceClassMajor
@@ -76,5 +103,6 @@ public final class BluetoothService: ObservableObject {
             )
         }
         .sorted { ($0.isConnected ? 0 : 1) < ($1.isConnected ? 0 : 1) }
+        return (true, list)
     }
 }
