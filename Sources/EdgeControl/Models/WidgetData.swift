@@ -191,10 +191,20 @@ public struct PluginWidgetManifest: Codable, Sendable {
 
     public func write() {
         guard let dir = Self.containerDirectory else { return }
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let url = dir.appendingPathComponent("plugins.json")
         guard let data = try? JSONEncoder.widgetEncoder.encode(self) else { return }
-        try? data.write(to: url, options: .atomic)
+        // App-group container writes have been observed hanging the calling
+        // thread on __open inside Foundation's atomic-write path (sandbox /
+        // container-manager state we don't control). Move the entire dance
+        // — directory creation, freshness check, atomic write — to a
+        // background queue with a fire-and-forget contract so the main
+        // thread never blocks on this call. Worst case the manifest is a
+        // tick stale, which is fine for desktop widgets that already poll.
+        DispatchQueue.global(qos: .utility).async {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            let url = dir.appendingPathComponent("plugins.json")
+            if let existing = try? Data(contentsOf: url), existing == data { return }
+            try? data.write(to: url, options: .atomic)
+        }
     }
 
     /// Get snapshot image path for a plugin at a given size

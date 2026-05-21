@@ -271,7 +271,9 @@ enum EdgeControlExecutable {
         widgetBridge.start()
         model.widgetDataBridge = widgetBridge
 
-        // Plugin desktop widget renderer: headless WKWebView snapshots
+        // Plugin desktop widget renderer: headless WKWebView snapshots.
+        // PluginWidgetManifest.write() now runs its disk I/O on a
+        // background queue so this call no longer gates start().
         let pluginRenderer = PluginWidgetRenderer(pluginManager: pluginManager, model: model)
         pluginRenderer.start()
         model.pluginWidgetRenderer = pluginRenderer
