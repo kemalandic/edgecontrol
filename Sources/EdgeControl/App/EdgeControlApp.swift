@@ -62,6 +62,17 @@ final class DashboardWindowController {
             dashboardWindow.orderOut(nil)
         }
     }
+
+    /// Hide the dashboard window without releasing it — used when the
+    /// target display isn't currently enumerated (wake-from-idle race,
+    /// monitor unplug, etc.) or before the system is about to sleep /
+    /// the session locks. Keeps the window parked off-screen so it
+    /// doesn't flash onto the main display while waiting for the
+    /// configured target to come back.
+    func hide() {
+        guard let window else { return }
+        window.orderOut(nil)
+    }
 }
 
 @MainActor
@@ -103,6 +114,103 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         // One-time offer to import gh/tea logins; no-op once shown or once
         // an account exists.
         cicdImportPrompt.offerIfNeeded(model: model)
+
+        // Re-pin to the configured display whenever the screen topology
+        // changes (target display sleep/wake, monitor unplug, dock change),
+        // the Mac wakes from idle, or the user session unlocks. Without
+        // this the kiosk window migrates to the main display when the
+        // target sleeps and never comes back when it wakes.
+        let nc = NotificationCenter.default
+        nc.addObserver(
+            self,
+            selector: #selector(repinDashboard),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+        )
+        let wsNc = NSWorkspace.shared.notificationCenter
+        for name in [
+            NSWorkspace.didWakeNotification,
+            NSWorkspace.screensDidWakeNotification,
+            NSWorkspace.sessionDidBecomeActiveNotification,
+        ] {
+            wsNc.addObserver(
+                self,
+                selector: #selector(repinDashboard),
+                name: name,
+                object: nil,
+            )
+        }
+
+        // Pre-emptively park the window off-screen BEFORE sleep / lock,
+        // so when the system wakes macOS can't punt the window to the
+        // main display while we wait for the target screen to re-enumerate.
+        // The wake-side repin (above) brings it back when ready.
+        for name in [
+            NSWorkspace.willSleepNotification,
+            NSWorkspace.screensDidSleepNotification,
+            NSWorkspace.sessionDidResignActiveNotification,
+        ] {
+            wsNc.addObserver(
+                self,
+                selector: #selector(parkDashboard),
+                name: name,
+                object: nil,
+            )
+        }
+    }
+
+    /// On wake / session-active, the target display often isn't yet in
+    /// NSScreen.screens — macOS takes a few seconds to re-enumerate after
+    /// USB-C / DisplayPort handshakes complete. A single repin call here
+    /// would find no target in the screen list and fall back to the main
+    /// display. Instead we retry on a short backoff until the target
+    /// screen appears or we've burned a reasonable budget.
+    @objc private func repinDashboard() {
+        retryRepin(attempt: 0)
+    }
+
+    /// Hide the window pre-emptively when the screen is about to sleep
+    /// or the session resigns active (lock). This prevents macOS from
+    /// briefly relocating the window to the main display before our
+    /// wake handler fires.
+    @objc private func parkDashboard() {
+        dashboardWindowController.hide()
+    }
+
+    // Backoff schedule: try right away, then doubling out to 60s. Once the
+    // target screen appears, the next attempt places + stops retrying.
+    private static let repinAttemptDelays: [TimeInterval] = [
+        0, 0.5, 1.5, 3, 6, 12, 30, 60, 60, 60,
+    ]
+
+    private func retryRepin(attempt: Int) {
+        // Hard ceiling at 10 attempts (~ 4 minutes) — beyond that something
+        // is wrong with the target display that won't resolve without user
+        // action. The window stays hidden meanwhile rather than parking on
+        // the wrong display.
+        guard attempt < Self.repinAttemptDelays.count else { return }
+        let delay = Self.repinAttemptDelays[attempt]
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self else { return }
+            let targetName = self.model.selectedDisplay?.name
+            let targetPresent = NSScreen.screens.contains { $0.localizedName == targetName }
+            if targetPresent || targetName == nil {
+                // Target available (or no specific target configured) →
+                // place + done.
+                self.dashboardWindowController.show(
+                    model: self.model,
+                    layoutEngine: self.layoutEngine,
+                    registry: self.registry,
+                    history: self.history,
+                    pluginManager: self.pluginManager,
+                )
+            } else {
+                // Target not enumerated yet — hide the window so it doesn't
+                // flash onto the main display, and try again later.
+                self.dashboardWindowController.hide()
+                self.retryRepin(attempt: attempt + 1)
+            }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
