@@ -45,14 +45,22 @@ final class DashboardWindowController {
             )
         }
 
-        WindowPlacement.configure(
+        let placed = WindowPlacement.configure(
             dashboardWindow,
             display: model.selectedDisplay,
-            kioskMode: layoutEngine.document.globalSettings.kioskMode
+            kioskMode: layoutEngine.document.globalSettings.kioskMode,
+            strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity
         )
 
-        dashboardWindow.orderFrontRegardless()
-        dashboardWindow.makeKeyAndOrderFront(nil)
+        if placed {
+            dashboardWindow.orderFrontRegardless()
+            dashboardWindow.makeKeyAndOrderFront(nil)
+        } else {
+            // strictMonitorAffinity is on AND no eligible non-main screen
+            // exists — keep the window parked off-screen rather than
+            // surfacing it on the main display.
+            dashboardWindow.orderOut(nil)
+        }
     }
 }
 
