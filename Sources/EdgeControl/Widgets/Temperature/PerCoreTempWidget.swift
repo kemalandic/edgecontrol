@@ -54,7 +54,7 @@ private struct PerCoreTempWidgetView: View {
             .padding(.vertical, 8)
 
             // Core list
-            ScrollView(.vertical, showsIndicators: false) {
+            TouchScrollView {
                 if columns == 2 {
                     let cores = service.cpuCoreTemps
                     let half = (cores.count + 1) / 2

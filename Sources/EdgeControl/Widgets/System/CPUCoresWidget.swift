@@ -53,7 +53,7 @@ private struct CPUCoresWidgetView: View {
             .padding(.vertical, 8)
 
             // Core list
-            ScrollView(.vertical, showsIndicators: false) {
+            TouchScrollView {
                 if columns == 2 {
                     let cores = metricsService.perCoreUsage
                     let half = (cores.count + 1) / 2

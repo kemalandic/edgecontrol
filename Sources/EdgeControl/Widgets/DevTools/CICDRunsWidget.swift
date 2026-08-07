@@ -149,7 +149,7 @@ private struct CICDRunsWidgetView: View {
             emptyMessage("NO RECENT RUNS", detail: nil)
 
         case .runs(let runs, _):
-            ScrollView(.vertical, showsIndicators: false) {
+            TouchScrollView {
                 VStack(spacing: 4) {
                     ForEach(Array(runs.prefix(maxRuns))) { run in
                         runRow(run)
