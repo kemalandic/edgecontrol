@@ -53,6 +53,27 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // Hide from Dock
+            settingsToggle(
+                "Hide from Dock",
+                subtitle: "Menu bar only — no Dock icon, no Cmd-Tab entry",
+                icon: "menubar.arrow.up.rectangle",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.hideFromDock },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.hideFromDock = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                        // Applied at once: asking for a relaunch to see a
+                        // toggle take effect is a poor trade.
+                        EdgeControlAppDelegate.applyActivationPolicy(
+                            hideFromDock: newValue,
+                            mainMenu: EdgeControlAppDelegate.defaultMainMenu()
+                        )
+                    }
+                )
+            )
+
             Divider().background(Theme.borderSubtle)
 
             // Layout export/import

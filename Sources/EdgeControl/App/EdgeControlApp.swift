@@ -95,12 +95,12 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Accessory policy: no Dock icon, no Cmd-Tab entry. EdgeControl
-        // is a kiosk dashboard living on a secondary display; the
-        // menu-bar status item below is the primary user-facing
-        // affordance on the main Mac.
-        NSApp.setActivationPolicy(.accessory)
+        // The menu-bar item is installed either way: in accessory mode it is
+        // the only way to reach Settings or quit, and in regular mode it is a
+        // convenience next to the normal menu bar.
+        Self.sharedMenuBuilder = { [weak self] in self?.buildMainMenu() ?? NSMenu() }
         installMenuBarItem()
+        applyActivationPolicy(hideFromDock: layoutEngine.document.globalSettings.hideFromDock)
         // Pre-configure SettingsWindowController with all dependencies
         SettingsWindowController.shared.configure(
             model: model,
@@ -232,6 +232,34 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func quitApp(_ sender: Any?) {
         NSApp.terminate(nil)
     }
+
+    /// Switches between a normal app and a menu-bar-only one.
+    ///
+    /// Callable at any time, so the Settings toggle takes effect immediately
+    /// rather than asking the user to relaunch. `accessory` drops the Dock
+    /// icon, the Cmd-Tab entry and the menu bar, which is why the main menu is
+    /// only installed in `regular`.
+    static func applyActivationPolicy(hideFromDock: Bool, mainMenu: @autoclosure () -> NSMenu) {
+        if hideFromDock {
+            NSApp.setActivationPolicy(.accessory)
+            NSApp.mainMenu = nil
+        } else {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.mainMenu = mainMenu()
+        }
+    }
+
+    private func applyActivationPolicy(hideFromDock: Bool) {
+        Self.applyActivationPolicy(hideFromDock: hideFromDock, mainMenu: buildMainMenu())
+    }
+
+    /// Menu used when the app is a normal (non-accessory) app. Static so
+    /// Settings can rebuild it when the user turns the Dock back on.
+    static func defaultMainMenu() -> NSMenu {
+        EdgeControlAppDelegate.sharedMenuBuilder()
+    }
+
+    private static var sharedMenuBuilder: () -> NSMenu = { NSMenu() }
 
     private func buildMainMenu() -> NSMenu {
         let mainMenu = NSMenu()

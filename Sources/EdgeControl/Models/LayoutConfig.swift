@@ -127,6 +127,10 @@ public struct GlobalSettings: Codable, Sendable {
     /// the existing fallback-to-non-main-then-main chain in
     /// WindowPlacement.configure.
     public var strictMonitorAffinity: Bool
+    /// Hide from the Dock and Cmd-Tab, leaving the menu-bar item as the only
+    /// affordance. Suits a kiosk whose window lives on a secondary display.
+    /// Default false keeps EdgeControl a normal app.
+    public var hideFromDock: Bool
     public var theme: ThemeSettings
 
     public init(
@@ -135,6 +139,7 @@ public struct GlobalSettings: Codable, Sendable {
         launchAtLogin: Bool = false,
         debugMode: Bool = false,
         strictMonitorAffinity: Bool = false,
+        hideFromDock: Bool = false,
         theme: ThemeSettings = ThemeSettings()
     ) {
         self.selectedDisplayName = selectedDisplayName
@@ -142,12 +147,13 @@ public struct GlobalSettings: Codable, Sendable {
         self.launchAtLogin = launchAtLogin
         self.debugMode = debugMode
         self.strictMonitorAffinity = strictMonitorAffinity
+        self.hideFromDock = hideFromDock
         self.theme = theme
     }
 
     enum CodingKeys: String, CodingKey {
         case selectedDisplayName, kioskMode, launchAtLogin, debugMode
-        case strictMonitorAffinity, theme
+        case strictMonitorAffinity, hideFromDock, theme
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -161,6 +167,7 @@ public struct GlobalSettings: Codable, Sendable {
         launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
         debugMode = try c.decodeIfPresent(Bool.self, forKey: .debugMode) ?? false
         strictMonitorAffinity = try c.decodeIfPresent(Bool.self, forKey: .strictMonitorAffinity) ?? false
+        hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
     }
 
@@ -171,6 +178,7 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(launchAtLogin, forKey: .launchAtLogin)
         try c.encode(debugMode, forKey: .debugMode)
         try c.encode(strictMonitorAffinity, forKey: .strictMonitorAffinity)
+        try c.encode(hideFromDock, forKey: .hideFromDock)
         try c.encode(theme, forKey: .theme)
     }
 }
