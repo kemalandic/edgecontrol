@@ -82,6 +82,21 @@ struct DisplaySettingsView: View {
                 )
             )
 
+            // Strict monitor affinity toggle
+            settingsToggle(
+                "Stay on Target Display",
+                subtitle: "Wait for the chosen display instead of falling back to another",
+                icon: "pin",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.strictMonitorAffinity },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.strictMonitorAffinity = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                    }
+                )
+            )
+
             Spacer(minLength: 0)
         }
         .padding(16)
