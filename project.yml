@@ -11,6 +11,11 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MACOSX_DEPLOYMENT_TARGET: "14.0"
+    # Single source of truth. Both Info.plists read these through
+    # $(MARKETING_VERSION) / $(CURRENT_PROJECT_VERSION), so the app and its
+    # widget extension can no longer drift apart.
+    MARKETING_VERSION: "2.2.0"
+    CURRENT_PROJECT_VERSION: "4"
 
 targets:
   EdgeControl:
@@ -22,8 +27,6 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol
         PRODUCT_NAME: EdgeControl
-        MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
         INFOPLIST_FILE: Sources/EdgeControl/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sources/EdgeControl/EdgeControl.entitlements
         CODE_SIGN_STYLE: Automatic
@@ -41,10 +44,21 @@ targets:
       - path: Sources/EdgeControlWidgets
       - path: Sources/EdgeControl/Models/WidgetData.swift
         createIntermediateGroups: false
+      # WidgetData carries CIRunState, so the extension needs the enum too.
+      - path: Sources/EdgeControl/Services/CI/CIRunState.swift
+        createIntermediateGroups: false
+      # WidgetData.write() logs through AppLog; Foundation + os only, so it
+      # is safe inside the sandboxed extension.
+      - path: Sources/EdgeControl/Services/AppLog.swift
+        createIntermediateGroups: false
     info:
       path: Sources/EdgeControlWidgets/Info.plist
       properties:
         CFBundleDisplayName: EdgeControl Widgets
+        # xcodegen regenerates this plist, so the version keys have to
+        # live here rather than in the file itself.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -65,8 +79,19 @@ targets:
     platform: macOS
     sources:
       - path: Tests/EdgeControlTests
+        excludes:
+          - "CI/Fixtures/**"
+      # Recorded API responses, copied into the test bundle so providers can be
+      # exercised without network access.
+      - path: Tests/EdgeControlTests/CI/Fixtures
+        buildPhase: resources
     dependencies:
       - target: EdgeControl
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol.tests
+        GENERATE_INFOPLIST_FILE: true
+        # Must match the host app's team, otherwise the host refuses to dlopen
+        # the test bundle: "different Team IDs".
+        DEVELOPMENT_TEAM: CNRZ47Y629
+        CODE_SIGN_STYLE: Automatic

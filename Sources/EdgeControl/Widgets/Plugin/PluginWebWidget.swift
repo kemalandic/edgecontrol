@@ -693,7 +693,7 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
         // MARK: - Navigation Delegate
 
         /// Restrict navigation to file:// URLs within the plugin bundle only.
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
             guard let url = navigationAction.request.url else {
                 decisionHandler(.cancel)
                 return

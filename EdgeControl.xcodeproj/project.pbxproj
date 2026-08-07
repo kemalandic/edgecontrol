@@ -10,22 +10,37 @@
 		00675BBB018816692ECC3E16 /* ClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4178FEFA30A50AD9F77F78F1 /* ClockWidget.swift */; };
 		00A55DEED54FE9263D330C8D /* WeatherWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */; };
 		026C8F39C2B077D936C72FB3 /* PluginWidgetRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E148907F28B14BDBA1564F42 /* PluginWidgetRenderer.swift */; };
+		02C16759451A6E571B9F6829 /* forgejo-user.json in Resources */ = {isa = PBXBuildFile; fileRef = 66ACE587D08F9C6516970671 /* forgejo-user.json */; };
 		067C54301124CFF84023C648 /* MemoryGaugeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */; };
 		06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322BB0E114232C4FC2E95B0A /* BluetoothService.swift */; };
+		07F22FD2B6C31A550078652C /* CIRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8E3A956E53382040795B3 /* CIRun.swift */; };
+		09FEB2BFDC20840124FA3084 /* GitHubProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22D3935E121EFF55DA69626 /* GitHubProviderTests.swift */; };
 		0A7DDFD4973B48992791445A /* CICDWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460BB08A24CC6C1DC523BEBB /* CICDWidgetView.swift */; };
+		0C36261A76ADD8D4185C3B95 /* RateLimitTrackingTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5688B35DBC480A88DE99C7F /* RateLimitTrackingTransport.swift */; };
+		0DB6D59FC350C661832FFE4E /* CIRunState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083EBD8A86C58AA57C85CA25 /* CIRunState.swift */; };
 		0E6CA99E2B66541721167948 /* EdgeControlWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 3E17173930E64C01843281B3 /* EdgeControlWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */; };
+		0EA7AA99CCC37C26BC2FCE55 /* forgejo-repos.json in Resources */ = {isa = PBXBuildFile; fileRef = 894257DCC41CF425603B8104 /* forgejo-repos.json */; };
 		12AD12A3AD9AB88E8DABE173 /* WidgetStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F535DC4FDB0FA106EED17D2 /* WidgetStyles.swift */; };
+		131F5C2647932BF709DE1B17 /* CIAccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24809892629EBACFFC38EB1B /* CIAccountStore.swift */; };
+		14E986BC310ED85F9AC48709 /* forgejo-runs.json in Resources */ = {isa = PBXBuildFile; fileRef = 28760D4F25AA8E0A320A0D54 /* forgejo-runs.json */; };
+		16431CC6842AC82817F6E9C2 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10418B6B91599F07758AB415 /* AppLog.swift */; };
 		166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */; };
 		1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */; };
+		1DFA6EA4E2C0BD5D4AC953B2 /* GitHubProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA75D888D822B244E302D7A0 /* GitHubProvider.swift */; };
+		21D9F1ACCE921F7EF6CD43BA /* CICDSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2240A912641ADEE2291695AB /* CICDSettingsTests.swift */; };
 		28786ADD0DC07CEAB6285A7E /* PluginStorageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66228D7A3E85B0E4DBD98925 /* PluginStorageService.swift */; };
 		2B9FB008D975D1517133A10C /* WidgetHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */; };
 		2C38CAA3A0A9801AD204BD67 /* NowPlayingWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */; };
 		2C6E44D33BE7F001DFE0ADCF /* PluginWebWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731EE950D6B7EEE03E8A988E /* PluginWebWidget.swift */; };
+		2D6955D50ACE42CB8680B459 /* CICDImportPromptController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 023C2E7A99806615566C2114 /* CICDImportPromptController.swift */; };
+		303445182C922B7EC2923508 /* LayoutConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88D41E20A1F2AF5648229E3B /* LayoutConfigTests.swift */; };
 		363607DB5872724C501A3B0A /* CPUGaugeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32692E5006C0EA34FF14A484 /* CPUGaugeWidget.swift */; };
+		367DC444F94891E30BA706C5 /* StubTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568231131F33767215953AC1 /* StubTransport.swift */; };
 		3778753DC6875CC5218F99FA /* LayoutEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF99821322AE802740C36545 /* LayoutEngine.swift */; };
+		38681F2D4A5DDA0E68F29E27 /* CredentialImporterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F793A9942B72216E001EF72 /* CredentialImporterTests.swift */; };
 		3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */; };
 		3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D6B0E686C7958948D5F219 /* DiskIOService.swift */; };
+		3D282679C726F7C60AE09600 /* CommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB84A7F782A653FCC4822AD9 /* CommandRunner.swift */; };
 		3E24A63B4725D72110F46442 /* DiskIOWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A306CDC5CBF2677EFDAEE996 /* DiskIOWidget.swift */; };
 		3E71A468398FAC4E09C8FBA3 /* TempHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA125AE17E85D450F6A00DD1 /* TempHistoryWidget.swift */; };
 		3F726B83AB924EAB2D56E621 /* WidgetCatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F362EA8761C591EFC0F589D5 /* WidgetCatalogView.swift */; };
@@ -33,25 +48,36 @@
 		44B0C7044DE4CF8DD657D82F /* WidgetProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373F6477D7980572608AD571 /* WidgetProtocol.swift */; };
 		450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */; };
 		4541F05A7B2DF78CFE14D858 /* WidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAF537A233F5C783295F343 /* WidgetData.swift */; };
+		476653D92C28402CD804B69B /* CICDWidgetStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB4A23F2797616B6C71DE408 /* CICDWidgetStateTests.swift */; };
+		4912C7C6DB086FBA4638A5AC /* CICDService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 453D53C3890EBA09E023ACA9 /* CICDService.swift */; };
+		4A19DC974BD48681CAC16422 /* CICDServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86782373F8BBBB5FD23B390 /* CICDServiceTests.swift */; };
 		4EB1421788DE7DA727D54997 /* SystemGaugeProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B42360E62752B5B689C5D1F /* SystemGaugeProvider.swift */; };
 		51C2DCC5F262CB019E7D1BF3 /* LayoutStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */; };
-		52D5BE720F097A4EB813179B /* GitHubService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788E53003A6A8077ED66E83A /* GitHubService.swift */; };
+		5243AB65A4DE9BA92C19158B /* WidgetDataSchemaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5453A83A6BAD1EAF5A0F56DB /* WidgetDataSchemaTests.swift */; };
+		5366D4434410CC0EC2B9BB65 /* CICDAccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E74CFD789D359E31C58B617F /* CICDAccountSheet.swift */; };
+		537A4C6E5FB2382662EDC173 /* ConditionalGETTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A529E3A4FD9911D457E7E090 /* ConditionalGETTransport.swift */; };
 		576555CB0A1ECA090B945198 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C59A086B0AFB78148E786B8D /* WeatherService.swift */; };
 		5767982D0BF8C63F5E5F6124 /* PluginDataBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */; };
 		5A6AFB8CD86F45A91DCA5CFA /* PluginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECA20ADC942310310D2C811 /* PluginManager.swift */; };
+		5A7F7291EB80585D5B2025C9 /* CICDSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0585D4ECBD3C294076FCD /* CICDSettingsView.swift */; };
 		5C8ECF6DC06FF87352563E91 /* DashboardShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6A61687864BFA022B4F4D44 /* DashboardShell.swift */; };
 		5E9B9342D5A423E04C1624CB /* NetworkProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4EE1FD46B45C00D615B4EB /* NetworkProvider.swift */; };
+		618B4EFC9CB490034D1C133A /* CIAccountStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4927E5114B917BAB4CFEC0E8 /* CIAccountStoreTests.swift */; };
 		656ED9462F09880357710710 /* TemperatureWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92C70F524C0B4EB51A0E3BF /* TemperatureWidgetView.swift */; };
 		69B8C3CBF6982B6FE821A527 /* GridPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E18C869626E48E882115BBEF /* GridPageView.swift */; };
 		6B428F8C3D8786FC9A3A0DAD /* StorageBarsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81313B953FFCE2D1E233EA47 /* StorageBarsWidget.swift */; };
 		6DBC308D7714AE68649D56B5 /* MemoryPressureWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042338F13B17D31814212BE6 /* MemoryPressureWidget.swift */; };
+		6ED422817D8A56C7F7B63207 /* CIRunState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083EBD8A86C58AA57C85CA25 /* CIRunState.swift */; };
 		6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 722485033F676CCBCFB190DF /* TouchButton.swift */; };
+		70297266E1659373B133FC10 /* CIAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE26FFFA83CDF5C88BBD15F2 /* CIAccount.swift */; };
+		725BD4A8FE39BA4942B975CC /* CITransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAAEFDCD79B89D602FB8443 /* CITransport.swift */; };
 		75EB907352D0BF0EC1954A5F /* WorldClocksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */; };
 		7969AD59663208973EE2D54B /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889153D44C024953157FD491 /* ThemeSettingsView.swift */; };
 		7BB31A753E0DA25D72DE20FE /* WidgetDataBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108B38781DD41D025E9B102E /* WidgetDataBridge.swift */; };
 		7E017066085F7359B6603574 /* ThemeEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */; };
 		7F9DC2CF3A63DAAB9A3363C1 /* MetricsHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */; };
 		7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */; };
+		80C83021424728145CCAC151 /* ForgejoProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F1521E21FECF0179E687B0 /* ForgejoProviderTests.swift */; };
 		814C3B299B4CDDDCA0C4BD4C /* SSDTempWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */; };
 		82B015FB75645C6823BD0C47 /* WiFiProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EA67D6152E0568A1CDD0A5F /* WiFiProvider.swift */; };
 		869A10050E17F0DE9DD997A6 /* TemperatureProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C1C8CEC22F7CDAF9949168 /* TemperatureProvider.swift */; };
@@ -60,15 +86,20 @@
 		8C0755A24C35AFB483501DB7 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = A6227C3F76176844E5F7B3D3 /* AppIcon.icns */; };
 		8D5E5222B55F195D788A6C1F /* LayoutConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83DA180C040E418D3393B87 /* LayoutConfig.swift */; };
 		8FCFC8603BA87F1A1C036633 /* PageManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12281DDDF4B06A76D53203CF /* PageManagerView.swift */; };
+		928A7480ECF5377832106286 /* CISecretStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42FDBFFBC3910900A76EF329 /* CISecretStore.swift */; };
+		93E3BDABAA934EF0D339DB0C /* RateLimitTrackingTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7310505A90AA44D1201EFED /* RateLimitTrackingTransportTests.swift */; };
 		94FE718562DC7C587DCBE999 /* CPUHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46AD90FFFBC4B61FCFAD5E40 /* CPUHistoryWidget.swift */; };
 		979079C0CD7CF151AD976FD1 /* WiFiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1D517F2C5775F62109D1F70 /* WiFiService.swift */; };
 		989AEADBBF2579571F89F293 /* WidgetConfigEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB4EEA4076FD3656673148B2 /* WidgetConfigEditor.swift */; };
 		98C3A0C7BD110CF4249BE2C0 /* DisplaySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */; };
+		9A9D4E2C9BAFCA43F15221F2 /* CIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA31B0302E9E975DF0E51A25 /* CIProvider.swift */; };
+		9B2C5A45DC622EE3FB08DC28 /* CredentialImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D6D1A82A1FBCAFCABFF9C4D /* CredentialImporter.swift */; };
 		A04017A0FDBCD68AEA54743F /* NetworkWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACAAB7091426B603E9632025 /* NetworkWidgetView.swift */; };
 		A226D21D04E9530DC0EB8500 /* AudioDevicesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A955201FA0E26CA2A945138B /* AudioDevicesWidget.swift */; };
 		A930352AA228A2C41251A6D3 /* ThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7720050FD9B5CBA078892D0 /* ThemeSettings.swift */; };
 		A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A033131F227B312B23519B79 /* EdgeControlApp.swift */; };
 		AA67089D28BA104E142FBAD7 /* CICDRunsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */; };
+		AAC6CB0E4100AB5F8DECC6A8 /* github-repos.json in Resources */ = {isa = PBXBuildFile; fileRef = 567341A3E54B10AF8BCE9E72 /* github-repos.json */; };
 		AB4B442103F2D5BD55FE6251 /* WidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAF537A233F5C783295F343 /* WidgetData.swift */; };
 		AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E4388008C822687930052 /* HardwareTouchService.swift */; };
 		B0DC0DE2B4686BD868A4A150 /* RadialGaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */; };
@@ -76,32 +107,42 @@
 		B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B32F73BCB42D4A717959D3 /* AppModel.swift */; };
 		B22E1E696B0CCBB38A811B4A /* WidgetGaugeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34DAAC8780EA8A2D26CC850C /* WidgetGaugeView.swift */; };
 		B2CCB5DA7A39D0800F6FA5B2 /* DisplayDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F07750B67FA6FA4D329650E0 /* DisplayDescriptor.swift */; };
+		B6F83E7F8028FDCF7692FB68 /* ConditionalGETTransportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF07E045A0067C9FB0967E58 /* ConditionalGETTransportTests.swift */; };
 		B75DF02369596DC5FAA14848 /* PluginWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72A3DE05E9DD3DF0F47A2311 /* PluginWidgetView.swift */; };
 		B819009E7CB727ED41402886 /* MoonPhaseWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */; };
 		B8D8D28C7039B0FBB20252AE /* TouchTappable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B21B89931A883D61A8267BB /* TouchTappable.swift */; };
 		B929CAF3AA01AB2B3A5E1F9A /* SystemGaugeWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70ECE563C838DF68844481D7 /* SystemGaugeWidgetView.swift */; };
 		BA56436DBA4478A4C76D2F50 /* TouchZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = B641FABA26849F495AA4527B /* TouchZone.swift */; };
 		BAD7B1704C4979EA035D18A6 /* WiFiWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2BED1AA61DC5F0E7D006E40 /* WiFiWidgetView.swift */; };
+		BC9C21332908CE217BAD6109 /* github-orgs.json in Resources */ = {isa = PBXBuildFile; fileRef = D453C8CB6E8919896376088D /* github-orgs.json */; };
+		C00DE5F6C2A285BDD9A2EB66 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10418B6B91599F07758AB415 /* AppLog.swift */; };
 		C2418CFE9BB9A03196699319 /* MemoryHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */; };
 		C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */; };
 		CA451229F99B09583CFC76E2 /* PluginManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C08C5CA9435270274DCC6A /* PluginManagerView.swift */; };
 		CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */; };
 		CF3FC2923F8CC58C18F9C534 /* PluginWidgetProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4AEBEBD85B555348B27DEF9 /* PluginWidgetProvider.swift */; };
+		CF5794C62F658F19C62C7D93 /* ForgejoProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847E4D4B6A34A4814BAB549F /* ForgejoProvider.swift */; };
 		D2071582ECF24AB6A1E64DCB /* NetworkStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A236891EC8BDFE75D1B7BFF /* NetworkStatsWidget.swift */; };
 		D253C27941895562CE75D2FF /* NowPlayingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */; };
 		D9393ABCB32BC3ACE61CD3F8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70FEAAA8B09E3342724D9B5C /* Theme.swift */; };
+		DE49107AE83643048C570264 /* github-user.json in Resources */ = {isa = PBXBuildFile; fileRef = 6915923EAB04D4A5F1DE68D4 /* github-user.json */; };
 		DF34A826FE02DBE0E38977E2 /* CPUTempWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8AA37AAAC3548F1665817A7 /* CPUTempWidget.swift */; };
 		E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC949C865B9083B7AA95480E /* DisplayManager.swift */; };
 		E087BB0CE2AFC3F84F70DB09 /* WidgetRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */; };
+		E25FC554104707CC66DAC3C1 /* CIErrorMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CD84835E9C4E1128E590E97 /* CIErrorMappingTests.swift */; };
 		E66E7CCB6D6F44D5A71E8C30 /* DiskIOProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C2E9F45B62C68CEA7DB70E9 /* DiskIOProvider.swift */; };
 		E6A5BA8FC1C2DB8724EE69FB /* WiFiInfoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */; };
+		E9823A182338C8491C736995 /* CICDImportPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB8F201D6B9EE09A097A158 /* CICDImportPrompt.swift */; };
 		EBAD9E2CA17B1529A8CFA6B8 /* CICDProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 572E0BB9DAC141A48F068D60 /* CICDProvider.swift */; };
 		EE048F1FD1E1DA49AC106EFE /* HistoryGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E87274D193465714FC7B8338 /* HistoryGraphView.swift */; };
 		F009D7FED7C0B0B7668235E6 /* DiskIOWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DE737CCA0DF519AA7D311DD /* DiskIOWidgetView.swift */; };
 		F1867A3A7E2C2E16B323838A /* TouchRuntimeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */; };
 		F35D84161A1E0DBA97F7F4FC /* NetworkMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */; };
 		F382891483C43830C8AE4F25 /* EdgeControlWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57EB794F2EA34AFA4685C600 /* EdgeControlWidgets.swift */; };
+		F3DD44B23A3FA4999E7105E3 /* CICDSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BDF35A627564E8D2563DCA8 /* CICDSettings.swift */; };
+		F3F08FED2FBA0347BA00D333 /* github-runs.json in Resources */ = {isa = PBXBuildFile; fileRef = A344FF5111EE9626D924058E /* github-runs.json */; };
 		F50463096338541B3E45D5F8 /* PluginManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A31F77F590D4841CFD1D2EF /* PluginManifest.swift */; };
+		F9CBEF101E96D3BC855980FE /* DiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0115C324C27E6FD5E995E304 /* DiscoveryTests.swift */; };
 		FA2DC89A27E123C170BF4422 /* CalibrationSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */; };
 		FB74AECEAF33600374255AB1 /* CPUCoresWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0767B29DAAC84B79B106EC3A /* CPUCoresWidget.swift */; };
 		FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */; };
@@ -140,20 +181,30 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0115C324C27E6FD5E995E304 /* DiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryTests.swift; sourceTree = "<group>"; };
+		023C2E7A99806615566C2114 /* CICDImportPromptController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDImportPromptController.swift; sourceTree = "<group>"; };
 		042338F13B17D31814212BE6 /* MemoryPressureWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryPressureWidget.swift; sourceTree = "<group>"; };
 		0767B29DAAC84B79B106EC3A /* CPUCoresWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUCoresWidget.swift; sourceTree = "<group>"; };
+		083EBD8A86C58AA57C85CA25 /* CIRunState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIRunState.swift; sourceTree = "<group>"; };
+		0CD84835E9C4E1128E590E97 /* CIErrorMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIErrorMappingTests.swift; sourceTree = "<group>"; };
 		0E4EE1FD46B45C00D615B4EB /* NetworkProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkProvider.swift; sourceTree = "<group>"; };
 		0ECA20ADC942310310D2C811 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
+		10418B6B91599F07758AB415 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
 		108B38781DD41D025E9B102E /* WidgetDataBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataBridge.swift; sourceTree = "<group>"; };
 		121E4388008C822687930052 /* HardwareTouchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareTouchService.swift; sourceTree = "<group>"; };
 		12281DDDF4B06A76D53203CF /* PageManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageManagerView.swift; sourceTree = "<group>"; };
 		13E1E34BE98DBAD8EAD506EE /* PerCoreTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerCoreTempWidget.swift; sourceTree = "<group>"; };
 		209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDRunsWidget.swift; sourceTree = "<group>"; };
 		212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiInfoWidget.swift; sourceTree = "<group>"; };
+		2240A912641ADEE2291695AB /* CICDSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDSettingsTests.swift; sourceTree = "<group>"; };
+		24809892629EBACFFC38EB1B /* CIAccountStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIAccountStore.swift; sourceTree = "<group>"; };
 		24BE41E2E67F43326209F5A9 /* EdgeControl.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EdgeControl.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		28760D4F25AA8E0A320A0D54 /* forgejo-runs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "forgejo-runs.json"; sourceTree = "<group>"; };
 		28B32F73BCB42D4A717959D3 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		2AD8E3A956E53382040795B3 /* CIRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIRun.swift; sourceTree = "<group>"; };
 		2C2E9F45B62C68CEA7DB70E9 /* DiskIOProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOProvider.swift; sourceTree = "<group>"; };
+		2D6D1A82A1FBCAFCABFF9C4D /* CredentialImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialImporter.swift; sourceTree = "<group>"; };
 		2F535DC4FDB0FA106EED17D2 /* WidgetStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStyles.swift; sourceTree = "<group>"; };
 		322BB0E114232C4FC2E95B0A /* BluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothService.swift; sourceTree = "<group>"; };
 		32692E5006C0EA34FF14A484 /* CPUGaugeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUGaugeWidget.swift; sourceTree = "<group>"; };
@@ -162,23 +213,34 @@
 		3A236891EC8BDFE75D1B7BFF /* NetworkStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkStatsWidget.swift; sourceTree = "<group>"; };
 		3E17173930E64C01843281B3 /* EdgeControlWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EdgeControlWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4178FEFA30A50AD9F77F78F1 /* ClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockWidget.swift; sourceTree = "<group>"; };
+		42FDBFFBC3910900A76EF329 /* CISecretStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CISecretStore.swift; sourceTree = "<group>"; };
+		43F1521E21FECF0179E687B0 /* ForgejoProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgejoProviderTests.swift; sourceTree = "<group>"; };
+		453D53C3890EBA09E023ACA9 /* CICDService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDService.swift; sourceTree = "<group>"; };
 		45F6663A2EB2FF9A47DB4D19 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		460BB08A24CC6C1DC523BEBB /* CICDWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDWidgetView.swift; sourceTree = "<group>"; };
 		46AD90FFFBC4B61FCFAD5E40 /* CPUHistoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUHistoryWidget.swift; sourceTree = "<group>"; };
 		48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutStore.swift; sourceTree = "<group>"; };
+		4927E5114B917BAB4CFEC0E8 /* CIAccountStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIAccountStoreTests.swift; sourceTree = "<group>"; };
 		4A31F77F590D4841CFD1D2EF /* PluginManifest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManifest.swift; sourceTree = "<group>"; };
+		4AAAEFDCD79B89D602FB8443 /* CITransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CITransport.swift; sourceTree = "<group>"; };
+		4BDF35A627564E8D2563DCA8 /* CICDSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDSettings.swift; sourceTree = "<group>"; };
 		4D1B46290E2B916CD0C3F458 /* SystemMetricsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetricsService.swift; sourceTree = "<group>"; };
-		511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplaySettingsView.swift; sourceTree = "<group>"; };
+		5453A83A6BAD1EAF5A0F56DB /* WidgetDataSchemaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetDataSchemaTests.swift; sourceTree = "<group>"; };
 		54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryHistoryWidget.swift; sourceTree = "<group>"; };
 		54A8008862717EF901595923 /* EdgeControl.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EdgeControl.entitlements; sourceTree = "<group>"; };
+		567341A3E54B10AF8BCE9E72 /* github-repos.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "github-repos.json"; sourceTree = "<group>"; };
+		568231131F33767215953AC1 /* StubTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StubTransport.swift; sourceTree = "<group>"; };
 		572E0BB9DAC141A48F068D60 /* CICDProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDProvider.swift; sourceTree = "<group>"; };
 		57EB794F2EA34AFA4685C600 /* EdgeControlWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlWidgets.swift; sourceTree = "<group>"; };
 		5CD9CB23F45C02FE5C72C355 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		66228D7A3E85B0E4DBD98925 /* PluginStorageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginStorageService.swift; sourceTree = "<group>"; };
 		662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeEnvironment.swift; sourceTree = "<group>"; };
+		66ACE587D08F9C6516970671 /* forgejo-user.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "forgejo-user.json"; sourceTree = "<group>"; };
 		67C08C5CA9435270274DCC6A /* PluginManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManagerView.swift; sourceTree = "<group>"; };
+		6915923EAB04D4A5F1DE68D4 /* github-user.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "github-user.json"; sourceTree = "<group>"; };
 		6B42360E62752B5B689C5D1F /* SystemGaugeProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGaugeProvider.swift; sourceTree = "<group>"; };
+		6BB8F201D6B9EE09A097A158 /* CICDImportPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDImportPrompt.swift; sourceTree = "<group>"; };
 		6EA67D6152E0568A1CDD0A5F /* WiFiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiProvider.swift; sourceTree = "<group>"; };
 		70ECE563C838DF68844481D7 /* SystemGaugeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGaugeWidgetView.swift; sourceTree = "<group>"; };
 		70FEAAA8B09E3342724D9B5C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -187,12 +249,14 @@
 		722485033F676CCBCFB190DF /* TouchButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchButton.swift; sourceTree = "<group>"; };
 		72A3DE05E9DD3DF0F47A2311 /* PluginWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWidgetView.swift; sourceTree = "<group>"; };
 		731EE950D6B7EEE03E8A988E /* PluginWebWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWebWidget.swift; sourceTree = "<group>"; };
-		788E53003A6A8077ED66E83A /* GitHubService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubService.swift; sourceTree = "<group>"; };
 		7DE737CCA0DF519AA7D311DD /* DiskIOWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOWidgetView.swift; sourceTree = "<group>"; };
 		81313B953FFCE2D1E233EA47 /* StorageBarsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBarsWidget.swift; sourceTree = "<group>"; };
+		847E4D4B6A34A4814BAB549F /* ForgejoProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgejoProvider.swift; sourceTree = "<group>"; };
 		85E32F9A45B0702E822B0F2D /* NowPlayingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingService.swift; sourceTree = "<group>"; };
 		889153D44C024953157FD491 /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
 		88C1C8CEC22F7CDAF9949168 /* TemperatureProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureProvider.swift; sourceTree = "<group>"; };
+		88D41E20A1F2AF5648229E3B /* LayoutConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConfigTests.swift; sourceTree = "<group>"; };
+		894257DCC41CF425603B8104 /* forgejo-repos.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "forgejo-repos.json"; sourceTree = "<group>"; };
 		8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryGaugeWidget.swift; sourceTree = "<group>"; };
 		8B21B89931A883D61A8267BB /* TouchTappable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchTappable.swift; sourceTree = "<group>"; };
 		9112F310275DD7CCDB060ADC /* NetworkMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitorService.swift; sourceTree = "<group>"; };
@@ -200,9 +264,13 @@
 		941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadialGaugeView.swift; sourceTree = "<group>"; };
 		9595C9AC45EA3355BE3FA845 /* ProcessMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMonitorService.swift; sourceTree = "<group>"; };
 		96BA74C71D7F6F2ED713C5FD /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
+		9F793A9942B72216E001EF72 /* CredentialImporterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialImporterTests.swift; sourceTree = "<group>"; };
 		9FE06553F4852DC6A40EC3E8 /* EdgeControlWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EdgeControlWidgets.entitlements; sourceTree = "<group>"; };
 		A033131F227B312B23519B79 /* EdgeControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeControlApp.swift; sourceTree = "<group>"; };
+		A0C0585D4ECBD3C294076FCD /* CICDSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDSettingsView.swift; sourceTree = "<group>"; };
 		A306CDC5CBF2677EFDAEE996 /* DiskIOWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOWidget.swift; sourceTree = "<group>"; };
+		A344FF5111EE9626D924058E /* github-runs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "github-runs.json"; sourceTree = "<group>"; };
+		A529E3A4FD9911D457E7E090 /* ConditionalGETTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionalGETTransport.swift; sourceTree = "<group>"; };
 		A6227C3F76176844E5F7B3D3 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		A6A61687864BFA022B4F4D44 /* DashboardShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardShell.swift; sourceTree = "<group>"; };
 		A83DA180C040E418D3393B87 /* LayoutConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutConfig.swift; sourceTree = "<group>"; };
@@ -211,26 +279,36 @@
 		ACAAB7091426B603E9632025 /* NetworkWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkWidgetView.swift; sourceTree = "<group>"; };
 		B1D517F2C5775F62109D1F70 /* WiFiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiService.swift; sourceTree = "<group>"; };
 		B641FABA26849F495AA4527B /* TouchZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchZone.swift; sourceTree = "<group>"; };
+		B86782373F8BBBB5FD23B390 /* CICDServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDServiceTests.swift; sourceTree = "<group>"; };
 		BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		BB4EEA4076FD3656673148B2 /* WidgetConfigEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigEditor.swift; sourceTree = "<group>"; };
 		BF99821322AE802740C36545 /* LayoutEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutEngine.swift; sourceTree = "<group>"; };
+		C22D3935E121EFF55DA69626 /* GitHubProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubProviderTests.swift; sourceTree = "<group>"; };
 		C405C399C83734FEF0840A72 /* DayProgressWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayProgressWidget.swift; sourceTree = "<group>"; };
 		C59A086B0AFB78148E786B8D /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClocksWidget.swift; sourceTree = "<group>"; };
+		CB4A23F2797616B6C71DE408 /* CICDWidgetStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDWidgetStateTests.swift; sourceTree = "<group>"; };
 		D0D6B0E686C7958948D5F219 /* DiskIOService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiskIOService.swift; sourceTree = "<group>"; };
 		D2863466B5789236B90ABDA8 /* CalibrationSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationSupport.swift; sourceTree = "<group>"; };
 		D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetrics.swift; sourceTree = "<group>"; };
+		D453C8CB6E8919896376088D /* github-orgs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "github-orgs.json"; sourceTree = "<group>"; };
+		D5688B35DBC480A88DE99C7F /* RateLimitTrackingTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateLimitTrackingTransport.swift; sourceTree = "<group>"; };
 		DC949C865B9083B7AA95480E /* DisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayManager.swift; sourceTree = "<group>"; };
 		DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSDTempWidget.swift; sourceTree = "<group>"; };
+		DE26FFFA83CDF5C88BBD15F2 /* CIAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIAccount.swift; sourceTree = "<group>"; };
+		DF07E045A0067C9FB0967E58 /* ConditionalGETTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionalGETTransportTests.swift; sourceTree = "<group>"; };
 		DF86B9D5B3D367A656132C2A /* SMCService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SMCService.swift; sourceTree = "<group>"; };
 		E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingWidget.swift; sourceTree = "<group>"; };
 		E148907F28B14BDBA1564F42 /* PluginWidgetRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWidgetRenderer.swift; sourceTree = "<group>"; };
 		E18C869626E48E882115BBEF /* GridPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridPageView.swift; sourceTree = "<group>"; };
 		E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDataBridge.swift; sourceTree = "<group>"; };
+		E74CFD789D359E31C58B617F /* CICDAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDAccountSheet.swift; sourceTree = "<group>"; };
 		E7720050FD9B5CBA078892D0 /* ThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettings.swift; sourceTree = "<group>"; };
 		E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsHistory.swift; sourceTree = "<group>"; };
 		E87274D193465714FC7B8338 /* HistoryGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryGraphView.swift; sourceTree = "<group>"; };
 		E8AA37AAAC3548F1665817A7 /* CPUTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUTempWidget.swift; sourceTree = "<group>"; };
+		EA31B0302E9E975DF0E51A25 /* CIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIProvider.swift; sourceTree = "<group>"; };
+		EA75D888D822B244E302D7A0 /* GitHubProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubProvider.swift; sourceTree = "<group>"; };
 		ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherWidget.swift; sourceTree = "<group>"; };
 		EE5DAEB0F923572A17671A03 /* EdgeControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EdgeControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF64DE4468D6775CCA84D316 /* TouchRuntimeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchRuntimeState.swift; sourceTree = "<group>"; };
@@ -240,9 +318,11 @@
 		F362EA8761C591EFC0F589D5 /* WidgetCatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetCatalogView.swift; sourceTree = "<group>"; };
 		F4AEBEBD85B555348B27DEF9 /* PluginWidgetProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWidgetProvider.swift; sourceTree = "<group>"; };
 		F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoonPhaseWidget.swift; sourceTree = "<group>"; };
+		F7310505A90AA44D1201EFED /* RateLimitTrackingTransportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateLimitTrackingTransportTests.swift; sourceTree = "<group>"; };
 		F92C70F524C0B4EB51A0E3BF /* TemperatureWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureWidgetView.swift; sourceTree = "<group>"; };
 		FAAF537A233F5C783295F343 /* WidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetData.swift; sourceTree = "<group>"; };
 		FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		FB84A7F782A653FCC4822AD9 /* CommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandRunner.swift; sourceTree = "<group>"; };
 		FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetHeader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -321,6 +401,20 @@
 			path = Models;
 			sourceTree = "<group>";
 		};
+		34042B197DCE238652B39364 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				894257DCC41CF425603B8104 /* forgejo-repos.json */,
+				28760D4F25AA8E0A320A0D54 /* forgejo-runs.json */,
+				66ACE587D08F9C6516970671 /* forgejo-user.json */,
+				D453C8CB6E8919896376088D /* github-orgs.json */,
+				567341A3E54B10AF8BCE9E72 /* github-repos.json */,
+				A344FF5111EE9626D924058E /* github-runs.json */,
+				6915923EAB04D4A5F1DE68D4 /* github-user.json */,
+			);
+			path = Fixtures;
+			sourceTree = "<group>";
+		};
 		352413D117DBDEC660399BC5 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -345,9 +439,34 @@
 			path = System;
 			sourceTree = "<group>";
 		};
+		5E78968FF21B29232B9E53BF /* CI */ = {
+			isa = PBXGroup;
+			children = (
+				34042B197DCE238652B39364 /* Fixtures */,
+				4927E5114B917BAB4CFEC0E8 /* CIAccountStoreTests.swift */,
+				B86782373F8BBBB5FD23B390 /* CICDServiceTests.swift */,
+				2240A912641ADEE2291695AB /* CICDSettingsTests.swift */,
+				CB4A23F2797616B6C71DE408 /* CICDWidgetStateTests.swift */,
+				0CD84835E9C4E1128E590E97 /* CIErrorMappingTests.swift */,
+				DF07E045A0067C9FB0967E58 /* ConditionalGETTransportTests.swift */,
+				9F793A9942B72216E001EF72 /* CredentialImporterTests.swift */,
+				0115C324C27E6FD5E995E304 /* DiscoveryTests.swift */,
+				43F1521E21FECF0179E687B0 /* ForgejoProviderTests.swift */,
+				C22D3935E121EFF55DA69626 /* GitHubProviderTests.swift */,
+				F7310505A90AA44D1201EFED /* RateLimitTrackingTransportTests.swift */,
+				568231131F33767215953AC1 /* StubTransport.swift */,
+				5453A83A6BAD1EAF5A0F56DB /* WidgetDataSchemaTests.swift */,
+			);
+			path = CI;
+			sourceTree = "<group>";
+		};
 		61BE116F930CBA4ABBE3ADD3 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				E74CFD789D359E31C58B617F /* CICDAccountSheet.swift */,
+				6BB8F201D6B9EE09A097A158 /* CICDImportPrompt.swift */,
+				023C2E7A99806615566C2114 /* CICDImportPromptController.swift */,
+				A0C0585D4ECBD3C294076FCD /* CICDSettingsView.swift */,
 				5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */,
 				926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */,
 				12281DDDF4B06A76D53203CF /* PageManagerView.swift */,
@@ -386,12 +505,13 @@
 		6C21C94077386850ACCD94BB /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				8A8549516F5001CEA7D8CF63 /* CI */,
+				10418B6B91599F07758AB415 /* AppLog.swift */,
 				28B32F73BCB42D4A717959D3 /* AppModel.swift */,
 				96BA74C71D7F6F2ED713C5FD /* AudioService.swift */,
 				322BB0E114232C4FC2E95B0A /* BluetoothService.swift */,
 				D0D6B0E686C7958948D5F219 /* DiskIOService.swift */,
 				DC949C865B9083B7AA95480E /* DisplayManager.swift */,
-				788E53003A6A8077ED66E83A /* GitHubService.swift */,
 				121E4388008C822687930052 /* HardwareTouchService.swift */,
 				BF99821322AE802740C36545 /* LayoutEngine.swift */,
 				48CB02ECF8C910DBEA37D31F /* LayoutStore.swift */,
@@ -435,9 +555,32 @@
 		806D9CBB4F1F337B653462E0 /* EdgeControlTests */ = {
 			isa = PBXGroup;
 			children = (
-				511BD262E783D0F26F5A5BA8 /* AppSettingsTests.swift */,
+				5E78968FF21B29232B9E53BF /* CI */,
+				88D41E20A1F2AF5648229E3B /* LayoutConfigTests.swift */,
 			);
 			path = EdgeControlTests;
+			sourceTree = "<group>";
+		};
+		8A8549516F5001CEA7D8CF63 /* CI */ = {
+			isa = PBXGroup;
+			children = (
+				DE26FFFA83CDF5C88BBD15F2 /* CIAccount.swift */,
+				24809892629EBACFFC38EB1B /* CIAccountStore.swift */,
+				453D53C3890EBA09E023ACA9 /* CICDService.swift */,
+				4BDF35A627564E8D2563DCA8 /* CICDSettings.swift */,
+				EA31B0302E9E975DF0E51A25 /* CIProvider.swift */,
+				2AD8E3A956E53382040795B3 /* CIRun.swift */,
+				083EBD8A86C58AA57C85CA25 /* CIRunState.swift */,
+				42FDBFFBC3910900A76EF329 /* CISecretStore.swift */,
+				4AAAEFDCD79B89D602FB8443 /* CITransport.swift */,
+				FB84A7F782A653FCC4822AD9 /* CommandRunner.swift */,
+				A529E3A4FD9911D457E7E090 /* ConditionalGETTransport.swift */,
+				2D6D1A82A1FBCAFCABFF9C4D /* CredentialImporter.swift */,
+				847E4D4B6A34A4814BAB549F /* ForgejoProvider.swift */,
+				EA75D888D822B244E302D7A0 /* GitHubProvider.swift */,
+				D5688B35DBC480A88DE99C7F /* RateLimitTrackingTransport.swift */,
+			);
+			path = CI;
 			sourceTree = "<group>";
 		};
 		9D3E5D616BECBEDCCCAFADB4 /* Providers */ = {
@@ -557,6 +700,7 @@
 			buildConfigurationList = 3A02F287C7FDE61A697534E1 /* Build configuration list for PBXNativeTarget "EdgeControlTests" */;
 			buildPhases = (
 				8A537D5E5DA2E96F483B6344 /* Sources */,
+				6EB9A47E6F109A9E6C092CE4 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -616,6 +760,10 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1630;
 				TargetAttributes = {
+					1C0109EC402DBEAD7E3F9B3F = {
+						DevelopmentTeam = CNRZ47Y629;
+						ProvisioningStyle = Automatic;
+					};
 					C39108212599C90CB5C41F34 = {
 						DevelopmentTeam = CNRZ47Y629;
 						ProvisioningStyle = Automatic;
@@ -641,8 +789,8 @@
 			projectRoot = "";
 			targets = (
 				FB33E4AC7A3FA22BCE769CA5 /* EdgeControl */,
-				1C0109EC402DBEAD7E3F9B3F /* EdgeControlTests */,
 				C39108212599C90CB5C41F34 /* EdgeControlWidgets */,
+				1C0109EC402DBEAD7E3F9B3F /* EdgeControlTests */,
 			);
 		};
 /* End PBXProject section */
@@ -656,6 +804,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		6EB9A47E6F109A9E6C092CE4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0EA7AA99CCC37C26BC2FCE55 /* forgejo-repos.json in Resources */,
+				14E986BC310ED85F9AC48709 /* forgejo-runs.json in Resources */,
+				02C16759451A6E571B9F6829 /* forgejo-user.json in Resources */,
+				BC9C21332908CE217BAD6109 /* github-orgs.json in Resources */,
+				AAC6CB0E4100AB5F8DECC6A8 /* github-repos.json in Resources */,
+				F3F08FED2FBA0347BA00D333 /* github-runs.json in Resources */,
+				DE49107AE83643048C570264 /* github-user.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -663,18 +825,35 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C00DE5F6C2A285BDD9A2EB66 /* AppLog.swift in Sources */,
 				B1C52A02ECE07F0FDF6E912A /* AppModel.swift in Sources */,
 				A226D21D04E9530DC0EB8500 /* AudioDevicesWidget.swift in Sources */,
 				B11C45705B8FD14749D3EF34 /* AudioService.swift in Sources */,
 				06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */,
 				1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */,
+				70297266E1659373B133FC10 /* CIAccount.swift in Sources */,
+				131F5C2647932BF709DE1B17 /* CIAccountStore.swift in Sources */,
+				5366D4434410CC0EC2B9BB65 /* CICDAccountSheet.swift in Sources */,
+				E9823A182338C8491C736995 /* CICDImportPrompt.swift in Sources */,
+				2D6955D50ACE42CB8680B459 /* CICDImportPromptController.swift in Sources */,
 				AA67089D28BA104E142FBAD7 /* CICDRunsWidget.swift in Sources */,
+				4912C7C6DB086FBA4638A5AC /* CICDService.swift in Sources */,
+				F3DD44B23A3FA4999E7105E3 /* CICDSettings.swift in Sources */,
+				5A7F7291EB80585D5B2025C9 /* CICDSettingsView.swift in Sources */,
+				9A9D4E2C9BAFCA43F15221F2 /* CIProvider.swift in Sources */,
+				07F22FD2B6C31A550078652C /* CIRun.swift in Sources */,
+				0DB6D59FC350C661832FFE4E /* CIRunState.swift in Sources */,
+				928A7480ECF5377832106286 /* CISecretStore.swift in Sources */,
+				725BD4A8FE39BA4942B975CC /* CITransport.swift in Sources */,
 				FB74AECEAF33600374255AB1 /* CPUCoresWidget.swift in Sources */,
 				363607DB5872724C501A3B0A /* CPUGaugeWidget.swift in Sources */,
 				94FE718562DC7C587DCBE999 /* CPUHistoryWidget.swift in Sources */,
 				DF34A826FE02DBE0E38977E2 /* CPUTempWidget.swift in Sources */,
 				FA2DC89A27E123C170BF4422 /* CalibrationSupport.swift in Sources */,
 				00675BBB018816692ECC3E16 /* ClockWidget.swift in Sources */,
+				3D282679C726F7C60AE09600 /* CommandRunner.swift in Sources */,
+				537A4C6E5FB2382662EDC173 /* ConditionalGETTransport.swift in Sources */,
+				9B2C5A45DC622EE3FB08DC28 /* CredentialImporter.swift in Sources */,
 				5C8ECF6DC06FF87352563E91 /* DashboardShell.swift in Sources */,
 				8A5B816079D770AF77A7D5A9 /* DayProgressWidget.swift in Sources */,
 				3C658AE0CCFB9B32E8E5EC78 /* DiskIOService.swift in Sources */,
@@ -683,8 +862,9 @@
 				E0267A9816F1ADA90942A73B /* DisplayManager.swift in Sources */,
 				98C3A0C7BD110CF4249BE2C0 /* DisplaySettingsView.swift in Sources */,
 				A9EAF951FDFECBA77C400F08 /* EdgeControlApp.swift in Sources */,
+				CF5794C62F658F19C62C7D93 /* ForgejoProvider.swift in Sources */,
 				7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */,
-				52D5BE720F097A4EB813179B /* GitHubService.swift in Sources */,
+				1DFA6EA4E2C0BD5D4AC953B2 /* GitHubProvider.swift in Sources */,
 				69B8C3CBF6982B6FE821A527 /* GridPageView.swift in Sources */,
 				AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */,
 				EE048F1FD1E1DA49AC106EFE /* HistoryGraphView.swift in Sources */,
@@ -712,6 +892,7 @@
 				FFFBC9806B8378794277B5D9 /* ProcessListWidget.swift in Sources */,
 				450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */,
 				B0DC0DE2B4686BD868A4A150 /* RadialGaugeView.swift in Sources */,
+				0C36261A76ADD8D4185C3B95 /* RateLimitTrackingTransport.swift in Sources */,
 				8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */,
 				814C3B299B4CDDDCA0C4BD4C /* SSDTempWidget.swift in Sources */,
 				C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */,
@@ -748,8 +929,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				16431CC6842AC82817F6E9C2 /* AppLog.swift in Sources */,
 				EBAD9E2CA17B1529A8CFA6B8 /* CICDProvider.swift in Sources */,
 				0A7DDFD4973B48992791445A /* CICDWidgetView.swift in Sources */,
+				6ED422817D8A56C7F7B63207 /* CIRunState.swift in Sources */,
 				E66E7CCB6D6F44D5A71E8C30 /* DiskIOProvider.swift in Sources */,
 				F009D7FED7C0B0B7668235E6 /* DiskIOWidgetView.swift in Sources */,
 				F382891483C43830C8AE4F25 /* EdgeControlWidgets.swift in Sources */,
@@ -773,7 +956,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				110C4C69CB5B188D433F40C0 /* AppSettingsTests.swift in Sources */,
+				618B4EFC9CB490034D1C133A /* CIAccountStoreTests.swift in Sources */,
+				4A19DC974BD48681CAC16422 /* CICDServiceTests.swift in Sources */,
+				21D9F1ACCE921F7EF6CD43BA /* CICDSettingsTests.swift in Sources */,
+				476653D92C28402CD804B69B /* CICDWidgetStateTests.swift in Sources */,
+				E25FC554104707CC66DAC3C1 /* CIErrorMappingTests.swift in Sources */,
+				B6F83E7F8028FDCF7692FB68 /* ConditionalGETTransportTests.swift in Sources */,
+				38681F2D4A5DDA0E68F29E27 /* CredentialImporterTests.swift in Sources */,
+				F9CBEF101E96D3BC855980FE /* DiscoveryTests.swift in Sources */,
+				80C83021424728145CCAC151 /* ForgejoProviderTests.swift in Sources */,
+				09FEB2BFDC20840124FA3084 /* GitHubProviderTests.swift in Sources */,
+				303445182C922B7EC2923508 /* LayoutConfigTests.swift in Sources */,
+				93E3BDABAA934EF0D339DB0C /* RateLimitTrackingTransportTests.swift in Sources */,
+				367DC444F94891E30BA706C5 /* StubTransport.swift in Sources */,
+				5243AB65A4DE9BA92C19158B /* WidgetDataSchemaTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -797,7 +993,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = CNRZ47Y629;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -843,6 +1042,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -855,6 +1055,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.2.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -872,7 +1073,6 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/EdgeControl/EdgeControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CNRZ47Y629;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -881,7 +1081,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol;
 				PRODUCT_NAME = EdgeControl;
 				SDKROOT = macosx;
@@ -893,7 +1092,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = CNRZ47Y629;
+				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -939,6 +1141,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -957,6 +1160,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 2.2.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1011,7 +1215,6 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/EdgeControl/EdgeControl.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = CNRZ47Y629;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -1020,7 +1223,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.pakslab.edgecontrol;
 				PRODUCT_NAME = EdgeControl;
 				SDKROOT = macosx;

@@ -5,6 +5,7 @@ enum SettingsTab: String, CaseIterable {
     case widgets = "Widgets"
     case theme = "Theme"
     case plugins = "Plugins"
+    case cicd = "CI/CD"
     case display = "Display"
     case general = "General"
 
@@ -14,6 +15,7 @@ enum SettingsTab: String, CaseIterable {
         case .widgets: "square.grid.2x2"
         case .theme: "paintbrush"
         case .plugins: "puzzlepiece.extension"
+        case .cicd: "arrow.triangle.branch"
         case .display: "display"
         case .general: "gearshape"
         }
@@ -103,6 +105,8 @@ struct SettingsView: View {
                     ThemeSettingsView()
                 case .plugins:
                     PluginManagerView()
+                case .cicd:
+                    CICDSettingsView()
                 case .display:
                     DisplaySettingsView()
                 case .general:

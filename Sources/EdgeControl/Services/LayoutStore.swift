@@ -35,11 +35,27 @@ public final class LayoutStore: Sendable {
     public func save(_ document: LayoutDocument) {
         let url = Self.fileURL
         let dir = Self.directoryURL
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        AppLog.attempt("creating layout directory") {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        guard let data = try? encoder.encode(document) else { return }
-        try? data.write(to: url, options: .atomic)
+
+        let data: Data
+        do {
+            data = try encoder.encode(document)
+        } catch {
+            AppLog.persistence.error(
+                "encoding layout failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+        // A failure here loses the user's dashboard arrangement. It used to be
+        // discarded silently, which made "my layout reset itself" impossible to
+        // diagnose.
+        AppLog.attempt("writing layout to \(url.lastPathComponent)") {
+            try data.write(to: url, options: .atomic)
+        }
     }
 
     // MARK: - Export / Import

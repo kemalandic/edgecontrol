@@ -32,6 +32,13 @@ public struct WidgetData: Codable, Sendable {
 
     // CI/CD
     public let cicdRuns: [WidgetCICDRun]
+    /// Bumped whenever the shared payload changes shape. The widget refuses
+    /// snapshots it does not recognise rather than rendering wrong data.
+    public static let currentSchemaVersion = 2
+    public let schemaVersion: Int
+    /// Set when there are no runs for a reason worth showing, e.g.
+    /// "No accounts configured". Nil when runs are present.
+    public let cicdStatusNote: String?
 
     public init(
         timestamp: Date = Date(),
@@ -50,7 +57,8 @@ public struct WidgetData: Codable, Sendable {
         wifiSignalStrength: Int? = nil,
         wifiChannel: Int? = nil,
         wifiBand: String? = nil,
-        cicdRuns: [WidgetCICDRun] = []
+        cicdRuns: [WidgetCICDRun] = [],
+        cicdStatusNote: String? = nil
     ) {
         self.timestamp = timestamp
         self.cpuUsage = cpuUsage
@@ -69,6 +77,9 @@ public struct WidgetData: Codable, Sendable {
         self.wifiChannel = wifiChannel
         self.wifiBand = wifiBand
         self.cicdRuns = cicdRuns
+        self.cicdStatusNote = cicdStatusNote
+        // Derived, never passed in.
+        self.schemaVersion = Self.currentSchemaVersion
     }
 
     /// Reads WidgetData from the shared App Group container.
@@ -77,7 +88,16 @@ public struct WidgetData: Codable, Sendable {
             forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
         )?.appendingPathComponent("EdgeControlWidgets.json") else { return nil }
         guard let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder.widgetDecoder.decode(WidgetData.self, from: data)
+        return decode(from: data)
+    }
+
+    /// Returns nil for a snapshot written by a different schema version, so
+    /// the widget can say "open the app to refresh" instead of rendering
+    /// stale or wrong data.
+    public static func decode(from data: Data) -> WidgetData? {
+        guard let decoded = try? JSONDecoder.widgetDecoder.decode(WidgetData.self, from: data),
+              decoded.schemaVersion == currentSchemaVersion else { return nil }
+        return decoded
     }
 
     /// Writes WidgetData to the shared App Group container.
@@ -85,8 +105,19 @@ public struct WidgetData: Codable, Sendable {
         guard let url = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
         )?.appendingPathComponent("EdgeControlWidgets.json") else { return }
-        guard let data = try? JSONEncoder.widgetEncoder.encode(self) else { return }
-        try? data.write(to: url, options: .atomic)
+        let data: Data
+        do {
+            data = try JSONEncoder.widgetEncoder.encode(self)
+        } catch {
+            AppLog.persistence.error(
+                "encoding widget snapshot failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+        // A failure here freezes the desktop widget on stale data.
+        AppLog.attempt("writing widget snapshot") {
+            try data.write(to: url, options: .atomic)
+        }
     }
 
     /// Whether data is stale (older than 10 minutes).
@@ -101,20 +132,32 @@ public struct WidgetData: Codable, Sendable {
 }
 
 public struct WidgetCICDRun: Codable, Identifiable, Sendable {
-    public let id: Int
+    /// Globally unique: "<accountID>/<repo>/<runID>".
+    public let id: String
+    /// Rendered under the repository name when several accounts are configured.
+    public let hostLabel: String
     public let repoName: String
     public let title: String
-    public let status: String
-    public let conclusion: String?
+    /// Normalised across hosts — replaces the old GitHub-shaped
+    /// `status` + `conclusion` pair.
+    public let state: CIRunState
     public let url: String
     public let updatedAt: Date
 
-    public init(id: Int, repoName: String, title: String, status: String, conclusion: String?, url: String, updatedAt: Date) {
+    public init(
+        id: String,
+        hostLabel: String,
+        repoName: String,
+        title: String,
+        state: CIRunState,
+        url: String,
+        updatedAt: Date
+    ) {
         self.id = id
+        self.hostLabel = hostLabel
         self.repoName = repoName
         self.title = title
-        self.status = status
-        self.conclusion = conclusion
+        self.state = state
         self.url = url
         self.updatedAt = updatedAt
     }

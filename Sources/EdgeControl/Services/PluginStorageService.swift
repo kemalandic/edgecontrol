@@ -93,7 +93,21 @@ public final class PluginStorageService {
 
     private func persistStore(pluginId: String, store: [String: Any]) {
         let url = storageURL(pluginId: pluginId)
-        guard let data = try? JSONSerialization.data(withJSONObject: store, options: [.prettyPrinted, .sortedKeys]) else { return }
-        try? data.write(to: url, options: .atomic)
+        let data: Data
+        do {
+            data = try JSONSerialization.data(
+                withJSONObject: store, options: [.prettyPrinted, .sortedKeys]
+            )
+        } catch {
+            AppLog.persistence.error(
+                "encoding plugin storage for \(pluginId, privacy: .public) failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+        // Losing this silently means a plugin's saved data vanishes with no
+        // trace of why.
+        AppLog.attempt("writing plugin storage for \(pluginId)") {
+            try data.write(to: url, options: .atomic)
+        }
     }
 }
