@@ -25,6 +25,7 @@
 		14E986BC310ED85F9AC48709 /* forgejo-runs.json in Resources */ = {isa = PBXBuildFile; fileRef = 28760D4F25AA8E0A320A0D54 /* forgejo-runs.json */; };
 		16431CC6842AC82817F6E9C2 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10418B6B91599F07758AB415 /* AppLog.swift */; };
 		166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */; };
+		16BB7D94190899C7839C72CD /* PulsingDot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D785B83D133CA91BDEC3FF8F /* PulsingDot.swift */; };
 		1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */; };
 		1DFA6EA4E2C0BD5D4AC953B2 /* GitHubProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA75D888D822B244E302D7A0 /* GitHubProvider.swift */; };
 		21D9F1ACCE921F7EF6CD43BA /* CICDSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2240A912641ADEE2291695AB /* CICDSettingsTests.swift */; };
@@ -75,6 +76,7 @@
 		7969AD59663208973EE2D54B /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889153D44C024953157FD491 /* ThemeSettingsView.swift */; };
 		7BB31A753E0DA25D72DE20FE /* WidgetDataBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108B38781DD41D025E9B102E /* WidgetDataBridge.swift */; };
 		7E017066085F7359B6603574 /* ThemeEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */; };
+		7E1E8637EF8A6CEEA8091FD9 /* TimeAgoText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175487C4A1C40E40556F6FA6 /* TimeAgoText.swift */; };
 		7F9DC2CF3A63DAAB9A3363C1 /* MetricsHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */; };
 		7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */; };
 		80C83021424728145CCAC151 /* ForgejoProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43F1521E21FECF0179E687B0 /* ForgejoProviderTests.swift */; };
@@ -196,6 +198,7 @@
 		121E4388008C822687930052 /* HardwareTouchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareTouchService.swift; sourceTree = "<group>"; };
 		12281DDDF4B06A76D53203CF /* PageManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageManagerView.swift; sourceTree = "<group>"; };
 		13E1E34BE98DBAD8EAD506EE /* PerCoreTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerCoreTempWidget.swift; sourceTree = "<group>"; };
+		175487C4A1C40E40556F6FA6 /* TimeAgoText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeAgoText.swift; sourceTree = "<group>"; };
 		209C768AAC71FE2E18323927 /* CICDRunsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDRunsWidget.swift; sourceTree = "<group>"; };
 		212E7566E86096DF6B8C49AE /* WiFiInfoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiInfoWidget.swift; sourceTree = "<group>"; };
 		2240A912641ADEE2291695AB /* CICDSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDSettingsTests.swift; sourceTree = "<group>"; };
@@ -294,6 +297,7 @@
 		D2EAAD6F93BA48C0F49E383A /* SystemMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMetrics.swift; sourceTree = "<group>"; };
 		D453C8CB6E8919896376088D /* github-orgs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "github-orgs.json"; sourceTree = "<group>"; };
 		D5688B35DBC480A88DE99C7F /* RateLimitTrackingTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RateLimitTrackingTransport.swift; sourceTree = "<group>"; };
+		D785B83D133CA91BDEC3FF8F /* PulsingDot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PulsingDot.swift; sourceTree = "<group>"; };
 		DC949C865B9083B7AA95480E /* DisplayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayManager.swift; sourceTree = "<group>"; };
 		DDFD59423340AB3F1E94C8B0 /* SSDTempWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSDTempWidget.swift; sourceTree = "<group>"; };
 		DE26FFFA83CDF5C88BBD15F2 /* CIAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIAccount.swift; sourceTree = "<group>"; };
@@ -547,8 +551,10 @@
 			children = (
 				E87274D193465714FC7B8338 /* HistoryGraphView.swift */,
 				E7DB749FF546CCDC8B0085DE /* MetricsHistory.swift */,
+				D785B83D133CA91BDEC3FF8F /* PulsingDot.swift */,
 				941EAFB44618565E4CBD7590 /* RadialGaugeView.swift */,
 				662EDBA8D127E44B0522687F /* ThemeEnvironment.swift */,
+				175487C4A1C40E40556F6FA6 /* TimeAgoText.swift */,
 				E4E52144F8D00F3651D539D8 /* TouchScrollView.swift */,
 				FB97EE7214F6CFD61B2DCE9C /* WidgetHeader.swift */,
 			);
@@ -894,6 +900,7 @@
 				026C8F39C2B077D936C72FB3 /* PluginWidgetRenderer.swift in Sources */,
 				FFFBC9806B8378794277B5D9 /* ProcessListWidget.swift in Sources */,
 				450031E0E0A974BC3D7F765E /* ProcessMonitorService.swift in Sources */,
+				16BB7D94190899C7839C72CD /* PulsingDot.swift in Sources */,
 				B0DC0DE2B4686BD868A4A150 /* RadialGaugeView.swift in Sources */,
 				0C36261A76ADD8D4185C3B95 /* RateLimitTrackingTransport.swift in Sources */,
 				8AE3BEA60D3B051B31EBDD80 /* SMCService.swift in Sources */,
@@ -908,6 +915,7 @@
 				7E017066085F7359B6603574 /* ThemeEnvironment.swift in Sources */,
 				A930352AA228A2C41251A6D3 /* ThemeSettings.swift in Sources */,
 				7969AD59663208973EE2D54B /* ThemeSettingsView.swift in Sources */,
+				7E1E8637EF8A6CEEA8091FD9 /* TimeAgoText.swift in Sources */,
 				6ED4A2A9EB295CA35CC5F63E /* TouchButton.swift in Sources */,
 				F1867A3A7E2C2E16B323838A /* TouchRuntimeState.swift in Sources */,
 				E4EF206AFB7EE585906B13E2 /* TouchScrollView.swift in Sources */,

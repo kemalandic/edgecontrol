@@ -15,6 +15,12 @@ public struct TimeAgoText: View {
         self.iso = iso
     }
 
+    /// Callers that already hold a `Date` — most of the app does — should not
+    /// have to round-trip through a string to use this.
+    public init(_ date: Date) {
+        self.iso = ISO8601DateFormatter().string(from: date)
+    }
+
     public var body: some View {
         Text(TimeAgoText.format(iso: iso, now: now))
             .onReceive(timer) { tick in now = tick }

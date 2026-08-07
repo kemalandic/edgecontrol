@@ -77,14 +77,20 @@ struct CICDSettingsView: View {
 
     private func accountRow(_ account: CIAccount) -> some View {
         HStack(spacing: 10) {
-            Circle()
-                .fill(healthColor(for: account))
-                .frame(width: 8, height: 8)
+            // Pulsing while a sync is in flight; a static dot otherwise, so the
+            // motion means something rather than decorating every row.
+            if case .syncing = service.accountStates[account.id] {
+                PulsingDot(color: Theme.accentYellow, size: 8)
+            } else {
+                Circle()
+                    .fill(healthColor(for: account))
+                    .frame(width: 8, height: 8)
+            }
             VStack(alignment: .leading, spacing: 2) {
                 Text(account.host)
                     .font(Theme.body(ts))
                     .foregroundStyle(Theme.text1(ts))
-                Text(healthDetail(for: account))
+                healthDetail(for: account)
                     .font(Theme.label(ts))
                     .foregroundStyle(Theme.text3(ts))
             }
@@ -179,20 +185,25 @@ struct CICDSettingsView: View {
         }
     }
 
-    private func healthDetail(for account: CIAccount) -> String {
+    /// `.ok` renders through `TimeAgoText` because the age has to keep
+    /// counting: a plain formatted string is computed once and then sits there
+    /// claiming "2m ago" long after it stopped being true.
+    @ViewBuilder
+    private func healthDetail(for account: CIAccount) -> some View {
         switch service.accountStates[account.id] {
         case .ok(let date):
-            return "Synced \(Self.relative.localizedString(for: date, relativeTo: Date()))"
+            HStack(spacing: 3) {
+                Text("Synced")
+                TimeAgoText(date)
+            }
         case .failed(let error, _):
-            return error.widgetMessage
+            Text(error.widgetMessage)
         case .syncing:
-            return "Syncing…"
+            Text("Syncing…")
         default:
-            return "Not started"
+            Text("Not started")
         }
     }
-
-    private static let relative = RelativeDateTimeFormatter()
 
     // MARK: - Discovery
 
