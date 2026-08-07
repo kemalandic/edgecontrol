@@ -37,7 +37,7 @@ public final class BluetoothService: ObservableObject {
     /// the main actor froze the UI = beachball-on-hover the user reported
     /// 2026-05-21. Keep IOBluetooth strictly on this queue.
     private static let bluetoothQueue = DispatchQueue(
-        label: "dev.imaznation.edgecontrol.bluetooth",
+        label: "ai.pakslab.edgecontrol.bluetooth",
         qos: .utility
     )
 
