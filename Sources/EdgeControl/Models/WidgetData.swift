@@ -189,21 +189,43 @@ public struct PluginWidgetManifest: Codable, Sendable {
         return try? JSONDecoder.widgetDecoder.decode(PluginWidgetManifest.self, from: data)
     }
 
+    /// Serial: two writes in quick succession must land in the order they were
+    /// issued. A concurrent queue would let the older manifest win at random.
+    private static let writeQueue = DispatchQueue(
+        label: "ai.pakslab.edgecontrol.plugin-manifest",
+        qos: .utility
+    )
+
     public func write() {
         guard let dir = Self.containerDirectory else { return }
-        guard let data = try? JSONEncoder.widgetEncoder.encode(self) else { return }
+        let data: Data
+        do {
+            data = try JSONEncoder.widgetEncoder.encode(self)
+        } catch {
+            AppLog.persistence.error(
+                "encoding plugin manifest failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
         // App-group container writes have been observed hanging the calling
         // thread on __open inside Foundation's atomic-write path (sandbox /
-        // container-manager state we don't control). Move the entire dance
-        // — directory creation, freshness check, atomic write — to a
-        // background queue with a fire-and-forget contract so the main
-        // thread never blocks on this call. Worst case the manifest is a
-        // tick stale, which is fine for desktop widgets that already poll.
-        DispatchQueue.global(qos: .utility).async {
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        // container-manager state we don't control). Move the whole dance —
+        // directory creation, freshness check, atomic write — off the caller's
+        // thread. Worst case the manifest is a tick stale, which is fine for
+        // desktop widgets that already poll.
+        Self.writeQueue.async {
+            AppLog.attempt("creating plugin manifest directory") {
+                try FileManager.default.createDirectory(
+                    at: dir, withIntermediateDirectories: true
+                )
+            }
             let url = dir.appendingPathComponent("plugins.json")
+            // Unchanged manifests are common — the renderer rewrites on every
+            // pass. Skipping the write avoids waking WidgetKit for nothing.
             if let existing = try? Data(contentsOf: url), existing == data { return }
-            try? data.write(to: url, options: .atomic)
+            AppLog.attempt("writing plugin manifest") {
+                try data.write(to: url, options: .atomic)
+            }
         }
     }
 
