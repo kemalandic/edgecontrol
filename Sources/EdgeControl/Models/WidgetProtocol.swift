@@ -313,7 +313,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case weather        // WeatherService
     case diskIO         // DiskIOService
     case process        // ProcessMonitorService
-    case github         // GitHubService
+    case cicd           // CICDService — GitHub, Forgejo, any future host
 }
 
 // MARK: - Dashboard Widget Protocol

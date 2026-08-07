@@ -46,7 +46,7 @@ public final class WidgetDataBridge {
             .store(in: &cancellables)
 
         // Observe CI/CD changes
-        model.githubService.$runs
+        model.cicdService.$runs
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.scheduleWrite() }
             .store(in: &cancellables)
@@ -73,7 +73,7 @@ public final class WidgetDataBridge {
         let net = model.networkService
         let disk = model.diskIOService
         let wifi = model.wifiService
-        let github = model.githubService
+        let cicd = model.cicdService
 
         let data = WidgetData(
             timestamp: Date(),
@@ -92,17 +92,22 @@ public final class WidgetDataBridge {
             wifiSignalStrength: wifi.isConnected ? wifi.signalStrength : nil,
             wifiChannel: wifi.isConnected ? wifi.channel : nil,
             wifiBand: nil,
-            cicdRuns: github.runs.prefix(10).map { run in
+            cicdRuns: cicd.runs.prefix(10).map { run in
                 WidgetCICDRun(
                     id: run.id,
-                    repoName: run.repoName,
-                    title: run.displayTitle,
-                    status: run.status,
-                    conclusion: run.conclusion,
-                    url: run.url,
-                    updatedAt: Date()
+                    hostLabel: run.hostLabel,
+                    repoName: run.repositoryName,
+                    title: run.title,
+                    state: run.state,
+                    url: run.url.absoluteString,
+                    updatedAt: run.startedAt
                 )
-            }
+            },
+            cicdStatusNote: Self.statusNote(
+                runs: cicd.runs,
+                accounts: model.accountStore.accounts,
+                states: cicd.accountStates
+            )
         )
 
         data.write()
@@ -112,5 +117,27 @@ public final class WidgetDataBridge {
     /// Force immediate write (called on app termination).
     public func flush() {
         writeSnapshot()
+    }
+
+    /// Why the desktop widget has no runs to show, phrased for the user.
+    ///
+    /// Shares `CICDWidgetState` with the in-app widget so both surfaces always
+    /// agree — the desktop widget previously rendered blank space for every one
+    /// of these cases.
+    nonisolated static func statusNote(
+        runs: [CIRun],
+        accounts: [CIAccount],
+        states: [UUID: CIAccountState]
+    ) -> String? {
+        switch CICDWidgetState.resolve(runs: runs, accounts: accounts, states: states) {
+        case .noAccounts:
+            return "No accounts configured"
+        case .accountError(let host, let error):
+            return "\(host) — \(error.widgetMessage)"
+        case .empty:
+            return "No recent runs"
+        case .runs:
+            return nil
+        }
     }
 }

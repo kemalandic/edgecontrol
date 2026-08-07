@@ -1,0 +1,82 @@
+{
+  "total_count": 7,
+  "workflow_runs": [
+    {
+      "id": 29978452950,
+      "name": "Release Individual Service",
+      "display_title": "fix(api): reject zero-amount events",
+      "status": "completed",
+      "conclusion": "success",
+      "head_branch": "api/v1.0.46",
+      "run_started_at": "2026-07-23T04:00:57Z",
+      "run_number": 87,
+      "html_url": "https://github.com/acme/platform/actions/runs/29978452950"
+    },
+    {
+      "id": 2,
+      "name": "Tests",
+      "display_title": "add coverage",
+      "status": "completed",
+      "conclusion": "failure",
+      "head_branch": "main",
+      "run_started_at": "2026-07-23T03:00:00Z",
+      "run_number": 86,
+      "html_url": "https://github.com/acme/platform/actions/runs/2"
+    },
+    {
+      "id": 3,
+      "name": "Tests",
+      "display_title": "flaky rerun",
+      "status": "completed",
+      "conclusion": "timed_out",
+      "head_branch": "main",
+      "run_started_at": "2026-07-23T02:00:00Z",
+      "run_number": 85,
+      "html_url": "https://github.com/acme/platform/actions/runs/3"
+    },
+    {
+      "id": 4,
+      "name": "Deploy",
+      "display_title": "manual stop",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "head_branch": "main",
+      "run_started_at": "2026-07-23T01:00:00Z",
+      "run_number": 84,
+      "html_url": "https://github.com/acme/platform/actions/runs/4"
+    },
+    {
+      "id": 5,
+      "name": "Deploy",
+      "display_title": "no changes",
+      "status": "completed",
+      "conclusion": "neutral",
+      "head_branch": "main",
+      "run_started_at": "2026-07-23T00:00:00Z",
+      "run_number": 83,
+      "html_url": "https://github.com/acme/platform/actions/runs/5"
+    },
+    {
+      "id": 6,
+      "name": "Build",
+      "display_title": "in flight",
+      "status": "in_progress",
+      "conclusion": null,
+      "head_branch": "feature/x",
+      "run_started_at": "2026-07-22T23:00:00Z",
+      "run_number": 82,
+      "html_url": "https://github.com/acme/platform/actions/runs/6"
+    },
+    {
+      "id": 7,
+      "name": "Build",
+      "display_title": "waiting for runner",
+      "status": "queued",
+      "conclusion": null,
+      "head_branch": "feature/y",
+      "run_started_at": "2026-07-22T22:00:00Z",
+      "run_number": 81,
+      "html_url": "https://github.com/acme/platform/actions/runs/7"
+    }
+  ]
+}

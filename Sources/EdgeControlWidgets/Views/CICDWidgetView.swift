@@ -10,7 +10,7 @@ struct CICDWidget: Widget {
                 .containerBackground(WidgetColors.background, for: .widget)
         }
         .configurationDisplayName("CI/CD")
-        .description("GitHub Actions workflow runs")
+        .description("Workflow runs from GitHub and Forgejo/Gitea")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -48,9 +48,13 @@ struct CICDWidgetView: View {
 
             if entry.runs.isEmpty {
                 Spacer()
-                Text("No runs")
+                // The note explains *why* there is nothing — no accounts, a dead
+                // token, an unreachable host, or genuinely no runs. Falling back
+                // to "No runs" only when the app has not told us.
+                Text(entry.statusNote ?? "No runs")
                     .font(.system(size: 13, design: .rounded))
                     .foregroundStyle(WidgetColors.textTertiary)
+                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                 Spacer()
             } else {
@@ -64,6 +68,11 @@ struct CICDWidgetView: View {
         .staleOverlay(isStale: entry.isStale, minutesAgo: entry.minutesAgo)
     }
 
+    /// True when the snapshot carries runs from more than one host.
+    private var multipleHosts: Bool {
+        Set(entry.runs.map(\.hostLabel)).count > 1
+    }
+
     private func runRow(_ run: WidgetCICDRun) -> some View {
         HStack(spacing: 8) {
             Circle()
@@ -71,9 +80,20 @@ struct CICDWidgetView: View {
                 .frame(width: 8, height: 8)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(run.repoName)
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                    .foregroundStyle(WidgetColors.textTertiary)
+                HStack(spacing: 4) {
+                    Text(run.repoName)
+                        .font(.system(size: 10, weight: .heavy, design: .rounded))
+                        .foregroundStyle(WidgetColors.textTertiary)
+                    // Without this, runs from three hosts sit in one list with
+                    // no way to tell them apart. Skipped on the small family,
+                    // where there is no room, and when a single host is in play.
+                    if family != .systemSmall, multipleHosts {
+                        Text(run.hostLabel)
+                            .font(.system(size: 9, design: .rounded))
+                            .foregroundStyle(WidgetColors.textTertiary.opacity(0.65))
+                            .lineLimit(1)
+                    }
+                }
 
                 if family != .systemSmall {
                     Text(run.title)
@@ -95,23 +115,23 @@ struct CICDWidgetView: View {
     }
 
     private func statusColor(_ run: WidgetCICDRun) -> Color {
-        if run.status == "in_progress" { return WidgetColors.yellow }
-        switch run.conclusion {
-        case "success": return WidgetColors.green
-        case "failure": return WidgetColors.red
-        case "cancelled": return WidgetColors.textTertiary
-        default: return WidgetColors.cyan
+        switch run.state {
+        case .running, .queued:              return WidgetColors.yellow
+        case .success:                       return WidgetColors.green
+        case .failure:                       return WidgetColors.red
+        case .cancelled, .skipped, .unknown: return WidgetColors.textTertiary
         }
     }
 
     private func statusLabel(_ run: WidgetCICDRun) -> String {
-        if run.status == "in_progress" { return "RUN" }
-        if run.status == "queued" { return "QUEUE" }
-        switch run.conclusion {
-        case "success": return "PASS"
-        case "failure": return "FAIL"
-        case "cancelled": return "SKIP"
-        default: return String(run.status.prefix(4)).uppercased()
+        switch run.state {
+        case .running:   return "RUN"
+        case .queued:    return "QUEUE"
+        case .success:   return "PASS"
+        case .failure:   return "FAIL"
+        case .cancelled: return "CANCEL"
+        case .skipped:   return "SKIP"
+        case .unknown:   return "—"
         }
     }
 }

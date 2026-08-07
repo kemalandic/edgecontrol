@@ -106,7 +106,7 @@ public final class WidgetRegistry: ObservableObject {
         register(MoonPhaseWidget())
 
         // DevTools
-        register(CICDRunsWidget(service: model.githubService))
+        register(CICDRunsWidget(service: model.cicdService))
     }
 
     /// Register all widgets from enabled plugins.

@@ -1,0 +1,95 @@
+{
+  "total_count": 8,
+  "workflow_runs": [
+    {
+      "id": 312,
+      "index_in_repo": 221,
+      "workflow_id": "ci.yml",
+      "title": "chore(backoffice): remove deprecated admin",
+      "status": "success",
+      "prettyref": "main",
+      "event": "push",
+      "created": "2026-08-05T23:25:36Z",
+      "started": "2026-08-05T23:25:37Z",
+      "stopped": "2026-08-05T23:25:52Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/221"
+    },
+    {
+      "id": 311,
+      "index_in_repo": 220,
+      "workflow_id": "ci.yml",
+      "title": "failing build",
+      "status": "failure",
+      "prettyref": "main",
+      "created": "2026-08-05T22:00:00Z",
+      "started": "2026-08-05T22:00:01Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/220"
+    },
+    {
+      "id": 310,
+      "index_in_repo": 219,
+      "workflow_id": "ci.yml",
+      "title": "superseded",
+      "status": "cancelled",
+      "prettyref": "main",
+      "created": "2026-08-05T21:00:00Z",
+      "started": "2026-08-05T21:00:01Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/219"
+    },
+    {
+      "id": 309,
+      "index_in_repo": 218,
+      "workflow_id": "deploy.yml",
+      "title": "in flight",
+      "status": "running",
+      "prettyref": "release/1.2",
+      "created": "2026-08-05T20:00:00Z",
+      "started": "2026-08-05T20:00:01Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/218"
+    },
+    {
+      "id": 308,
+      "index_in_repo": 217,
+      "workflow_id": "deploy.yml",
+      "title": "no runner yet",
+      "status": "waiting",
+      "prettyref": "main",
+      "created": "2026-08-05T19:00:00Z",
+      "started": "0001-01-01T00:00:00Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/217"
+    },
+    {
+      "id": 307,
+      "index_in_repo": 216,
+      "workflow_id": "deploy.yml",
+      "title": "needs approval",
+      "status": "blocked",
+      "prettyref": "main",
+      "created": "2026-08-05T18:00:00Z",
+      "started": "0001-01-01T00:00:00Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/216"
+    },
+    {
+      "id": 306,
+      "index_in_repo": 215,
+      "workflow_id": "ci.yml",
+      "title": "path filter miss",
+      "status": "skipped",
+      "prettyref": "main",
+      "created": "2026-08-05T17:00:00Z",
+      "started": "2026-08-05T17:00:01Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/215"
+    },
+    {
+      "id": 305,
+      "index_in_repo": 214,
+      "workflow_id": "ci.yml",
+      "title": "odd state",
+      "status": "unknown",
+      "prettyref": "main",
+      "created": "2026-08-05T16:00:00Z",
+      "started": "2026-08-05T16:00:01Z",
+      "html_url": "https://git.example.dev/acme/feed/actions/runs/214"
+    }
+  ]
+}

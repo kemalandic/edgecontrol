@@ -1,0 +1,6 @@
+[
+  { "full_name": "acme/feed", "name": "feed", "updated_at": "2026-08-06T02:30:56Z",
+    "owner": { "login": "acme" } },
+  { "full_name": "acme/old",  "name": "old",  "updated_at": "2024-03-01T00:00:00Z",
+    "owner": { "login": "acme" } }
+]

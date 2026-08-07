@@ -22,7 +22,8 @@ public final class AppModel: ObservableObject {
     public let audioService = AudioService()
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
-    public let githubService = GitHubService()
+    public let accountStore = CIAccountStore()
+    public private(set) lazy var cicdService = CICDService(accountStore: accountStore)
     public var widgetDataBridge: WidgetDataBridge?
     public var pluginWidgetRenderer: PluginWidgetRenderer?
     private let displayManager: DisplayManager
@@ -140,7 +141,7 @@ public final class AppModel: ObservableObject {
         case .weather: return weatherService
         case .diskIO: return diskIOService
         case .process: return processService
-        case .github: return githubService
+        case .cicd: return cicdService
         }
     }
 
@@ -178,4 +179,4 @@ extension AudioService: ServiceLifecycle {}
 extension WeatherDataService: ServiceLifecycle {}
 extension DiskIOService: ServiceLifecycle {}
 extension ProcessMonitorService: ServiceLifecycle {}
-extension GitHubService: ServiceLifecycle {}
+extension CICDService: ServiceLifecycle {}

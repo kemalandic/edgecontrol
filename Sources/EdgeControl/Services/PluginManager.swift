@@ -267,7 +267,17 @@ public final class PluginManager: ObservableObject {
     private func saveState() {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
-        guard let data = try? encoder.encode(savedState) else { return }
-        try? data.write(to: Self.stateURL, options: .atomic)
+        let data: Data
+        do {
+            data = try encoder.encode(savedState)
+        } catch {
+            AppLog.plugins.error(
+                "encoding plugin state failed: \(error.localizedDescription, privacy: .public)"
+            )
+            return
+        }
+        AppLog.attempt("writing plugin state", log: AppLog.plugins) {
+            try data.write(to: Self.stateURL, options: .atomic)
+        }
     }
 }

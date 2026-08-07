@@ -34,7 +34,7 @@ EdgeControl turns any display into a fully customizable system dashboard. You cr
 
 **Info (5)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase
 
-**DevTools (1)** — CI/CD Runs (GitHub Actions across all repos)
+**DevTools (1)** — CI/CD Runs (GitHub Actions and Forgejo/Gitea, across all your hosts)
 
 ### Dynamic Grid Layout
 
@@ -67,7 +67,9 @@ EdgeControl provides native macOS desktop widgets via WidgetKit — add system m
 - **Disk I/O** — Read/write speeds (small/medium)
 - **Network** — Upload/download speeds (small/medium)
 - **WiFi Info** — SSID, signal strength, channel (small/medium)
-- **CI/CD** — GitHub Actions run status (small/medium/large)
+- **CI/CD** — Workflow run status from GitHub and Forgejo/Gitea (small/medium/large)
+
+See [CI/CD setup](docs/cicd-setup.md) for adding accounts and the token scopes required.
 - **Plugin Widget** — Any plugin with `desktopWidget` support rendered as a desktop widget
 
 ### Plugin System

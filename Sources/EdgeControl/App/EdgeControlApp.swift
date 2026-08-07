@@ -59,6 +59,7 @@ final class DashboardWindowController {
 @MainActor
 final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     private let model: AppModel
+    private let cicdImportPrompt = CICDImportPromptController()
     private let layoutEngine: LayoutEngine
     private let registry: WidgetRegistry
     private let history: MetricsHistory
@@ -91,6 +92,9 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
             pluginManager: pluginManager
         )
         NSApp.activate(ignoringOtherApps: true)
+        // One-time offer to import gh/tea logins; no-op once shown or once
+        // an account exists.
+        cicdImportPrompt.offerIfNeeded(model: model)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
