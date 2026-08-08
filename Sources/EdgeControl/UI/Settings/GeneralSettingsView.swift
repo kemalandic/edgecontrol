@@ -74,6 +74,43 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // Units
+            HStack(spacing: 10) {
+                Image(systemName: "ruler")
+                    .font(.system(size: 16))
+                    .foregroundStyle(accent)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Units")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text(layoutEngine.document.globalSettings.units.detail)
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                }
+
+                Spacer()
+
+                Picker("", selection: Binding(
+                    get: { layoutEngine.document.globalSettings.units },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.units = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                    }
+                )) {
+                    ForEach(UnitSystem.allCases, id: \.self) { system in
+                        Text(system.displayName).tag(system)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 180)
+            }
+            .padding(10)
+            .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
             Divider().background(Theme.borderSubtle)
 
             // Layout export/import

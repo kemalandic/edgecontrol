@@ -36,6 +36,7 @@ public final class WeatherWidget: DashboardWidget {
 private struct WeatherWidgetBody: View {
     @ObservedObject var service: WeatherDataService
     @Environment(\.themeSettings) private var ts
+    @Environment(\.unitSystem) private var units
     let showForecast: Bool
     let isCompact: Bool
 
@@ -80,7 +81,7 @@ private struct WeatherWidgetBody: View {
                     .font(.system(size: (isCompact ? 36 : 64) * ts.fontScale))
                     .symbolRenderingMode(.multicolor)
 
-                Text(String(format: "%.0f°", w.temperature))
+                Text(units.degrees(fromCelsius: w.temperature))
                     .font(Theme.font(size: isCompact ? 36 : 72, weight: .light, settings: ts))
                     .foregroundStyle(Theme.text1(ts))
                     .monospacedDigit()
@@ -96,11 +97,11 @@ private struct WeatherWidgetBody: View {
 
             VStack(alignment: .leading, spacing: isCompact ? 6 : 10) {
                 statRow(icon: "humidity.fill", label: "Humidity", value: "\(w.humidity)%")
-                statRow(icon: "wind", label: "Wind", value: String(format: "%.0f km/h", w.windSpeed))
+                statRow(icon: "wind", label: "Wind", value: units.windSpeedText(fromKilometresPerHour: w.windSpeed))
 
                 if let today = service.dailyForecast.first {
-                    statRow(icon: "thermometer.high", label: "High", value: String(format: "%.0f°", today.highTemp))
-                    statRow(icon: "thermometer.low", label: "Low", value: String(format: "%.0f°", today.lowTemp))
+                    statRow(icon: "thermometer.high", label: "High", value: units.degrees(fromCelsius: today.highTemp))
+                    statRow(icon: "thermometer.low", label: "Low", value: units.degrees(fromCelsius: today.lowTemp))
                 }
 
                 if let alert = findUpcomingChange() {
@@ -152,11 +153,11 @@ private struct WeatherWidgetBody: View {
                 .frame(height: isCompact ? 22 : 36)
 
             HStack(spacing: 3) {
-                Text(String(format: "%.0f°", day.highTemp))
+                Text(units.degrees(fromCelsius: day.highTemp))
                     .font(isCompact ? Theme.body(ts) : Theme.value(ts))
                     .foregroundStyle(Theme.text1(ts))
                     .monospacedDigit()
-                Text(String(format: "%.0f°", day.lowTemp))
+                Text(units.degrees(fromCelsius: day.lowTemp))
                     .font(isCompact ? Theme.caption(ts) : Theme.value(ts))
                     .foregroundStyle(Theme.text3(ts))
                     .monospacedDigit()
@@ -201,12 +202,18 @@ private struct WeatherWidgetBody: View {
         // right now makes the alert a function of the time of day: at night the
         // current reading sits near the daily low, so nearly every evening
         // announced a warm-up that was really just sunrise.
+        // Threshold stays in Celsius so what counts as "worth mentioning" does
+        // not move when the display units do.
         let diff = tomorrow.highTemp - today.highTemp
         if abs(diff) >= 7 {
             let direction = diff > 0 ? "warmer" : "colder"
             return WeatherAlert(
                 icon: diff > 0 ? "thermometer.sun.fill" : "thermometer.snowflake",
-                message: String(format: "%.0f° %@ tomorrow", abs(diff), direction),
+                message: String(
+                    format: "%.0f° %@ tomorrow",
+                    abs(units.temperatureDifference(fromCelsius: diff)),
+                    direction
+                ),
                 color: diff > 0 ? Theme.accentOrange : Theme.accentCyan
             )
         }

@@ -33,8 +33,11 @@ enum WidgetFormatters {
         String(format: "%.0f%%", value)
     }
 
-    static func temperature(_ value: Double) -> String {
-        String(format: "%.0f°C", value)
+    /// The snapshot always carries Celsius; `units` only decides how it reads.
+    /// A snapshot written before units existed has none, and Celsius is what it
+    /// meant.
+    static func temperature(_ celsius: Double, units: UnitSystem?) -> String {
+        (units ?? .metric).temperatureText(fromCelsius: celsius)
     }
 
     static func bytesPerSec(_ value: Double) -> String {

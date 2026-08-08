@@ -36,6 +36,7 @@ public final class SSDTempWidget: DashboardWidget {
 private struct SSDTempWidgetView: View {
     @ObservedObject var service: SMCService
     @Environment(\.themeSettings) private var ts
+    @Environment(\.unitSystem) private var units
     let showLabel: Bool
     let isBar: Bool
     let isChart: Bool
@@ -72,7 +73,7 @@ private struct SSDTempWidgetView: View {
                     .font(Theme.font(size: ts.fontSizeCaption * 1.5, weight: .heavy, settings: ts))
                     .foregroundStyle(Theme.text3(ts))
                 Spacer()
-                Text(temp != nil ? String(format: "%.0f°C", temp!) : "N/A")
+                Text(temp.map { units.temperatureText(fromCelsius: $0) } ?? "N/A")
                     .font(Theme.font(size: ts.fontSizeLabel * 1.5, weight: .heavy, settings: ts))
                     .foregroundStyle(color)
                     .monospacedDigit()
@@ -105,7 +106,7 @@ private struct SSDTempWidgetView: View {
                 .font(Theme.label(ts))
                 .foregroundStyle(color)
             Spacer()
-            Text(temp != nil ? String(format: "%.0f°C", temp!) : "N/A")
+            Text(temp.map { units.temperatureText(fromCelsius: $0) } ?? "N/A")
                 .font(Theme.value(ts))
                 .foregroundStyle(color)
                 .monospacedDigit()
@@ -129,7 +130,7 @@ private struct SSDTempWidgetView: View {
                         Image(systemName: "internaldrive")
                             .font(.system(size: 18 * ts.fontScale))
                             .foregroundStyle(color)
-                        Text(String(format: "%.0f°", temp))
+                        Text(units.degrees(fromCelsius: temp))
                             .font(Theme.value(ts))
                             .foregroundStyle(color)
                             .monospacedDigit()
@@ -139,7 +140,7 @@ private struct SSDTempWidgetView: View {
                         value: temp,
                         maxValue: 100,
                         label: "SSD",
-                        displayValue: String(format: "%.0f°C", temp),
+                        displayValue: units.temperatureText(fromCelsius: temp),
                         unit: "",
                         accentColor: color,
                         showLabel: showLabel

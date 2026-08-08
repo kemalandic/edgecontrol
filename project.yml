@@ -47,6 +47,10 @@ targets:
       # WidgetData carries CIRunState, so the extension needs the enum too.
       - path: Sources/EdgeControl/Services/CI/CIRunState.swift
         createIntermediateGroups: false
+      # Same reason: the snapshot carries the unit system so the desktop widget
+      # renders the same scale as the dashboard.
+      - path: Sources/EdgeControl/Models/UnitSystem.swift
+        createIntermediateGroups: false
       # WidgetData.write() logs through AppLog; Foundation + os only, so it
       # is safe inside the sandboxed extension.
       - path: Sources/EdgeControl/Services/AppLog.swift

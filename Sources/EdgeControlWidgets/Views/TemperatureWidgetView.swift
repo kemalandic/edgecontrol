@@ -41,7 +41,7 @@ struct TemperatureWidgetView: View {
                 .foregroundStyle(WidgetColors.orange)
 
             if let cpu = entry.cpuTemp {
-                Text(WidgetFormatters.temperature(cpu))
+                Text(WidgetFormatters.temperature(cpu, units: entry.units))
                     .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(WidgetColors.tempColor(for: cpu))
 
@@ -74,7 +74,7 @@ struct TemperatureWidgetView: View {
                 .font(.system(size: 16))
                 .foregroundStyle(temp.map { WidgetColors.tempColor(for: $0) } ?? WidgetColors.textTertiary)
 
-            Text(temp.map { WidgetFormatters.temperature($0) } ?? "--")
+            Text(temp.map { WidgetFormatters.temperature($0, units: entry.units) } ?? "--")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(temp.map { WidgetColors.tempColor(for: $0) } ?? WidgetColors.textTertiary)
 

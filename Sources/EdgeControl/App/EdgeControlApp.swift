@@ -342,7 +342,7 @@ enum EdgeControlExecutable {
         model.updateActiveServices(neededServices: neededServices)
 
         // Bridge: write metrics to shared container for desktop widgets
-        let widgetBridge = WidgetDataBridge(model: model)
+        let widgetBridge = WidgetDataBridge(model: model, layoutEngine: layoutEngine)
         widgetBridge.start()
         model.widgetDataBridge = widgetBridge
 

@@ -6,35 +6,66 @@ public final class LayoutStore: Sendable {
 
     private static let fileName = "layout.json"
 
-    private static var directoryURL: URL {
+    private static var defaultDirectoryURL: URL {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         return support.appendingPathComponent("EdgeControl", isDirectory: true)
     }
 
-    private static var fileURL: URL {
-        directoryURL.appendingPathComponent(fileName)
+    private let directoryURL: URL
+
+    private var fileURL: URL {
+        directoryURL.appendingPathComponent(Self.fileName)
     }
 
-    public init() {}
+    /// `directory` exists so tests can point the store somewhere disposable.
+    /// Every caller in the app takes the default, which is Application Support.
+    public init(directory: URL? = nil) {
+        self.directoryURL = directory ?? Self.defaultDirectoryURL
+    }
 
     // MARK: - Read / Write
 
     public func load() -> LayoutDocument {
-        let url = Self.fileURL
-        if let data = try? Data(contentsOf: url),
-           let doc = try? JSONDecoder().decode(LayoutDocument.self, from: data) {
-            return doc
+        let url = fileURL
+
+        if FileManager.default.fileExists(atPath: url.path) {
+            do {
+                let data = try Data(contentsOf: url)
+                return try JSONDecoder().decode(LayoutDocument.self, from: data)
+            } catch {
+                // There is a file and we cannot read it. Generating defaults
+                // straight over the top is how a layout "resets itself" with
+                // nothing left to diagnose — and the read can fail for reasons
+                // that have nothing to do with the contents. Move it aside first.
+                AppLog.persistence.error(
+                    "loading layout failed: \(error.localizedDescription, privacy: .public)"
+                )
+                quarantine(url)
+            }
         }
-        // First launch or corrupt file — generate default and migrate
+
+        // Genuinely nothing usable on disk — first launch, or the file we just
+        // moved aside.
         let doc = Self.generateDefaultLayout()
         save(doc)
-        Self.migrateFromUserDefaults(into: doc)
+        migrateFromUserDefaults(into: doc)
         return doc
     }
 
+    /// Keeps one generation. A second failure must not bury the first copy: that
+    /// one is closest to the last good state and is the user's real arrangement.
+    private func quarantine(_ url: URL) {
+        let backup = url.appendingPathExtension("corrupt")
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: backup.path) else { return }
+        _ = AppLog.attempt("moving unreadable layout to \(backup.lastPathComponent)") {
+            try fm.moveItem(at: url, to: backup)
+        }
+    }
+
     public func save(_ document: LayoutDocument) {
-        let url = Self.fileURL
-        let dir = Self.directoryURL
+        let url = fileURL
+        let dir = directoryURL
         AppLog.attempt("creating layout directory") {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -145,7 +176,7 @@ public final class LayoutStore: Sendable {
 
     // MARK: - Migration from UserDefaults
 
-    private static func migrateFromUserDefaults(into document: LayoutDocument) {
+    private func migrateFromUserDefaults(into document: LayoutDocument) {
         let key = "EdgeControlSettings"
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
 
@@ -163,8 +194,7 @@ public final class LayoutStore: Sendable {
         if let debug = legacy.debugMode { doc.globalSettings.debugMode = debug }
 
         // Save migrated settings and remove old key
-        let store = LayoutStore()
-        store.save(doc)
+        save(doc)
         UserDefaults.standard.removeObject(forKey: key)
     }
 }

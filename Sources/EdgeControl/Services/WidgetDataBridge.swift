@@ -7,11 +7,13 @@ import WidgetKit
 @MainActor
 public final class WidgetDataBridge {
     private let model: AppModel
+    private let layoutEngine: LayoutEngine
     private var cancellables: Set<AnyCancellable> = []
     private var writeScheduled = false
 
-    public init(model: AppModel) {
+    public init(model: AppModel, layoutEngine: LayoutEngine) {
         self.model = model
+        self.layoutEngine = layoutEngine
     }
 
     public func start() {
@@ -47,6 +49,14 @@ public final class WidgetDataBridge {
 
         // Observe CI/CD changes
         model.cicdService.$runs
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.scheduleWrite() }
+            .store(in: &cancellables)
+
+        // Settings carried in the snapshot, currently the unit system. Without
+        // this the desktop widget keeps the old units until some unrelated
+        // metric happens to move.
+        layoutEngine.$document
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.scheduleWrite() }
             .store(in: &cancellables)
@@ -107,7 +117,8 @@ public final class WidgetDataBridge {
                 runs: cicd.runs,
                 accounts: model.accountStore.accounts,
                 states: cicd.accountStates
-            )
+            ),
+            unitSystem: layoutEngine.document.globalSettings.units
         )
 
         data.write()

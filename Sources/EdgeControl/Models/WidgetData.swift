@@ -39,6 +39,13 @@ public struct WidgetData: Codable, Sendable {
     /// Set when there are no runs for a reason worth showing, e.g.
     /// "No accounts configured". Nil when runs are present.
     public let cicdStatusNote: String?
+    /// Units the app is displaying in, so the desktop widget agrees with the
+    /// dashboard. Optional on purpose and deliberately does NOT bump
+    /// schemaVersion: the gate above is strict equality, so bumping would make
+    /// the widget reject every snapshot written before the upgrade. An added
+    /// optional cannot make an older payload render wrongly — it reads as nil
+    /// and falls back to Celsius, which is what those payloads meant.
+    public let unitSystem: UnitSystem?
 
     public init(
         timestamp: Date = Date(),
@@ -58,7 +65,8 @@ public struct WidgetData: Codable, Sendable {
         wifiChannel: Int? = nil,
         wifiBand: String? = nil,
         cicdRuns: [WidgetCICDRun] = [],
-        cicdStatusNote: String? = nil
+        cicdStatusNote: String? = nil,
+        unitSystem: UnitSystem? = nil
     ) {
         self.timestamp = timestamp
         self.cpuUsage = cpuUsage
@@ -78,6 +86,7 @@ public struct WidgetData: Codable, Sendable {
         self.wifiBand = wifiBand
         self.cicdRuns = cicdRuns
         self.cicdStatusNote = cicdStatusNote
+        self.unitSystem = unitSystem
         // Derived, never passed in.
         self.schemaVersion = Self.currentSchemaVersion
     }

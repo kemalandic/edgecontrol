@@ -28,6 +28,7 @@ public final class TempHistoryWidget: DashboardWidget {
 private struct TempHistoryWidgetView: View {
     @ObservedObject var service: SMCService
     @Environment(\.themeSettings) private var ts
+    @Environment(\.unitSystem) private var units
     let isCompact: Bool
 
     var body: some View {
@@ -40,10 +41,10 @@ private struct TempHistoryWidgetView: View {
                     Spacer()
 
                     if let cpu = service.cpuTemperature {
-                        legendChip("CPU", value: String(format: "%.0f°", cpu), color: Theme.widgetPrimary("temp-history", ts: ts, default: .cyan))
+                        legendChip("CPU", value: units.degrees(fromCelsius: cpu), color: Theme.widgetPrimary("temp-history", ts: ts, default: .cyan))
                     }
                     if let gpu = service.gpuTemperature {
-                        legendChip("GPU", value: String(format: "%.0f°", gpu), color: Theme.widgetSecondary("temp-history", ts: ts, default: .orange) ?? Theme.accentOrange)
+                        legendChip("GPU", value: units.degrees(fromCelsius: gpu), color: Theme.widgetSecondary("temp-history", ts: ts, default: .orange) ?? Theme.accentOrange)
                     }
                 }
             }

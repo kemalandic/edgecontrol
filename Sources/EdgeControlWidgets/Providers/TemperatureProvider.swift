@@ -5,15 +5,16 @@ struct TemperatureEntry: TimelineEntry, Sendable {
     let cpuTemp: Double?
     let gpuTemp: Double?
     let ssdTemp: Double?
+    let units: UnitSystem?
     let isStale: Bool
     let minutesAgo: Int
 
     static let placeholder = TemperatureEntry(
-        date: Date(), cpuTemp: 52, gpuTemp: 45, ssdTemp: 38, isStale: false, minutesAgo: 0
+        date: Date(), cpuTemp: 52, gpuTemp: 45, ssdTemp: 38, units: .metric, isStale: false, minutesAgo: 0
     )
 
     static let noData = TemperatureEntry(
-        date: Date(), cpuTemp: nil, gpuTemp: nil, ssdTemp: nil, isStale: true, minutesAgo: 0
+        date: Date(), cpuTemp: nil, gpuTemp: nil, ssdTemp: nil, units: nil, isStale: true, minutesAgo: 0
     )
 }
 
@@ -37,6 +38,7 @@ struct TemperatureProvider: TimelineProvider {
             cpuTemp: data.cpuTemp,
             gpuTemp: data.gpuTemp,
             ssdTemp: data.ssdTemp,
+            units: data.unitSystem,
             isStale: data.isStale,
             minutesAgo: data.minutesAgo
         )

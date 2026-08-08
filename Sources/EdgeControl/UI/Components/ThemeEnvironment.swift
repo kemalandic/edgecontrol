@@ -20,6 +20,27 @@ extension View {
     }
 }
 
+// MARK: - Unit System Environment Key
+
+/// Lets a widget format a reading without reaching for LayoutEngine. Same shape
+/// as the theme above: set once on the dashboard, read wherever a value is drawn.
+private struct UnitSystemKey: EnvironmentKey {
+    static let defaultValue = UnitSystem.metric
+}
+
+extension EnvironmentValues {
+    var unitSystem: UnitSystem {
+        get { self[UnitSystemKey.self] }
+        set { self[UnitSystemKey.self] = newValue }
+    }
+}
+
+extension View {
+    func unitSystem(_ units: UnitSystem) -> some View {
+        environment(\.unitSystem, units)
+    }
+}
+
 // MARK: - Widget Card ViewModifier
 
 /// Applies themed background, corner radius, and border to a widget.

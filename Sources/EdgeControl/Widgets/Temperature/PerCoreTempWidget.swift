@@ -28,6 +28,7 @@ public final class PerCoreTempWidget: DashboardWidget {
 private struct PerCoreTempWidgetView: View {
     @ObservedObject var service: SMCService
     @Environment(\.themeSettings) private var ts
+    @Environment(\.unitSystem) private var units
     let columns: Int
 
     private var primary: Color { Theme.widgetPrimary("per-core-temp", ts: ts, default: .cyan) }
@@ -108,7 +109,7 @@ private struct PerCoreTempWidgetView: View {
             }
             .frame(height: 12)
 
-            Text(String(format: "%.0f°", core.temperature))
+            Text(units.degrees(fromCelsius: core.temperature))
                 .font(.system(size: 11 * ts.fontScale, weight: .bold, design: .monospaced))
                 .foregroundStyle(color)
                 .frame(width: 32, alignment: .trailing)

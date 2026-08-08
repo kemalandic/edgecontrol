@@ -131,6 +131,10 @@ public struct GlobalSettings: Codable, Sendable {
     /// affordance. Suits a kiosk whose window lives on a secondary display.
     /// Default false keeps EdgeControl a normal app.
     public var hideFromDock: Bool
+    /// Units the dashboard displays in. Defaults to whatever the user's region
+    /// already uses rather than to metric, so a fresh install abroad is right
+    /// without anyone going looking for the setting.
+    public var units: UnitSystem
     public var theme: ThemeSettings
 
     public init(
@@ -140,6 +144,7 @@ public struct GlobalSettings: Codable, Sendable {
         debugMode: Bool = false,
         strictMonitorAffinity: Bool = false,
         hideFromDock: Bool = false,
+        units: UnitSystem = .localeDefault,
         theme: ThemeSettings = ThemeSettings()
     ) {
         self.selectedDisplayName = selectedDisplayName
@@ -148,12 +153,13 @@ public struct GlobalSettings: Codable, Sendable {
         self.debugMode = debugMode
         self.strictMonitorAffinity = strictMonitorAffinity
         self.hideFromDock = hideFromDock
+        self.units = units
         self.theme = theme
     }
 
     enum CodingKeys: String, CodingKey {
         case selectedDisplayName, kioskMode, launchAtLogin, debugMode
-        case strictMonitorAffinity, hideFromDock, theme
+        case strictMonitorAffinity, hideFromDock, units, theme
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -168,6 +174,7 @@ public struct GlobalSettings: Codable, Sendable {
         debugMode = try c.decodeIfPresent(Bool.self, forKey: .debugMode) ?? false
         strictMonitorAffinity = try c.decodeIfPresent(Bool.self, forKey: .strictMonitorAffinity) ?? false
         hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
+        units = try c.decodeIfPresent(UnitSystem.self, forKey: .units) ?? .localeDefault
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
     }
 
@@ -179,6 +186,7 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(debugMode, forKey: .debugMode)
         try c.encode(strictMonitorAffinity, forKey: .strictMonitorAffinity)
         try c.encode(hideFromDock, forKey: .hideFromDock)
+        try c.encode(units, forKey: .units)
         try c.encode(theme, forKey: .theme)
     }
 }

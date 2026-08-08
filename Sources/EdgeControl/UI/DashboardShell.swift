@@ -109,6 +109,7 @@ struct DashboardShell: View {
             }
         }
         .themeSettings(layoutEngine.document.globalSettings.theme)
+        .unitSystem(layoutEngine.document.globalSettings.units)
         .coordinateSpace(name: TouchCoordinate.name)
         .onChange(of: model.systemMetrics) { _, newMetrics in
             if let m = newMetrics {
