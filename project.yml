@@ -14,8 +14,8 @@ settings:
     # Single source of truth. Both Info.plists read these through
     # $(MARKETING_VERSION) / $(CURRENT_PROJECT_VERSION), so the app and its
     # widget extension can no longer drift apart.
-    MARKETING_VERSION: "2.2.0"
-    CURRENT_PROJECT_VERSION: "4"
+    MARKETING_VERSION: "2.3.0"
+    CURRENT_PROJECT_VERSION: "5"
 
 targets:
   EdgeControl:

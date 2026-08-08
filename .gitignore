@@ -1,5 +1,7 @@
 .DS_Store
 .build/
+# Scripts/package.sh output: archive, exported app, staging tree and the dmg.
+build/
 .swiftpm/
 xcuserdata/
 DerivedData/
