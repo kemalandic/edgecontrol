@@ -102,8 +102,14 @@ Extend EdgeControl with custom HTML/JS widgets:
 
 ```bash
 brew tap kemalandic/edgecontrol
+brew trust kemalandic/edgecontrol
 brew install --cask edgecontrol
 ```
+
+Recent Homebrew refuses to load a cask from a third-party tap until you trust it,
+so the middle line is not optional — without it the install stops at
+`Refusing to load cask ... from untrusted tap`. Older Homebrew has no `brew trust`
+command and does not need one; skip it there.
 
 ### Manual
 
