@@ -53,6 +53,9 @@ public struct ForgejoProvider: CIProvider {
         let full_name: String
         let name: String
         let updated_at: String?
+        /// Optional so an older Gitea/Forgejo that omits the field still
+        /// decodes; absent reads as "not archived".
+        let archived: Bool?
     }
 
     // MARK: - Request helper
@@ -88,6 +91,10 @@ public struct ForgejoProvider: CIProvider {
             ])
         let formatter = ISO8601DateFormatter()
         return try await decode([WireRepo].self, from: url).compactMap { repo in
+            // An archived repository cannot run anything again, and archiving
+            // leaves updated_at where it was, so it would otherwise sit in the
+            // window and fill the widget with finished history.
+            guard repo.archived != true else { return nil }
             guard let raw = repo.updated_at,
                   let updated = formatter.date(from: raw),
                   updated >= activeSince else { return nil }

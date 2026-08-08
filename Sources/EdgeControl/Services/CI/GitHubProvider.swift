@@ -51,6 +51,10 @@ public struct GitHubProvider: CIProvider {
         let full_name: String
         let name: String
         let pushed_at: String?
+        /// Optional so a host that omits the field still decodes; absent reads
+        /// as "not archived", which is the safe direction — a repository is
+        /// only ever hidden on a positive signal.
+        let archived: Bool?
     }
 
     // MARK: - Request helper
@@ -83,6 +87,12 @@ public struct GitHubProvider: CIProvider {
         func absorb(_ repos: [WireRepo]) {
             for repo in repos {
                 guard !seen.contains(repo.full_name) else { continue }
+                // Archiving does not move pushed_at, so an archived repository
+                // keeps sorting near the top and passes the activity window for
+                // as long as its last push is recent. It can never produce
+                // another run, so it is dropped here rather than filling the
+                // widget with history.
+                guard repo.archived != true else { continue }
                 guard let raw = repo.pushed_at,
                       let pushed = formatter.date(from: raw),
                       pushed >= activeSince else { continue }

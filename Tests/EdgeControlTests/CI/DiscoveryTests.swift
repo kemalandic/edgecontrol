@@ -34,10 +34,27 @@ final class DiscoveryTests: XCTestCase {
             ("/orgs/acme/repos", StubTransport.fixture("github-repos")),
         ])
         let repos = try await gitHub(transport).discoverRepositories(activeSince: cutoff)
-        // "archive" is outside the window; "dashboard" appears in both the user
-        // and org responses and must be de-duplicated.
+        // "archive" is outside the window; "retired" is archived; "dashboard"
+        // appears in both the user and org responses and must be de-duplicated.
         XCTAssertEqual(repos.map(\.fullName), ["octo/dashboard"])
         XCTAssertEqual(repos.first?.shortName, "dashboard")
+    }
+
+    /// Archiving leaves pushed_at untouched, so an archived repository stays
+    /// inside the activity window and used to be discovered — filling the
+    /// widget with runs that can never change again.
+    func testGitHubDiscoverySkipsArchivedRepositories() async throws {
+        let transport = StubTransport(replies: [
+            ("/user/orgs", StubTransport.fixture("github-orgs")),
+            ("/user/repos", StubTransport.fixture("github-repos")),
+            ("/orgs/acme/repos", StubTransport.fixture("github-repos")),
+        ])
+        let repos = try await gitHub(transport).discoverRepositories(activeSince: cutoff)
+
+        XCTAssertFalse(
+            repos.contains { $0.fullName == "octo/retired" },
+            "octo/retired is archived with a recent push and must not be discovered"
+        )
     }
 
     // MARK: - Forgejo
@@ -71,6 +88,19 @@ final class DiscoveryTests: XCTestCase {
         XCTAssertEqual(transport.requestedURLs.count, 1)
         XCTAssertTrue(
             transport.requestedURLs[0].absoluteString.contains("order_by=recentupdate")
+        )
+    }
+
+    /// Same reasoning as the GitHub case: archiving does not move updated_at.
+    func testForgejoDiscoverySkipsArchivedRepositories() async throws {
+        let transport = StubTransport(replies: [
+            ("/user/repos", StubTransport.fixture("forgejo-repos"))
+        ])
+        let repos = try await forgejo(transport).discoverRepositories(activeSince: cutoff)
+
+        XCTAssertFalse(
+            repos.contains { $0.fullName == "acme/retired" },
+            "acme/retired is archived with a recent update and must not be discovered"
         )
     }
 }
