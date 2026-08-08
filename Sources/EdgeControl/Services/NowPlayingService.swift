@@ -48,6 +48,7 @@ public final class NowPlayingService: ObservableObject {
     @Published public var artworkImage: NSImage?
 
     private var timer: Timer?
+    private var fetchTask: Task<Void, Never>?
     private var lastArtworkURL: String?
 
     public init() {}
@@ -60,26 +61,39 @@ public final class NowPlayingService: ObservableObject {
                 self?.fetch()
             }
         }
+        timer?.tolerance = 0.5
     }
 
     public func stop() {
         timer?.invalidate()
         timer = nil
+        // The subprocesses already in flight cannot be interrupted, but marking
+        // the task cancelled stops its result from being applied after we stop.
+        fetchTask?.cancel()
+        fetchTask = nil
     }
 
     private func fetch() {
+        // One poll at a time. The six query groups below run in sequence and
+        // each osascript may burn its full timeout, so a single fetch can
+        // outlast the 5s timer several times over. Without this guard the ticks
+        // stack up, multiply the subprocesses, and race each other into
+        // `allSources` — where the last one to finish wins rather than the
+        // newest one. Skipping is right: the next tick is 5 seconds away.
+        guard fetchTask == nil else { return }
+
         let runningApps = NSWorkspace.shared.runningApplications
-        Task.detached {
-            // Query all sources sequentially — each osascript has its own process timeout
-            var sources: [NowPlayingInfo] = []
-            sources.append(contentsOf: Self.querySafariSources(runningApps: runningApps))
-            sources.append(contentsOf: Self.querySpotify(runningApps: runningApps))
-            sources.append(contentsOf: Self.queryAppleMusic(runningApps: runningApps))
-            sources.append(contentsOf: Self.queryChromiumSources(app: "Google Chrome", bundleId: "com.google.Chrome", runningApps: runningApps))
-            sources.append(contentsOf: Self.queryChromiumSources(app: "Microsoft Edge", bundleId: "com.microsoft.edgemac", runningApps: runningApps))
-            sources.append(contentsOf: Self.queryWebApps(runningApps: runningApps))
+        fetchTask = Task.detached { [weak self] in
+            let sources = Self.collectSources(runningApps: runningApps)
+            guard let self else { return }
 
             await MainActor.run {
+                // Cancelled means stop() ran while these subprocesses were still
+                // going: drop the result and leave fetchTask alone — stop()
+                // already cleared it and a later start() may have replaced it.
+                guard !Task.isCancelled else { return }
+                self.fetchTask = nil
+
                 self.allSources = sources
 
                 if self.selectedSourceIndex >= sources.count {
@@ -106,6 +120,21 @@ public final class NowPlayingService: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Queries every source in sequence. Sequential rather than concurrent on
+    /// purpose: each osascript is its own subprocess with its own timeout, and
+    /// firing six at once at every tick is what this service is trying not to
+    /// do. Each query returns early when its app is not running.
+    nonisolated private static func collectSources(runningApps: [NSRunningApplication]) -> [NowPlayingInfo] {
+        var sources: [NowPlayingInfo] = []
+        sources.append(contentsOf: querySafariSources(runningApps: runningApps))
+        sources.append(contentsOf: querySpotify(runningApps: runningApps))
+        sources.append(contentsOf: queryAppleMusic(runningApps: runningApps))
+        sources.append(contentsOf: queryChromiumSources(app: "Google Chrome", bundleId: "com.google.Chrome", runningApps: runningApps))
+        sources.append(contentsOf: queryChromiumSources(app: "Microsoft Edge", bundleId: "com.microsoft.edgemac", runningApps: runningApps))
+        sources.append(contentsOf: queryWebApps(runningApps: runningApps))
+        return sources
     }
 
     public func selectSource(_ index: Int) {
@@ -285,14 +314,19 @@ public final class NowPlayingService: ObservableObject {
         }
     }
 
-    nonisolated private static func runOsascript(_ script: String) {
+    nonisolated private static func runOsascript(_ script: String, timeout: TimeInterval = 4.0) {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
         process.arguments = ["-e", script]
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
-        try? process.run()
-        process.waitUntilExit()
+
+        do {
+            try process.run()
+        } catch {
+            return
+        }
+        _ = awaitExit(process, timeout: timeout)
     }
 
     // MARK: - Query: Safari Tabs
@@ -602,18 +636,26 @@ public final class NowPlayingService: ObservableObject {
         } catch {
             return ""
         }
+        guard awaitExit(process, timeout: timeout) else { return "" }
 
-        // Wait with timeout — kill if too slow
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    /// Waits for `process`, killing it at the deadline; false means it had to be
+    /// killed. Both osascript paths go through here so their wait semantics
+    /// cannot drift apart again — the command path used to call a bare
+    /// `waitUntilExit()`, which blocks for as long as the target app takes to
+    /// answer, and that is unbounded while an Automation prompt sits unanswered.
+    nonisolated private static func awaitExit(_ process: Process, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while process.isRunning && Date() < deadline {
             Thread.sleep(forTimeInterval: 0.1)
         }
         if process.isRunning {
             process.terminate()
-            return ""
+            return false
         }
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return true
     }
 }

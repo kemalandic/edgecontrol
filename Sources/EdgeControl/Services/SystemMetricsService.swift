@@ -39,6 +39,10 @@ public final class SystemMetricsService: ObservableObject {
                 self?.sample()
             }
         }
+        // Lets the system line this wakeup up with the other pollers instead of
+        // waking the CPU on its own schedule. Nothing here needs the sample to
+        // land on an exact boundary.
+        timer?.tolerance = 0.2
     }
 
     public func stop() {

@@ -33,7 +33,7 @@ private struct WorldClocksWidgetView: View {
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1, tolerance: 0.1, on: .main, in: .common).autoconnect()
 
     private let worldClocks: [(city: String, tz: String, flag: String)] = [
         ("Istanbul", "Europe/Istanbul", "\u{1F1F9}\u{1F1F7}"),

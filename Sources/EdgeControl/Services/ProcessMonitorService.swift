@@ -39,6 +39,7 @@ public final class ProcessMonitorService: ObservableObject {
                 self?.sample()
             }
         }
+        timer?.tolerance = 0.5
     }
 
     public func stop() {

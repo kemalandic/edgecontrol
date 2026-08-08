@@ -22,6 +22,7 @@ public final class NetworkMonitorService: ObservableObject {
                 self?.sample()
             }
         }
+        timer?.tolerance = 0.2
     }
 
     public func stop() {

@@ -75,7 +75,7 @@ private struct ClockContainer: View {
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
-    private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1.0, tolerance: 0.1, on: .main, in: .common).autoconnect()
 
     var primary: Color { Theme.widgetPrimary("clock", ts: ts, default: .cyan) }
     var cal: Calendar { Calendar.current }

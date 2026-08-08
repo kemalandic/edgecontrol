@@ -70,10 +70,7 @@ public final class CICDRunsWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        CICDRunsWidgetView(
-            service: service,
-            maxRuns: size.height <= 2 ? 2 : size.height <= 3 ? 3 : 6
-        )
+        CICDRunsWidgetView(service: service)
     }
 }
 
@@ -81,7 +78,6 @@ private struct CICDRunsWidgetView: View {
     @ObservedObject var service: CICDService
     @EnvironmentObject private var model: AppModel
     @Environment(\.themeSettings) private var ts
-    let maxRuns: Int
 
     private var touchRegistry: TouchZoneRegistry { model.touchService.zoneRegistry }
 
@@ -149,9 +145,14 @@ private struct CICDRunsWidgetView: View {
             emptyMessage("NO RECENT RUNS", detail: nil)
 
         case .runs(let runs, _):
+            // Every run goes in, however short the widget: the scroll view is
+            // what handles overflow now. Capping the rows to whatever fits
+            // leaves nothing to scroll to, and the count in the header ends up
+            // describing runs the user cannot reach. The service already holds
+            // the list to 50.
             TouchScrollView {
                 VStack(spacing: 4) {
-                    ForEach(Array(runs.prefix(maxRuns))) { run in
+                    ForEach(runs) { run in
                         runRow(run)
                     }
                 }

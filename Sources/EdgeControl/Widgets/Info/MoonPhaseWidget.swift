@@ -31,7 +31,7 @@ private struct MoonPhaseWidgetView: View {
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
-    private let timer = Timer.publish(every: 3600, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 3600, tolerance: 300, on: .main, in: .common).autoconnect()
 
     // Simple moon phase calculation (synodic month = 29.53 days)
     private var moonAge: Double {

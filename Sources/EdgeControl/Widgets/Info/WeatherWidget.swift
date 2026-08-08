@@ -183,25 +183,30 @@ private struct WeatherWidgetBody: View {
     }
 
     private func findUpcomingChange() -> WeatherAlert? {
-        guard let current = service.current, service.dailyForecast.count >= 2 else { return nil }
+        guard service.dailyForecast.count >= 2 else { return nil }
+        let today = service.dailyForecast[0]
         let tomorrow = service.dailyForecast[1]
 
         switch tomorrow.weatherCode {
         case 61, 63, 65, 80, 81, 82:
-            return WeatherAlert(icon: "cloud.rain.fill", message: "Yarın yağmur bekleniyor", color: Theme.accentBlue)
+            return WeatherAlert(icon: "cloud.rain.fill", message: "Rain expected tomorrow", color: Theme.accentBlue)
         case 71, 73, 75, 85, 86:
-            return WeatherAlert(icon: "cloud.snow.fill", message: "Yarın kar bekleniyor", color: Theme.accentCyan)
+            return WeatherAlert(icon: "cloud.snow.fill", message: "Snow expected tomorrow", color: Theme.accentCyan)
         case 95, 96, 99:
-            return WeatherAlert(icon: "cloud.bolt.fill", message: "Yarın fırtına bekleniyor", color: Theme.accentOrange)
+            return WeatherAlert(icon: "cloud.bolt.fill", message: "Storms expected tomorrow", color: Theme.accentOrange)
         default: break
         }
 
-        let diff = tomorrow.highTemp - current.temperature
+        // High against high. Measuring tomorrow's high from the temperature
+        // right now makes the alert a function of the time of day: at night the
+        // current reading sits near the daily low, so nearly every evening
+        // announced a warm-up that was really just sunrise.
+        let diff = tomorrow.highTemp - today.highTemp
         if abs(diff) >= 7 {
-            let direction = diff > 0 ? "artış" : "düşüş"
+            let direction = diff > 0 ? "warmer" : "colder"
             return WeatherAlert(
                 icon: diff > 0 ? "thermometer.sun.fill" : "thermometer.snowflake",
-                message: String(format: "Yarın %.0f° %@", abs(diff), direction),
+                message: String(format: "%.0f° %@ tomorrow", abs(diff), direction),
                 color: diff > 0 ? Theme.accentOrange : Theme.accentCyan
             )
         }

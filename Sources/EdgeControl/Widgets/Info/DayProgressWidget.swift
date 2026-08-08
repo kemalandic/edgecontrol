@@ -25,7 +25,7 @@ private struct DayProgressWidgetView: View {
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
-    private let timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 30, tolerance: 5, on: .main, in: .common).autoconnect()
 
     private var dayProgress: Double {
         let calendar = Calendar.current

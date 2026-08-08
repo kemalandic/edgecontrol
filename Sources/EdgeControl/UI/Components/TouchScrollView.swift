@@ -15,7 +15,6 @@ public struct TouchScrollView<Content: View>: View {
     @State private var offset: CGFloat = 0
     @State private var offsetAtDragStart: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
-    @State private var viewportHeight: CGFloat = 0
     @State private var scrollbarOpacity: Double = 0
     @State private var fadeOutWorkItem: DispatchWorkItem?
 
@@ -51,7 +50,19 @@ public struct TouchScrollView<Content: View>: View {
                         .allowsHitTesting(false)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The viewport, stated exactly. Two things are load-bearing here.
+            //
+            // Fixed, not `maxHeight: .infinity`: a flexible frame grows to its
+            // child, so once the content is taller than the viewport the frame
+            // grows with it and `clipped()` has nothing left to cut — rows
+            // spill out over the widget card and the drag area spills too.
+            //
+            // `.top`, not the default `.center`: the ZStack takes the height of
+            // its tallest child, which is the full content. Centering that in
+            // the viewport puts offset 0 in the middle of the list, so the rows
+            // above it sit outside the clip and no amount of dragging brings
+            // them back. Top-aligned, offset 0 is the first row.
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             .contentShape(Rectangle())
             .clipped()
             .gesture(
@@ -106,8 +117,6 @@ public struct TouchScrollView<Content: View>: View {
             .onPreferenceChange(ContentHeightKey.self) { h in
                 if h > 0 { contentHeight = h }
             }
-            .onAppear { viewportHeight = geo.size.height }
-            .onChange(of: geo.size.height) { _, new in viewportHeight = new }
         }
     }
 

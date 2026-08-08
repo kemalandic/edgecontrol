@@ -243,6 +243,7 @@ public final class SMCService: ObservableObject {
                 self?.sample()
             }
         }
+        timer?.tolerance = 0.3
     }
 
     public func stop() {

@@ -24,6 +24,7 @@ public final class WiFiService: ObservableObject {
                 self?.sample()
             }
         }
+        timer?.tolerance = 0.5
     }
 
     public func stop() {

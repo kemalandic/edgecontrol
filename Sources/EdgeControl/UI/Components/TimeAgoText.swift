@@ -9,7 +9,7 @@ public struct TimeAgoText: View {
     public let iso: String
 
     @State private var now: Date = Date()
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 1, tolerance: 0.1, on: .main, in: .common).autoconnect()
 
     public init(_ iso: String) {
         self.iso = iso

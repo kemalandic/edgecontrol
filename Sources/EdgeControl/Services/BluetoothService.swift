@@ -51,6 +51,7 @@ public final class BluetoothService: ObservableObject {
                 self?.sample()
             }
         }
+        timer?.tolerance = 1.0
     }
 
     public func stop() {

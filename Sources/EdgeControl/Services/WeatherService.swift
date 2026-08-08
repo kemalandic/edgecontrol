@@ -82,6 +82,8 @@ public final class WeatherDataService: ObservableObject {
                 self?.fetch()
             }
         }
+        // A minute either side of a 15-minute forecast refresh is free.
+        timer?.tolerance = 60
     }
 
     public func stop() {

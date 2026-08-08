@@ -38,6 +38,7 @@ public final class PluginWidgetRenderer {
                 self?.takeAllSnapshots()
             }
         }
+        timer?.tolerance = 30
     }
 
     public func stop() {

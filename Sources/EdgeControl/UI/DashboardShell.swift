@@ -69,6 +69,11 @@ struct DashboardShell: View {
                             }
                         }
                     }
+                    // Without this the swipe only starts on a widget card: the
+                    // gaps between cards draw nothing, and SwiftUI delivers
+                    // gestures only where content exists. Same reason
+                    // TouchTappable, TouchButton and TouchScrollView all set it.
+                    .contentShape(Rectangle())
                     .gesture(
                         editMode ? nil : DragGesture(minimumDistance: 60)
                             .onEnded { value in
