@@ -9,6 +9,16 @@ struct GeneralSettingsView: View {
         Theme.accent(layoutEngine.document.globalSettings.theme)
     }
 
+    /// Read from the bundle rather than typed in here. project.yml is the one
+    /// place the numbers live, and this line had sat at 0.1.0 through three
+    /// releases because nothing tied it to them.
+    private static var versionText: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "—"
+        let build = info?["CFBundleVersion"] as? String ?? "—"
+        return "Version \(short) (\(build))"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("General")
@@ -153,10 +163,10 @@ struct GeneralSettingsView: View {
                 Text("EdgeControl")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
-                Text("Version 0.1.0")
+                Text(Self.versionText)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
-                Text("ai.pakslab.edgecontrol")
+                Text(Bundle.main.bundleIdentifier ?? "ai.pakslab.edgecontrol")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(Theme.textTertiary)
             }
