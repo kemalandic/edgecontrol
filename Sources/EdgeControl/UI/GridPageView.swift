@@ -21,6 +21,10 @@ struct GridPageView: View {
         Theme.accent(layoutEngine.document.globalSettings.theme)
     }
 
+    // Selection: with overlaps staged, the selected widget renders on top so
+    // its resize handle and remove button are the reachable ones.
+    @State private var selectedInstanceId: String?
+
     // Resize state
     @State private var resizingInstanceId: String?
     @State private var resizeTargetW: Int?
@@ -38,6 +42,10 @@ struct GridPageView: View {
             ZStack(alignment: .topLeading) {
                 // Grid lines — more visible in edit mode
                 gridLines(cellW: cellW, cellH: cellH, size: geo.size)
+                Color.clear.frame(width: 0, height: 0)
+                    .onChange(of: editMode) { _, editing in
+                        if !editing { selectedInstanceId = nil }
+                    }
 
                 // Drop target highlight during drag
                 if let targetCol = dragTargetCol, let targetRow = dragTargetRow,
@@ -99,6 +107,7 @@ struct GridPageView: View {
                     if let widget = registry.widget(for: placement.widgetId) {
                         let isDragging = draggingInstanceId == placement.instanceId
                         let isResizing = resizingInstanceId == placement.instanceId
+                        let isSelected = selectedInstanceId == placement.instanceId
                         let x = CGFloat(placement.col) * cellW
                         let y = CGFloat(placement.row) * cellH
                         let w = CGFloat(placement.width) * cellW
@@ -124,8 +133,10 @@ struct GridPageView: View {
                                     let isOverlapped = overlappedIds.contains(placement.instanceId)
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                                         .strokeBorder(
-                                            isOverlapped ? Theme.accentOrange.opacity(0.9) : accent.opacity(0.4),
-                                            lineWidth: isOverlapped ? 2.5 : 1.5
+                                            isSelected ? accent
+                                                : isOverlapped ? Theme.accentOrange.opacity(0.9)
+                                                : accent.opacity(0.4),
+                                            lineWidth: isSelected ? 2.5 : isOverlapped ? 2.5 : 1.5
                                         )
                                         .allowsHitTesting(false)
 
@@ -154,8 +165,13 @@ struct GridPageView: View {
                         }
                         .offset(isDragging ? dragOffset : .zero)
                         .position(x: x + w / 2, y: y + h / 2)
+                        // Tap selects; selection floats the widget above any
+                        // staged overlap so ITS handles are the clickable ones.
+                        .onTapGesture {
+                            if editMode { selectedInstanceId = placement.instanceId }
+                        }
                         .gesture(editMode ? dragGesture(placement: placement, cellW: cellW, cellH: cellH) : nil)
-                        .zIndex(isDragging || isResizing ? 100 : 0)
+                        .zIndex(isDragging || isResizing ? 100 : isSelected && editMode ? 50 : 0)
                     }
                 }
 
@@ -190,6 +206,7 @@ struct GridPageView: View {
         DragGesture()
             .onChanged { value in
                 draggingInstanceId = placement.instanceId
+                selectedInstanceId = placement.instanceId
                 dragOffset = value.translation
 
                 // Calculate target grid cell from drag position
