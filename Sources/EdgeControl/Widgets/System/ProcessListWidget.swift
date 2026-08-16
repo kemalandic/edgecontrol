@@ -15,7 +15,7 @@ public final class ProcessListWidget: DashboardWidget {
         ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu"), options: ["cpu", "memory"]),
         // "auto" fills whatever height the widget has; a number pins the row
         // count and scrolls past it.
-        ConfigSchemaEntry(key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"), options: ["auto", "4", "6", "8", "10", "12"]),
+        ConfigSchemaEntry(key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"), options: ["auto", "4", "6", "8", "10", "12", "16"]),
     ]
     public let defaultColors = WidgetColors(primary: .purple, secondary: .cyan)
 
@@ -73,7 +73,7 @@ private struct ProcessListWidgetView: View {
                         .foregroundStyle(Theme.text3(ts))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    let fitCount = min(max(Int(geo.size.height / rowHeight), 3), 12)
+                    let fitCount = min(max(Int(geo.size.height / rowHeight), 3), 16)
                     let maxCount = fixedRows ?? fitCount
                     let ranked = sortByMemory
                         ? service.topProcesses.sorted { $0.memoryMB > $1.memoryMB }

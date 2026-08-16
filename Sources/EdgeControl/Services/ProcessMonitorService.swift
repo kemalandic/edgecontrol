@@ -100,7 +100,7 @@ public final class ProcessMonitorService: ObservableObject {
         }
 
         // Sort, take top 5, resolve icons
-        let top = Array(results.sorted { $0.cpuPercent > $1.cpuPercent }.prefix(12))
+        let top = Array(results.sorted { $0.cpuPercent > $1.cpuPercent }.prefix(16))
         resolveIcons(for: top)
     }
 
