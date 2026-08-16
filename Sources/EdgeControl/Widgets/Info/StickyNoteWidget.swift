@@ -563,6 +563,7 @@ private final class LinkPasteTextView: NSTextView {
             idx -= 1
         }
         applyParagraphSpacing()
+        renumberOrderedLists()
     }
 
     /// Every paragraph gets its rhythm: heading-sized first characters get
@@ -597,6 +598,50 @@ private final class LinkPasteTextView: NSTextView {
                 level: indentLevel(of: existing, isList: isList)
             )
             storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
+            location = paragraph.location + paragraph.length
+        }
+    }
+
+    /// Numbered items in a contiguous list block stay sequential per indent
+    /// level: each one follows the previous number at its level (bullets and
+    /// checkboxes between them don't break the count), and any non-list
+    /// line — blank or plain text — ends the block and resets numbering.
+    /// Runs on every change, so inserting, deleting or converting an item
+    /// renumbers the rest of its list. The block's first number is kept
+    /// as typed, so lists may start anywhere.
+    private func renumberOrderedLists() {
+        guard let storage = textStorage, storage.length > 0 else { return }
+        var counters: [Int: Int] = [:]
+        var location = 0
+        while location < (storage.string as NSString).length {
+            let ns = storage.string as NSString
+            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
+            var line = ns.substring(with: paragraph)
+            if line.hasSuffix("\n") { line.removeLast() }
+            if markerLength(of: line) == 0 {
+                counters.removeAll()
+                location = paragraph.location + paragraph.length
+                continue
+            }
+            if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
+               let n = Int(line[..<tab].dropLast()) {
+                let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+                let level = indentLevel(of: existing, isList: true)
+                counters = counters.filter { $0.key <= level }
+                let expected = counters[level].map { $0 + 1 } ?? n
+                counters[level] = expected
+                if n != expected {
+                    let headLength = (String(line[..<tab]) as NSString).length
+                    storage.replaceCharacters(
+                        in: NSRange(location: paragraph.location, length: headLength),
+                        with: "\(expected)."
+                    )
+                    let fresh = (storage.string as NSString)
+                        .lineRange(for: NSRange(location: paragraph.location, length: 0))
+                    location = fresh.location + fresh.length
+                    continue
+                }
+            }
             location = paragraph.location + paragraph.length
         }
     }
