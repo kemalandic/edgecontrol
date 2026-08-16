@@ -173,8 +173,9 @@ private struct RichStickyTextView: NSViewRepresentable {
                 Self.parseLegacy(legacyMarkdown, font: baseFont, textColor: textColor)
             )
         }
+        textView.accentColor = linkColor
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
-        textView.applyCheckboxCursors()
+        textView.normalizeCheckboxes()
 
         let scroll = NSScrollView()
         scroll.documentView = textView
@@ -187,6 +188,7 @@ private struct RichStickyTextView: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let textView = scroll.documentView as? LinkPasteTextView else { return }
         textView.insertionPointColor = textColor
+        textView.accentColor = linkColor
         // Reflow the whole note when the configured font family/size changes,
         // preserving bold/italic traits and relative (heading) sizes.
         if context.coordinator.appliedFontKey != fontKey {
@@ -201,7 +203,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         if Self.rtfString(textView.attributedString()) != rtfBase64,
            let restored = Self.fromRTF(rtfBase64) {
             textView.textStorage?.setAttributedString(restored)
-            textView.applyCheckboxCursors()
+            textView.normalizeCheckboxes()
         }
     }
 
@@ -271,10 +273,24 @@ private struct RichStickyTextView: NSViewRepresentable {
 
     // MARK: Storage
 
+    /// Drawn checkboxes live only in the view; storage keeps the glyph
+    /// characters, so RTF, the plain mirror and pre-attachment notes all
+    /// stay compatible.
     static func rtfString(_ attributed: NSAttributedString) -> String {
         guard attributed.length > 0 else { return "" }
-        let range = NSRange(location: 0, length: attributed.length)
-        return attributed.rtf(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])?
+        let mapped = NSMutableAttributedString()
+        attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
+            if let box = attrs[.attachment] as? CheckboxAttachment {
+                var plain = attrs
+                plain.removeValue(forKey: .attachment)
+                plain.removeValue(forKey: .cursor)
+                mapped.append(NSAttributedString(string: box.checked ? "☑" : "☐", attributes: plain))
+            } else {
+                mapped.append(attributed.attributedSubstring(from: range))
+            }
+        }
+        let range = NSRange(location: 0, length: mapped.length)
+        return mapped.rtf(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])?
             .base64EncodedString() ?? ""
     }
 
@@ -289,7 +305,9 @@ private struct RichStickyTextView: NSViewRepresentable {
         var out = ""
         attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
             let text = attributed.attributedSubstring(from: range).string
-            if let link = attrs[.link] {
+            if let box = attrs[.attachment] as? CheckboxAttachment {
+                out += box.checked ? "☑" : "☐"
+            } else if let link = attrs[.link] {
                 let url = (link as? URL)?.absoluteString ?? (link as? String ?? "")
                 out += "[\(text)](\(url))"
             } else {
@@ -325,40 +343,54 @@ private struct RichStickyTextView: NSViewRepresentable {
 private final class LinkPasteTextView: NSTextView {
     var defaultFont: NSFont = .systemFont(ofSize: 13)
     var defaultColor: NSColor = .white
+    var accentColor: NSColor = .systemYellow
+    private var isNormalizing = false
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor]
     }
 
-    /// Checkbox glyphs behave like controls, so hovering shows the hand, not
-    /// the I-beam. The .cursor attribute is hover-only and never serializes
-    /// into the RTF.
     override func didChangeText() {
         super.didChangeText()
-        applyCheckboxCursors()
+        guard !isNormalizing else { return }
+        isNormalizing = true
+        normalizeCheckboxes()
+        isNormalizing = false
     }
 
-    func applyCheckboxCursors() {
-        // Pointer cursor only. The glyph stays at body size: caret height
-        // follows line height, and line height follows the tallest glyph, so
-        // an enlarged box either grows the caret or squashes the line — both
-        // tried, both worse. This pass also repairs notes saved during the
-        // oversized-glyph experiments.
+    /// One drawn checkbox (attachment) plus its following no-break space.
+    private func checkboxMarker(checked: Bool) -> NSAttributedString {
+        let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
+        s.append(NSAttributedString(string: "\u{00A0}", attributes: bodyAttributes))
+        return s
+    }
+
+    private func checkboxOnly(checked: Bool) -> NSAttributedString {
+        let attachment = CheckboxAttachment.make(
+            checked: checked, font: defaultFont,
+            stroke: defaultColor, accent: accentColor
+        )
+        let s = NSMutableAttributedString(attachment: attachment)
+        s.addAttributes(
+            [.cursor: NSCursor.pointingHand, .font: defaultFont],
+            range: NSRange(location: 0, length: s.length)
+        )
+        return s
+    }
+
+    /// Storage carries ☐/☑ characters; the view draws them. Any glyph that
+    /// appears (load, paste, legacy notes) becomes a drawn attachment.
+    func normalizeCheckboxes() {
         guard let storage = textStorage else { return }
+        var idx = storage.length - 1
         let ns = storage.string as NSString
-        var idx = 0
-        while idx < ns.length {
+        while idx >= 0 {
             let ch = ns.substring(with: NSRange(location: idx, length: 1))
             if ch == "☐" || ch == "☑" {
                 let range = NSRange(location: idx, length: 1)
-                storage.addAttributes(
-                    [.cursor: NSCursor.pointingHand, .font: defaultFont],
-                    range: range
-                )
-                storage.removeAttribute(.paragraphStyle, range: range)
-                storage.removeAttribute(.baselineOffset, range: range)
+                storage.replaceCharacters(in: range, with: checkboxOnly(checked: ch == "☑"))
             }
-            idx += 1
+            idx -= 1
         }
     }
 
@@ -420,11 +452,11 @@ private final class LinkPasteTextView: NSTextView {
         // checkbox forms chain off the bullet. Conversion waits for the
         // CLOSING bracket — converting at "[" would make "[x]" untypeable.
         case "- [ ]", "- []", "•\u{00A0}[ ]", "•\u{00A0}[]":
-            replace(prefixRange, with: NSAttributedString(string: "☐\u{00A0}", attributes: bodyAttributes))
+            replace(prefixRange, with: checkboxMarker(checked: false))
             return true
         case "- [x]", "- [X]", "•\u{00A0}[x]", "•\u{00A0}[X]",
              "•\u{00A0}[ x]", "•\u{00A0}[ X]":
-            replace(prefixRange, with: NSAttributedString(string: "☑\u{00A0}", attributes: bodyAttributes))
+            replace(prefixRange, with: checkboxMarker(checked: true))
             return true
         case "#", "##", "###":
             replace(prefixRange, with: NSAttributedString(string: ""))
@@ -475,7 +507,8 @@ private final class LinkPasteTextView: NSTextView {
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         var content = ns.substring(with: lineRange)
         if content.hasSuffix("\n") { content.removeLast() }
-        let markers = ["•\u{00A0}", "☐\u{00A0}", "☑\u{00A0}", "•", "☐", "☑"]
+        let markers = ["•\u{00A0}", "☐\u{00A0}", "☑\u{00A0}", "•", "☐", "☑",
+                       "\u{FFFC}\u{00A0}", "\u{FFFC}"]
         guard markers.contains(content) else { return false }
         let deleteRange = NSRange(location: lineRange.location, length: (content as NSString).length)
         replace(deleteRange, with: NSAttributedString(string: ""))
@@ -503,17 +536,18 @@ private final class LinkPasteTextView: NSTextView {
     /// Pressing return on a bullet/checkbox line continues the list; on an
     /// empty list line it ends it (handled by the caller inserting nothing —
     /// the empty marker line stays until deleted, matching most editors).
-    private func listContinuation() -> String? {
+    private func listContinuation() -> NSAttributedString? {
         let ns = string as NSString
         let loc = selectedRange().location
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         let line = ns.substring(with: lineRange)
         if line.hasPrefix("•\u{00A0}"), line.trimmingCharacters(in: .whitespacesAndNewlines) != "•" {
-            return "•\u{00A0}"
+            return NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes)
         }
-        if line.hasPrefix("☐\u{00A0}") || line.hasPrefix("☑\u{00A0}") {
+        // Drawn checkbox lines start with the attachment character.
+        if line.hasPrefix("\u{FFFC}") {
             let stripped = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if stripped != "☐" && stripped != "☑" { return "☐\u{00A0}" }
+            if stripped != "\u{FFFC}" { return checkboxMarker(checked: false) }
         }
         return nil
     }
@@ -529,14 +563,11 @@ private final class LinkPasteTextView: NSTextView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         let index = characterIndexForInsertion(at: point)
-        let ns = string as NSString
-        for candidate in [index, index - 1] where candidate >= 0 && candidate < ns.length {
-            let char = ns.substring(with: NSRange(location: candidate, length: 1))
-            if char == "☐" || char == "☑" {
+        for candidate in [index, index - 1] where candidate >= 0 && candidate < (textStorage?.length ?? 0) {
+            if let box = textStorage?.attribute(.attachment, at: candidate, effectiveRange: nil) as? CheckboxAttachment {
                 let range = NSRange(location: candidate, length: 1)
-                let flipped = char == "☐" ? "☑" : "☐"
-                guard shouldChangeText(in: range, replacementString: flipped) else { break }
-                textStorage?.replaceCharacters(in: range, with: flipped)
+                guard shouldChangeText(in: range, replacementString: nil) else { break }
+                textStorage?.replaceCharacters(in: range, with: checkboxOnly(checked: !box.checked))
                 didChangeText()
                 return
             }
@@ -608,5 +639,58 @@ private final class LinkPasteTextView: NSTextView {
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
         let typed = field.stringValue.trimmingCharacters(in: .whitespaces)
         return typed.isEmpty ? defaultTitle : typed
+    }
+}
+
+// MARK: - Drawn checkbox
+
+/// Custom-drawn checkbox image the note renders in place of ☐/☑: a rounded
+/// stroke square, filled with the note's accent plus a checkmark when done.
+/// The attachment exists only in the view — serialization maps it back to
+/// the glyph characters.
+private final class CheckboxAttachment: NSTextAttachment {
+    var checked = false
+
+    static func make(checked: Bool, font: NSFont, stroke: NSColor, accent: NSColor) -> CheckboxAttachment {
+        let side = (font.pointSize * 1.2).rounded()
+        let attachment = CheckboxAttachment()
+        attachment.checked = checked
+        attachment.image = drawImage(checked: checked, side: side, stroke: stroke, accent: accent)
+        // Center against the cap height so the box reads as part of the line.
+        attachment.bounds = CGRect(
+            x: 0, y: (font.capHeight - side) / 2, width: side, height: side
+        )
+        return attachment
+    }
+
+    private static func drawImage(checked: Bool, side: CGFloat, stroke: NSColor, accent: NSColor) -> NSImage {
+        NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
+            let inset = rect.insetBy(dx: 1, dy: 1)
+            let radius = side * 0.24
+            let path = NSBezierPath(roundedRect: inset, xRadius: radius, yRadius: radius)
+            if checked {
+                accent.setFill()
+                path.fill()
+                // Checkmark in whichever of black/white reads against the accent.
+                let rgb = accent.usingColorSpace(.deviceRGB)
+                let luminance = rgb.map {
+                    0.299 * $0.redComponent + 0.587 * $0.greenComponent + 0.114 * $0.blueComponent
+                } ?? 1
+                let mark = NSBezierPath()
+                mark.move(to: NSPoint(x: side * 0.26, y: side * 0.52))
+                mark.line(to: NSPoint(x: side * 0.44, y: side * 0.32))
+                mark.line(to: NSPoint(x: side * 0.76, y: side * 0.70))
+                mark.lineWidth = max(1.5, side * 0.14)
+                mark.lineCapStyle = .round
+                mark.lineJoinStyle = .round
+                (luminance > 0.6 ? NSColor.black.withAlphaComponent(0.85) : .white).setStroke()
+                mark.stroke()
+            } else {
+                stroke.withAlphaComponent(0.75).setStroke()
+                path.lineWidth = max(1.5, side * 0.11)
+                path.stroke()
+            }
+            return true
+        }
     }
 }
