@@ -336,12 +336,26 @@ struct PageManagerView: View {
         // Widget config editor. Every widget without its own tap behavior
         // also gets the universal "Opens on Tap" launcher field.
         if let widget = registry.widget(for: placement.widgetId) {
-            let schema = WidgetLaunch.excluded.contains(widget.widgetId)
-                ? widget.configSchema
-                : widget.configSchema + [ConfigSchemaEntry(
+            let schema: [ConfigSchemaEntry] = {
+                guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return widget.configSchema }
+                var extra = [ConfigSchemaEntry(
                     key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
                     type: .text,
                     defaultValue: .string(WidgetLaunch.defaultApp(for: widget.widgetId)))]
+                // Tab choice appears only when the launch target is Activity
+                // Monitor (its tab set is fixed, indexed by SelectedTab).
+                let target = placement.config.string(
+                    WidgetLaunch.configKey,
+                    default: WidgetLaunch.defaultApp(for: widget.widgetId))
+                if WidgetLaunch.isActivityMonitor(target) {
+                    extra.append(ConfigSchemaEntry(
+                        key: WidgetLaunch.tabConfigKey, label: "Activity Monitor Tab",
+                        type: .picker,
+                        defaultValue: .string("CPU"),
+                        options: WidgetLaunch.activityMonitorTabs))
+                }
+                return widget.configSchema + extra
+            }()
             WidgetConfigEditor(
                 schema: schema,
                 config: Binding(

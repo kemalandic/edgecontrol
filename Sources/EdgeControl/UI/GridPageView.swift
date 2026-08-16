@@ -186,7 +186,10 @@ struct GridPageView: View {
                                 if editMode {
                                     selectedInstanceId = placement.instanceId
                                 } else {
-                                    WidgetLaunch.launch(launchTarget(for: placement))
+                                    WidgetLaunch.launch(
+                                        launchTarget(for: placement),
+                                        tab: placement.config.string(WidgetLaunch.tabConfigKey, default: "CPU")
+                                    )
                                 }
                             }
                         }
