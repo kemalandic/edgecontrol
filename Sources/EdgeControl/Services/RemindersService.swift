@@ -111,17 +111,19 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         refresh()
     }
 
-    /// Creates a real reminder in the selected list, optionally due today.
-    public func add(title: String, dueToday: Bool = false) {
+    /// Creates a real reminder in the selected list, optionally due at a
+    /// specific time (with an alarm, so it actually notifies).
+    public func add(title: String, due: Date? = nil) {
         let trimmed = title.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, let calendar = selectedCalendar else { return }
         let reminder = EKReminder(eventStore: store)
         reminder.title = trimmed
         reminder.calendar = calendar
-        if dueToday {
+        if let due {
             reminder.dueDateComponents = Calendar.current.dateComponents(
-                [.year, .month, .day], from: Date()
+                [.year, .month, .day, .hour, .minute], from: due
             )
+            reminder.addAlarm(EKAlarm(absoluteDate: due))
         }
         try? store.save(reminder, commit: true)
         refresh()

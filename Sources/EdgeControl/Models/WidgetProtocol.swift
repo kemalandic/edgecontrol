@@ -386,6 +386,7 @@ public enum WidgetLaunch {
         case "process-list": "Activity Monitor"
         case "storage-bars": "DaisyDisk"
         case "clock": "Calendar"
+        case "reminders": "Reminders"
         default: ""
         }
     }
