@@ -174,11 +174,12 @@ struct GridPageView: View {
                                 }
                             }
                         }
-                        // Mouse-only affordance: a gear fades in at the top
-                        // right on hover and deep-links to this widget's
-                        // settings. Hidden entirely (not just transparent)
-                        // when unhovered so it can't swallow touches.
-                        .overlay(alignment: .topTrailing) {
+                        // Mouse-only affordance: a gear fades in at the
+                        // bottom right on hover and deep-links to this
+                        // widget's settings. Hidden entirely (not just
+                        // transparent) when unhovered so it can't swallow
+                        // touches.
+                        .overlay(alignment: .bottomTrailing) {
                             if !editMode, hoveredInstanceId == placement.instanceId {
                                 Button {
                                     layoutEngine.settingsFocus = LayoutEngine.SettingsFocus(
