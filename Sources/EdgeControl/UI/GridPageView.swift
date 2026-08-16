@@ -13,7 +13,6 @@ struct GridPageView: View {
 
     // Drag state
     @State private var draggingInstanceId: String?
-    @State private var dragOffset: CGSize = .zero
     @State private var dragTargetCol: Int?
     @State private var dragTargetRow: Int?
     @State private var dragIsValid: Bool = false
@@ -293,7 +292,6 @@ struct GridPageView: View {
                                 }
                             }
                         }
-                        .offset(isDragging ? dragOffset : .zero)
                         .position(x: x + w / 2, y: y + h / 2)
                         .gesture(editMode ? dragGesture(placement: placement, cellW: cellW, cellH: cellH) : nil)
                         .zIndex(isDragging || isResizing ? 100 : isSelected && editMode ? 50 : 0)
@@ -348,7 +346,6 @@ struct GridPageView: View {
             .onChanged { value in
                 draggingInstanceId = placement.instanceId
                 selectedInstanceId = placement.instanceId
-                dragOffset = value.translation
 
                 // Calculate target grid cell from drag position
                 let newCol = placement.col + Int(round(value.translation.width / cellW))
@@ -386,10 +383,10 @@ struct GridPageView: View {
                     }
                 }
 
-                // Reset drag state
+                // Reset drag state (the card never moved — it dims in
+                // place and jumps to its new cell on drop)
                 withAnimation(.easeOut(duration: 0.2)) {
                     draggingInstanceId = nil
-                    dragOffset = .zero
                     dragTargetCol = nil
                     dragTargetRow = nil
                     dragIsValid = false
