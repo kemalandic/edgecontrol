@@ -292,6 +292,26 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
         editMenuItem.submenu = editMenu
         mainMenu.addItem(editMenuItem)
+
+        // Bold/Italic ride NSFontManager like the standard Format menu;
+        // Underline goes down the responder chain; Strikethrough is our own
+        // selector on the sticky note's text view.
+        let formatMenuItem = NSMenuItem()
+        let formatMenu = NSMenu(title: "Format")
+        let boldItem = NSMenuItem(title: "Bold", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "b")
+        boldItem.target = NSFontManager.shared
+        boldItem.tag = Int(NSFontTraitMask.boldFontMask.rawValue)
+        formatMenu.addItem(boldItem)
+        let italicItem = NSMenuItem(title: "Italic", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "i")
+        italicItem.target = NSFontManager.shared
+        italicItem.tag = Int(NSFontTraitMask.italicFontMask.rawValue)
+        formatMenu.addItem(italicItem)
+        formatMenu.addItem(NSMenuItem(title: "Underline", action: Selector(("underline:")), keyEquivalent: "u"))
+        let strikeItem = NSMenuItem(title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
+        strikeItem.keyEquivalentModifierMask = [.command, .shift]
+        formatMenu.addItem(strikeItem)
+        formatMenuItem.submenu = formatMenu
+        mainMenu.addItem(formatMenuItem)
         return mainMenu
     }
 

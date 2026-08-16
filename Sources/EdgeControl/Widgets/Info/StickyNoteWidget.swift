@@ -17,6 +17,10 @@ public final class StickyNoteWidget: DashboardWidget {
                           options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
         ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.12),
                           minValue: 0.0, maxValue: 1.0, step: 0.05),
+        ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("system"),
+                          options: ["system", "rounded", "serif", "mono", "marker", "noteworthy"]),
+        ConfigSchemaEntry(key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(13),
+                          minValue: 10, maxValue: 24, step: 1),
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
 
@@ -26,8 +30,11 @@ public final class StickyNoteWidget: DashboardWidget {
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
         StickyNoteWidgetView(
             note: config.string("note"),
+            rtf: config.string("rtf"),
             colorName: config.string("color", default: "yellow"),
             tintOpacity: config.double("opacity", default: 0.12),
+            fontFamily: config.string("font", default: "system"),
+            fontSize: config.double("fontSize", default: 13),
             pageId: config.string("_pageId"),
             instanceId: config.string("_instanceId"),
             baseConfig: config
@@ -35,20 +42,26 @@ public final class StickyNoteWidget: DashboardWidget {
     }
 }
 
-/// Always-editable rich text: links live inline as styled, clickable titles.
-/// Storage stays plain — links serialize to `[title](url)` in the config, so
-/// notes round-trip through export/import and the settings field.
+/// A markdown-lite rich note: type "- ", "- [ ] ", "# " or "---" and they
+/// convert to bullets, checkboxes, headings and rules on the spot — the note
+/// is rich text from then on, never markdown. Links paste as titled links.
+/// Storage is RTF (with a plain-text mirror in "note" for the settings field
+/// and for pre-RTF notes).
 private struct StickyNoteWidgetView: View {
     let note: String
+    let rtf: String
     let colorName: String
     let tintOpacity: Double
+    let fontFamily: String
+    let fontSize: Double
     let pageId: String
     let instanceId: String
     let baseConfig: WidgetConfig
 
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @Environment(\.themeSettings) private var ts
-    @State private var draft = ""
+    @State private var rtfDraft = ""
+    @State private var plainDraft = ""
     @State private var seeded = false
     @State private var saveTask: Task<Void, Never>?
 
@@ -68,8 +81,10 @@ private struct StickyNoteWidgetView: View {
 
     var body: some View {
         RichStickyTextView(
-            markdown: $draft,
-            font: NSFont.systemFont(ofSize: 13 * ts.fontScale),
+            rtfBase64: $rtfDraft,
+            plainText: $plainDraft,
+            legacyMarkdown: note,
+            baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
             textColor: NSColor(Theme.text1(ts)),
             linkColor: NSColor(primary)
         )
@@ -78,37 +93,39 @@ private struct StickyNoteWidgetView: View {
         .widgetCard()
         .onAppear {
             if !seeded {
-                draft = note
+                rtfDraft = rtf
+                plainDraft = note
                 seeded = true
             }
         }
         // External edits (settings field, layout import) win over a stale
         // on-screen draft only when they actually differ.
-        .onChange(of: note) { _, newValue in
-            if newValue != draft { draft = newValue }
+        .onChange(of: rtf) { _, newValue in
+            if newValue != rtfDraft { rtfDraft = newValue }
         }
         // Debounced: saving mutates the layout document, and doing that per
         // keystroke re-rendered every widget on the dashboard per character.
-        .onChange(of: draft) { _, newValue in
+        .onChange(of: rtfDraft) { _, _ in
             saveTask?.cancel()
             saveTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(800))
                 guard !Task.isCancelled else { return }
-                save(newValue)
+                save()
             }
         }
         .onDisappear {
             saveTask?.cancel()
-            save(draft)
+            save()
         }
     }
 
-    private func save(_ text: String) {
-        guard !instanceId.isEmpty, text != note else { return }
+    private func save() {
+        guard !instanceId.isEmpty, rtfDraft != rtf else { return }
         // Strip the injected identity keys: they describe the render pass,
         // not the widget's persistent state.
         var config = baseConfig
-        config["note"] = .string(text)
+        config["rtf"] = .string(rtfDraft)
+        config["note"] = .string(plainDraft)
         config["_pageId"] = nil
         config["_instanceId"] = nil
         layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
@@ -117,12 +134,11 @@ private struct StickyNoteWidgetView: View {
 
 // MARK: - Rich text view
 
-/// NSTextView wrapper: rich in the view, `[title](url)` in storage. Pasting
-/// a URL over selected text linkifies the selection; pasting a bare URL asks
-/// for a title. Clicking a link opens it, even while editable.
 private struct RichStickyTextView: NSViewRepresentable {
-    @Binding var markdown: String
-    let font: NSFont
+    @Binding var rtfBase64: String
+    @Binding var plainText: String
+    let legacyMarkdown: String
+    let baseFont: NSFont
     let textColor: NSColor
     let linkColor: NSColor
 
@@ -131,6 +147,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         textView.delegate = context.coordinator
         textView.isRichText = true
         textView.allowsUndo = true
+        textView.usesFontPanel = true
         textView.drawsBackground = false
         textView.focusRingType = .none
         textView.isAutomaticQuoteSubstitutionEnabled = false
@@ -144,10 +161,19 @@ private struct RichStickyTextView: NSViewRepresentable {
             .underlineStyle: NSUnderlineStyle.single.rawValue,
             .cursor: NSCursor.pointingHand,
         ]
-        applyStyle(to: textView)
-        textView.textStorage?.setAttributedString(
-            Self.parse(markdown, font: font, textColor: textColor)
-        )
+        textView.defaultFont = baseFont
+        textView.defaultColor = textColor
+        textView.insertionPointColor = textColor
+        context.coordinator.appliedFontKey = fontKey
+
+        if let restored = Self.fromRTF(rtfBase64) {
+            textView.textStorage?.setAttributedString(restored)
+        } else {
+            textView.textStorage?.setAttributedString(
+                Self.parseLegacy(legacyMarkdown, font: baseFont, textColor: textColor)
+            )
+        }
+        textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
 
         let scroll = NSScrollView()
         scroll.documentView = textView
@@ -159,33 +185,79 @@ private struct RichStickyTextView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let textView = scroll.documentView as? LinkPasteTextView else { return }
-        applyStyle(to: textView)
-        // Only reload content on a genuine external change; echoing our own
+        textView.insertionPointColor = textColor
+        // Reflow the whole note when the configured font family/size changes,
+        // preserving bold/italic traits and relative (heading) sizes.
+        if context.coordinator.appliedFontKey != fontKey {
+            let ratio = baseFont.pointSize / textView.defaultFont.pointSize
+            reapplyBaseFont(in: textView, ratio: ratio)
+            textView.defaultFont = baseFont
+            context.coordinator.appliedFontKey = fontKey
+            context.coordinator.pushChanges(from: textView)
+        }
+        // Reload only on a genuine external change; echoing our own
         // keystrokes back through setAttributedString would fight the cursor.
-        if Self.serialize(textView.attributedString()) != markdown {
-            textView.textStorage?.setAttributedString(
-                Self.parse(markdown, font: font, textColor: textColor)
-            )
+        if Self.rtfString(textView.attributedString()) != rtfBase64,
+           let restored = Self.fromRTF(rtfBase64) {
+            textView.textStorage?.setAttributedString(restored)
         }
     }
 
-    private func applyStyle(to textView: LinkPasteTextView) {
-        textView.font = font
-        textView.textColor = textColor
-        textView.insertionPointColor = textColor
-        textView.defaultFont = font
-        textView.defaultColor = textColor
+    private var fontKey: String { "\(baseFont.fontName)-\(baseFont.pointSize)" }
+
+    private func reapplyBaseFont(in textView: LinkPasteTextView, ratio: CGFloat) {
+        guard let storage = textView.textStorage else { return }
+        storage.beginEditing()
+        storage.enumerateAttribute(.font, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+            guard let old = value as? NSFont else { return }
+            let traits = old.fontDescriptor.symbolicTraits
+            var descriptor = baseFont.fontDescriptor.withSymbolicTraits(traits)
+            if NSFont(descriptor: descriptor, size: 0) == nil { descriptor = baseFont.fontDescriptor }
+            let newFont = NSFont(descriptor: descriptor, size: old.pointSize * ratio)
+                ?? baseFont
+            storage.addAttribute(.font, value: newFont, range: range)
+        }
+        storage.endEditing()
+        textView.typingAttributes[.font] = baseFont
+    }
+
+    static func makeFont(family: String, size: Double) -> NSFont {
+        let s = CGFloat(size)
+        switch family {
+        case "mono":
+            return .monospacedSystemFont(ofSize: s, weight: .regular)
+        case "rounded":
+            let d = NSFont.systemFont(ofSize: s).fontDescriptor.withDesign(.rounded)
+            return d.flatMap { NSFont(descriptor: $0, size: s) } ?? .systemFont(ofSize: s)
+        case "serif":
+            let d = NSFont.systemFont(ofSize: s).fontDescriptor.withDesign(.serif)
+            return d.flatMap { NSFont(descriptor: $0, size: s) } ?? .systemFont(ofSize: s)
+        case "marker":
+            return NSFont(name: "Marker Felt", size: s) ?? .systemFont(ofSize: s)
+        case "noteworthy":
+            return NSFont(name: "Noteworthy", size: s) ?? .systemFont(ofSize: s)
+        default:
+            return .systemFont(ofSize: s)
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
+    @MainActor
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: RichStickyTextView
+        var appliedFontKey = ""
         init(_ parent: RichStickyTextView) { self.parent = parent }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
-            parent.markdown = RichStickyTextView.serialize(textView.attributedString())
+            pushChanges(from: textView)
+        }
+
+        func pushChanges(from textView: NSTextView) {
+            let attributed = textView.attributedString()
+            parent.rtfBase64 = RichStickyTextView.rtfString(attributed)
+            parent.plainText = RichStickyTextView.plainMirror(attributed)
         }
 
         func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
@@ -195,9 +267,23 @@ private struct RichStickyTextView: NSViewRepresentable {
         }
     }
 
-    // MARK: Markdown round-trip (links only, nothing else interpreted)
+    // MARK: Storage
 
-    static func serialize(_ attributed: NSAttributedString) -> String {
+    static func rtfString(_ attributed: NSAttributedString) -> String {
+        guard attributed.length > 0 else { return "" }
+        let range = NSRange(location: 0, length: attributed.length)
+        return attributed.rtf(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])?
+            .base64EncodedString() ?? ""
+    }
+
+    static func fromRTF(_ base64: String) -> NSAttributedString? {
+        guard !base64.isEmpty, let data = Data(base64Encoded: base64) else { return nil }
+        return NSAttributedString(rtf: data, documentAttributes: nil)
+    }
+
+    /// Plain mirror for the settings field / export readability: links keep
+    /// their [title](url) form, formatting is dropped.
+    static func plainMirror(_ attributed: NSAttributedString) -> String {
         var out = ""
         attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
             let text = attributed.attributedSubstring(from: range).string
@@ -211,7 +297,8 @@ private struct RichStickyTextView: NSViewRepresentable {
         return out
     }
 
-    static func parse(_ markdown: String, font: NSFont, textColor: NSColor) -> NSAttributedString {
+    /// Pre-RTF notes stored `[title](url)` markdown; parse once on load.
+    static func parseLegacy(_ markdown: String, font: NSFont, textColor: NSColor) -> NSAttributedString {
         let plain: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
         let result = NSMutableAttributedString()
         var rest = Substring(markdown)
@@ -228,10 +315,163 @@ private struct RichStickyTextView: NSViewRepresentable {
     }
 }
 
-/// The paste override that makes URLs become links instead of sprawling text.
+// MARK: - The editor
+
+/// Markdown-lite conversions at the keystroke, links on paste, glyph
+/// checkboxes that toggle on click, and a strikethrough action for the
+/// Format menu.
 private final class LinkPasteTextView: NSTextView {
     var defaultFont: NSFont = .systemFont(ofSize: 13)
     var defaultColor: NSColor = .white
+
+    private var bodyAttributes: [NSAttributedString.Key: Any] {
+        [.font: defaultFont, .foregroundColor: defaultColor]
+    }
+
+    private func headingFont(_ level: Int) -> NSFont {
+        let scale: CGFloat = level == 1 ? 1.6 : level == 2 ? 1.35 : 1.15
+        let descriptor = defaultFont.fontDescriptor.withSymbolicTraits(
+            defaultFont.fontDescriptor.symbolicTraits.union(.bold)
+        )
+        return NSFont(descriptor: descriptor, size: defaultFont.pointSize * scale)
+            ?? .boldSystemFont(ofSize: defaultFont.pointSize * scale)
+    }
+
+    // MARK: Typing conversions
+
+    override func insertText(_ insertString: Any, replacementRange: NSRange) {
+        let str = (insertString as? String)
+            ?? (insertString as? NSAttributedString)?.string ?? ""
+
+        if str == " ", convertLinePrefix() { return }
+
+        if str == "\n" {
+            if convertHorizontalRule() { return }
+            let continuation = listContinuation()
+            super.insertText(insertString, replacementRange: replacementRange)
+            // A heading ends at the line break; typing resumes as body text.
+            typingAttributes = bodyAttributes
+            if let continuation {
+                super.insertText(continuation, replacementRange: selectedRange())
+            }
+            return
+        }
+
+        super.insertText(insertString, replacementRange: replacementRange)
+    }
+
+    /// "- " → bullet, "- [ ] " → checkbox, "# "/"## "/"### " → heading.
+    /// Called when a space is typed; returns true when the space is consumed.
+    private func convertLinePrefix() -> Bool {
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        guard loc >= lineRange.location else { return false }
+        let prefixRange = NSRange(location: lineRange.location, length: loc - lineRange.location)
+        let prefix = ns.substring(with: prefixRange)
+
+        switch prefix {
+        case "-":
+            replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+            return true
+        case "- [", "- [ ]", "- []":
+            replace(prefixRange, with: NSAttributedString(string: "☐\u{00A0}", attributes: bodyAttributes))
+            return true
+        case "- [x]", "- [X]":
+            replace(prefixRange, with: NSAttributedString(string: "☑\u{00A0}", attributes: bodyAttributes))
+            return true
+        case "#", "##", "###":
+            replace(prefixRange, with: NSAttributedString(string: ""))
+            var attrs = bodyAttributes
+            attrs[.font] = headingFont(prefix.count)
+            typingAttributes = attrs
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// A line reading exactly "---" becomes a dim horizontal rule on return.
+    private func convertHorizontalRule() -> Bool {
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        let line = ns.substring(with: lineRange).trimmingCharacters(in: .newlines)
+        guard line == "---" else { return false }
+        var attrs = bodyAttributes
+        attrs[.foregroundColor] = defaultColor.withAlphaComponent(0.35)
+        let rule = NSMutableAttributedString(
+            string: String(repeating: "─", count: 24) + "\n", attributes: attrs
+        )
+        replace(lineRange, with: rule)
+        typingAttributes = bodyAttributes
+        return true
+    }
+
+    /// Pressing return on a bullet/checkbox line continues the list; on an
+    /// empty list line it ends it (handled by the caller inserting nothing —
+    /// the empty marker line stays until deleted, matching most editors).
+    private func listContinuation() -> String? {
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        let line = ns.substring(with: lineRange)
+        if line.hasPrefix("•\u{00A0}"), line.trimmingCharacters(in: .whitespacesAndNewlines) != "•" {
+            return "•\u{00A0}"
+        }
+        if line.hasPrefix("☐\u{00A0}") || line.hasPrefix("☑\u{00A0}") {
+            let stripped = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if stripped != "☐" && stripped != "☑" { return "☐\u{00A0}" }
+        }
+        return nil
+    }
+
+    private func replace(_ range: NSRange, with attributed: NSAttributedString) {
+        guard shouldChangeText(in: range, replacementString: attributed.string) else { return }
+        textStorage?.replaceCharacters(in: range, with: attributed)
+        didChangeText()
+    }
+
+    // MARK: Checkbox toggling
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let index = characterIndexForInsertion(at: point)
+        let ns = string as NSString
+        for candidate in [index, index - 1] where candidate >= 0 && candidate < ns.length {
+            let char = ns.substring(with: NSRange(location: candidate, length: 1))
+            if char == "☐" || char == "☑" {
+                let range = NSRange(location: candidate, length: 1)
+                let flipped = char == "☐" ? "☑" : "☐"
+                guard shouldChangeText(in: range, replacementString: flipped) else { break }
+                textStorage?.replaceCharacters(in: range, with: flipped)
+                didChangeText()
+                return
+            }
+        }
+        super.mouseDown(with: event)
+    }
+
+    // MARK: Strikethrough (Format menu)
+
+    @objc func toggleStrikethrough(_ sender: Any?) {
+        let range = selectedRange()
+        guard range.length > 0, let storage = textStorage else {
+            let current = typingAttributes[.strikethroughStyle] as? Int ?? 0
+            typingAttributes[.strikethroughStyle] = current == 0 ? NSUnderlineStyle.single.rawValue : 0
+            return
+        }
+        guard shouldChangeText(in: range, replacementString: nil) else { return }
+        let current = storage.attribute(.strikethroughStyle, at: range.location, effectiveRange: nil) as? Int ?? 0
+        if current == 0 {
+            storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        } else {
+            storage.removeAttribute(.strikethroughStyle, range: range)
+        }
+        didChangeText()
+    }
+
+    // MARK: Link paste
 
     override func paste(_ sender: Any?) {
         guard let pasted = NSPasteboard.general.string(forType: .string)?
@@ -249,9 +489,8 @@ private final class LinkPasteTextView: NSTextView {
             textStorage?.addAttribute(.link, value: pasted, range: range)
             didChangeText()
         } else if let title = Self.promptForTitle(defaultTitle: URL(string: pasted)?.host ?? "link") {
-            let attrs: [NSAttributedString.Key: Any] = [
-                .font: defaultFont, .foregroundColor: defaultColor, .link: pasted,
-            ]
+            var attrs = bodyAttributes
+            attrs[.link] = pasted
             insertText(NSAttributedString(string: title, attributes: attrs), replacementRange: range)
             // Continued typing must not extend the link.
             typingAttributes[.link] = nil
