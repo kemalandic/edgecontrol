@@ -314,6 +314,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case diskIO         // DiskIOService
     case process        // ProcessMonitorService
     case cicd           // CICDService — GitHub, Forgejo, any future host
+    case reminders      // RemindersService (EventKit)
 }
 
 // MARK: - Dashboard Widget Protocol
