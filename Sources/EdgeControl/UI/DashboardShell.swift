@@ -62,9 +62,12 @@ struct DashboardShell: View {
                                     layoutEngine: layoutEngine
                                 )
                                 .padding(8)
+                                // Forward slides in from the trailing edge;
+                                // backward reverses both edges so pages appear
+                                // to travel the way you swiped.
                                 .transition(.asymmetric(
-                                    insertion: .move(edge: .trailing),
-                                    removal: .move(edge: .leading)
+                                    insertion: .move(edge: layoutEngine.navigatingForward ? .trailing : .leading),
+                                    removal: .move(edge: layoutEngine.navigatingForward ? .leading : .trailing)
                                 ))
                             }
                         }

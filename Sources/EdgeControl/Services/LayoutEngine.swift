@@ -4,7 +4,15 @@ import Foundation
 @MainActor
 public final class LayoutEngine: ObservableObject {
     @Published public var document: LayoutDocument
-    @Published public var currentPageIndex: Int = 0
+    @Published public var currentPageIndex: Int = 0 {
+        willSet { navigatingForward = newValue >= currentPageIndex }
+    }
+    /// Direction of the last page change; drives the slide transition. Every
+    /// path that changes pages (touch swipe, drag, page dots, page manager)
+    /// assigns currentPageIndex, so the willSet covers them all. Deliberately
+    /// not @Published: the flag must hold its value through the body pass the
+    /// index change triggers, not cause another evaluation mid-animation.
+    public private(set) var navigatingForward = true
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
     /// True while the dashboard is in edit mode. Placement rules relax so
