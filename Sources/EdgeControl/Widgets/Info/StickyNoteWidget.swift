@@ -339,32 +339,24 @@ private final class LinkPasteTextView: NSTextView {
     }
 
     func applyCheckboxCursors() {
+        // Pointer cursor only. The glyph stays at body size: caret height
+        // follows line height, and line height follows the tallest glyph, so
+        // an enlarged box either grows the caret or squashes the line — both
+        // tried, both worse. This pass also repairs notes saved during the
+        // oversized-glyph experiments.
         guard let storage = textStorage else { return }
         let ns = storage.string as NSString
-        // Enlarged as a tap target — but the line height is clamped to the
-        // body's, because the caret spans the line: an unclamped 2x glyph
-        // made the insertion cursor giant. The box's ink is small within its
-        // em square, so 1.5x fits a body-height line.
-        let size = defaultFont.pointSize * 1.5
-        let glyphFont = NSFont(descriptor: defaultFont.fontDescriptor, size: size)
-            ?? NSFont.systemFont(ofSize: size)
-        let bodyLine = defaultFont.ascender + abs(defaultFont.descender) + defaultFont.leading
-        let para = NSMutableParagraphStyle()
-        para.minimumLineHeight = bodyLine
-        para.maximumLineHeight = bodyLine * 1.12
         var idx = 0
         while idx < ns.length {
             let ch = ns.substring(with: NSRange(location: idx, length: 1))
             if ch == "☐" || ch == "☑" {
+                let range = NSRange(location: idx, length: 1)
                 storage.addAttributes(
-                    [
-                        .cursor: NSCursor.pointingHand,
-                        .font: glyphFont,
-                        .paragraphStyle: para,
-                        .baselineOffset: -(size - defaultFont.pointSize) * 0.15,
-                    ],
-                    range: NSRange(location: idx, length: 1)
+                    [.cursor: NSCursor.pointingHand, .font: defaultFont],
+                    range: range
                 )
+                storage.removeAttribute(.paragraphStyle, range: range)
+                storage.removeAttribute(.baselineOffset, range: range)
             }
             idx += 1
         }
