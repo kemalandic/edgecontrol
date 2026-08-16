@@ -22,12 +22,13 @@ struct GuideView: View {
                         ("Swipe left/right", "Move between pages — pages follow your finger."),
                         ("Tap a widget", "Launches its configured app (set per widget under Pages)."),
                         ("⌘ + hover", "A gear appears in the widget's corner; click it to jump straight to that widget's settings."),
-                        ("Right-click", "\"Edit This Widget's Settings\" jumps to the same place."),
                     ])
                     section("Edit Mode", rows: [
+                        ("Right-click", "\"Edit This Widget's Settings\" jumps straight to its settings. Edit mode only — outside it, widgets keep the click."),
                         ("Drag anywhere", "Widgets go inert while editing; any point on the card drags it."),
                         ("Tap", "Selects a widget (selection floats it above overlaps)."),
                         ("Corner handle", "Drag the bottom-right handle to resize."),
+                        ("Drop on others", "Widgets you drop onto step aside to their nearest free spot; if there's no room they stay overlapped for you to separate."),
                         ("Layer buttons", "On the selected widget: send to back / bring to front — for reaching widgets stacked on one another."),
                         ("✕", "Removes the widget from the page."),
                     ])
@@ -42,14 +43,18 @@ struct GuideView: View {
                         ("Tab / ⇧Tab", "Indent / unindent the line, from anywhere in it."),
                         ("Paste a URL", "Over selected text, that text becomes the link. On its own, you're asked for a title."),
                         ("Return in a link", "Opens the link instead of breaking the line."),
+                        ("Click a link", "Opens it — a finger tap does too."),
+                        ("Settings", "Each note has its own card color, text color, opacity, font and size — via the ⌘-hover gear or the Pages tab."),
                     ])
                     section("Sticky Note — shortcuts", rows: [
                         ("⌘B / ⌘I / ⌘U", "Bold, italic, underline."),
                         ("⌘⇧X", "Strikethrough."),
-                        ("⌘↩", "Check / uncheck the todo on the caret's line — or every checkbox line in a selection."),
+                        ("⌘Return", "Check / uncheck the todo on the caret's line — or every checkbox line in a selection."),
                         ("⌘= / ⌘-", "Bigger / smaller text."),
                         ("⌘0", "Snap back to the configured font size."),
                         ("⌘⇧0", "Body text — clears heading size, bold/italic, underline and strikethrough."),
+                        ("⌘Z / ⇧⌘Z", "Undo / redo."),
+                        ("⌘A/C/V/X", "Select all, copy, paste, cut — the standard set."),
                         ("Click a box", "Toggles the checkbox; works by touch too."),
                     ])
                     section("Reminders", rows: [
