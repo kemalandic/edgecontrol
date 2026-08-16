@@ -236,7 +236,7 @@ private struct WidgetSizePreviewSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: widget.iconName)
-                Text("\(widget.displayName) — all supported sizes")
+                Text("\(widget.displayName) — min, default and max sizes")
                     .font(.system(size: 15, weight: .heavy, design: .rounded))
                 Spacer()
                 Text("Widgets without their service running show placeholder data")
@@ -249,9 +249,14 @@ private struct WidgetSizePreviewSheet: View {
 
             ScrollView(.vertical, showsIndicators: true) {
                 LazyVStack(alignment: .leading, spacing: 14) {
+                    // Extents only: the full width x height cross product
+                    // ran to dozens of near-identical tiles for wide-ranged
+                    // widgets and scrolled forever.
                     let range = widget.supportedSizes
-                    ForEach(Array(range.min.height...range.max.height), id: \.self) { h in
-                        ForEach(Array(range.min.width...range.max.width), id: \.self) { w in
+                    let widths = Array(Set([range.min.width, widget.defaultSize.width, range.max.width])).sorted()
+                    let heights = Array(Set([range.min.height, widget.defaultSize.height, range.max.height])).sorted()
+                    ForEach(heights, id: \.self) { h in
+                        ForEach(widths, id: \.self) { w in
                             // Narrow sizes get a larger scale — a 1-column
                             // preview at audit scale was an illegible sliver.
                             let s: CGFloat = w <= 3 ? 0.75 : scale
