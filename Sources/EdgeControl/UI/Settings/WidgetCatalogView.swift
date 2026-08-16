@@ -4,6 +4,11 @@ struct WidgetCatalogView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var registry: WidgetRegistry
     @State private var selectedCategory: WidgetCategory?
+    @State private var previewedWidget: PreviewItem?
+
+    private struct PreviewItem: Identifiable {
+        let id: String
+    }
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -55,6 +60,11 @@ struct WidgetCatalogView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
+        .sheet(item: $previewedWidget) { item in
+            if let widget = registry.widget(for: item.id) {
+                WidgetSizePreviewSheet(widget: widget) { previewedWidget = nil }
+            }
+        }
     }
 
     private func categoryChip(_ category: WidgetCategory?, label: String) -> some View {
@@ -117,20 +127,39 @@ struct WidgetCatalogView: View {
 
                 Spacer()
 
-                if isPlaced {
-                    Image(systemName: "checkmark.circle.fill")
+                // Renders the widget at every supported size — an audit
+                // surface for layout regressions.
+                Button {
+                    previewedWidget = PreviewItem(id: widget.widgetId)
+                } label: {
+                    Image(systemName: "eye.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundStyle(Theme.accentGreen.opacity(0.5))
-                } else {
+                        .foregroundStyle(accent.opacity(0.8))
+                }
+                .buttonStyle(.plain)
+                .help("Preview at all supported sizes")
+
+                if isPlaced {
                     Button {
-                        addWidgetToCurrentPage(widget)
+                        removeOneFromCurrentPage(widgetId: widget.widgetId)
                     } label: {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 18))
                             .foregroundStyle(Theme.accentGreen)
                     }
                     .buttonStyle(.plain)
+                    .help("Remove one from this page")
                 }
+
+                Button {
+                    addWidgetToCurrentPage(widget)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Theme.accentGreen)
+                }
+                .buttonStyle(.plain)
+                .help("Add to this page")
             }
         }
         .padding(10)
@@ -152,6 +181,13 @@ struct WidgetCatalogView: View {
     private func placedCountOnCurrentPage(widgetId: String) -> Int {
         guard let page = currentPage else { return 0 }
         return page.widgets.filter { $0.widgetId == widgetId }.count
+    }
+
+    /// The checkmark removes one instance per click, most recent first.
+    private func removeOneFromCurrentPage(widgetId: String) {
+        guard let page = currentPage,
+              let victim = page.widgets.last(where: { $0.widgetId == widgetId }) else { return }
+        layoutEngine.removeWidget(pageId: page.id, instanceId: victim.instanceId)
     }
 
     private func addWidgetToCurrentPage(_ widget: any DashboardWidget) {
@@ -180,5 +216,65 @@ struct WidgetCatalogView: View {
             height: widget.defaultSize.height,
             config: widget.defaultConfig()
         )
+    }
+}
+
+// MARK: - Size Preview
+
+/// Renders a widget at every size its range allows, at true cell geometry
+/// scaled down — the audit surface for per-size layout regressions.
+private struct WidgetSizePreviewSheet: View {
+    let widget: any DashboardWidget
+    let dismiss: () -> Void
+
+    private let cell: CGFloat = 120
+    private let scale: CGFloat = 0.45
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: widget.iconName)
+                Text("\(widget.displayName) — all supported sizes")
+                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                Spacer()
+                Text("Widgets without their service running show placeholder data")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                Button("Close", action: dismiss)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .foregroundStyle(.white)
+
+            ScrollView(.vertical, showsIndicators: true) {
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    let range = widget.supportedSizes
+                    ForEach(Array(range.min.height...range.max.height), id: \.self) { h in
+                        ForEach(Array(range.min.width...range.max.width), id: \.self) { w in
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("\(w)x\(h)")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(Theme.textTertiary)
+                                AnyView(widget.body(
+                                    size: WidgetSize(width: w, height: h),
+                                    config: widget.defaultConfig()
+                                ))
+                                .frame(width: CGFloat(w) * cell, height: CGFloat(h) * cell)
+                                .clipped()
+                                .scaleEffect(scale, anchor: .topLeading)
+                                .frame(
+                                    width: CGFloat(w) * cell * scale,
+                                    height: CGFloat(h) * cell * scale,
+                                    alignment: .topLeading
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 12)
+            }
+        }
+        .padding(16)
+        .frame(minWidth: 560, minHeight: 460)
+        .background(Theme.backgroundPrimary)
     }
 }
