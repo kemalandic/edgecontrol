@@ -50,19 +50,22 @@ private struct NetworkStatsWidgetView: View {
                 WidgetHeader(title: "NETWORK", color: primary)
             }
 
-            if isBar {
-                HStack(spacing: 12) {
-                    barGroup(icon: "arrow.down.circle.fill", color: primary,
-                             label: "DOWN", speed: service.downloadSpeed)
-                    barGroup(icon: "arrow.up.circle.fill", color: secondary,
-                             label: "UP", speed: service.uploadSpeed)
-                }
-            } else {
-                speedRow(icon: "arrow.down.circle.fill", color: primary,
-                         label: "DOWN", speed: service.downloadSpeed)
-                speedRow(icon: "arrow.up.circle.fill", color: secondary,
-                         label: "UP", speed: service.uploadSpeed)
-            }
+            if !isBar { Spacer(minLength: 0) }
+
+            // Same component Disk I/O renders — equal boxes, equal layout.
+            RatePairView(
+                first: .init(
+                    icon: "arrow.down.circle.fill", label: "DOWN",
+                    value: NetworkMonitorService.formatSpeed(service.downloadSpeed),
+                    color: primary
+                ),
+                second: .init(
+                    icon: "arrow.up.circle.fill", label: "UP",
+                    value: NetworkMonitorService.formatSpeed(service.uploadSpeed),
+                    color: secondary
+                ),
+                compact: isCompact
+            )
 
             if !isBar && (!isCompact || showCompactTotals) {
                 HStack(spacing: 10) {
@@ -77,44 +80,7 @@ private struct NetworkStatsWidgetView: View {
         .widgetCard()
     }
 
-    private func speedRow(icon: String, color: Color, label: String, speed: Double) -> some View {
-        HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
-                .foregroundStyle(color)
-            Text(label)
-                .font(Theme.label(ts))
-                .foregroundStyle(Theme.text3(ts))
-            Spacer()
-            Text(NetworkMonitorService.formatSpeed(speed))
-                .font(Theme.value(ts))
-                .foregroundStyle(Theme.text1(ts))
-                .monospacedDigit()
-                .minimumScaleFactor(0.5)
-        }
-    }
 
-    // 1-row group: icon+label line over the value line, matching Disk I/O's
-    // single-row arrangement so the two widgets read as one family.
-    private func barGroup(icon: String, color: Color, label: String, speed: Double) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 12 * ts.fontScale))
-                    .foregroundStyle(color)
-                Text(label)
-                    .font(Theme.label(ts))
-                    .foregroundStyle(Theme.text3(ts))
-            }
-            Text(NetworkMonitorService.formatSpeed(speed))
-                .font(Theme.value(ts))
-                .foregroundStyle(Theme.text1(ts))
-                .monospacedDigit()
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
 
     private func totalChip(_ label: String, value: String, color: Color) -> some View {
         HStack(spacing: 6) {

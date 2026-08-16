@@ -47,43 +47,19 @@ private struct DiskIOWidgetView: View {
 
             Spacer(minLength: 0)
 
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
-                            .foregroundStyle(Theme.widgetSecondary("disk-io", ts: ts, default: .green) ?? Theme.accentGreen)
-                        Text("READ")
-                            .font(Theme.label(ts))
-                            .foregroundStyle(Theme.text3(ts))
-                    }
-                    Text(formatSpeed(service.readBytesPerSec))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
-                            .foregroundStyle(Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange)
-                        Text("WRITE")
-                            .font(Theme.label(ts))
-                            .foregroundStyle(Theme.text3(ts))
-                    }
-                    Text(formatSpeed(service.writeBytesPerSec))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            RatePairView(
+                first: .init(
+                    icon: "arrow.down.circle.fill", label: "READ",
+                    value: formatSpeed(service.readBytesPerSec),
+                    color: Theme.widgetSecondary("disk-io", ts: ts, default: .green) ?? Theme.accentGreen
+                ),
+                second: .init(
+                    icon: "arrow.up.circle.fill", label: "WRITE",
+                    value: formatSpeed(service.writeBytesPerSec),
+                    color: Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange
+                ),
+                compact: isCompact
+            )
 
             Spacer(minLength: 0)
         }
