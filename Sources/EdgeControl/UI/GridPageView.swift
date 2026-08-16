@@ -135,11 +135,25 @@ struct GridPageView: View {
                                 c["_instanceId"] = .string(placement.instanceId)
                                 return c
                             }()
-                            AnyView(widget.body(
-                                size: WidgetSize(width: placement.width, height: placement.height),
-                                config: cfg
-                            ))
-                            .padding(CGFloat(layoutEngine.document.globalSettings.theme.widgetGap))
+                            // Equatable wrapper: drag state changes re-render
+                            // this page body ~60x/s, and rebuilding every
+                            // widget's view tree each tick is what made
+                            // dragging janky. The wrapper skips a widget's
+                            // body unless its own inputs changed, so a drag
+                            // only updates cheap transforms.
+                            WidgetContentView(
+                                registry: registry,
+                                widgetId: placement.widgetId,
+                                width: placement.width,
+                                height: placement.height,
+                                config: cfg,
+                                gap: CGFloat(layoutEngine.document.globalSettings.theme.widgetGap)
+                            )
+                            .equatable()
+                            // In edit mode the widget's own controls go
+                            // inert: any point on the card drags it, and a
+                            // tap selects it instead of poking the widget.
+                            .allowsHitTesting(!editMode)
                         }
                         .frame(width: w, height: h)
                         // Compact layouts at large font scales can overflow a
@@ -424,5 +438,37 @@ struct GridPageView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+
+/// The widget's rendered body behind an explicit Equatable gate: SwiftUI
+/// skips re-evaluating it unless the placement's own inputs change, which
+/// keeps edit-mode drags from rebuilding every widget on the page per tick.
+private struct WidgetContentView: View, Equatable {
+    let registry: WidgetRegistry
+    let widgetId: String
+    let width: Int
+    let height: Int
+    let config: WidgetConfig
+    let gap: CGFloat
+
+    // The registry is a process-wide singleton, so identity of the value
+    // fields is the whole story; touching the non-Sendable registry here
+    // would also violate the nonisolated Equatable requirement.
+    nonisolated static func == (a: Self, b: Self) -> Bool {
+        a.widgetId == b.widgetId
+            && a.width == b.width && a.height == b.height
+            && a.config == b.config && a.gap == b.gap
+    }
+
+    var body: some View {
+        if let widget = registry.widget(for: widgetId) {
+            AnyView(widget.body(
+                size: WidgetSize(width: width, height: height),
+                config: config
+            ))
+            .padding(gap)
+        }
     }
 }
