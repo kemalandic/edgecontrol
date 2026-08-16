@@ -65,7 +65,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let win = NSWindow(contentViewController: hosting)
         win.title = "EdgeControl Settings"
         win.styleMask = [.titled, .closable, .resizable]
-        win.setContentSize(NSSize(width: 700, height: 500))
+        win.setContentSize(NSSize(width: 1130, height: 755))
         win.center()
         win.isReleasedWhenClosed = false
         win.level = .normal
