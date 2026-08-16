@@ -149,6 +149,21 @@ public final class LayoutEngine: ObservableObject {
     }
 
     /// Remove a widget instance from a page.
+    /// Move a widget to the front or back of its page's stacking order.
+    /// Widgets render in array order, so overlapped widgets can be pulled
+    /// out from under one another while editing.
+    public func reorderWidget(pageId: String, instanceId: String, toFront: Bool) {
+        guard let pageIdx = pageIndex(for: pageId),
+              let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return }
+        let placement = document.pages[pageIdx].widgets.remove(at: widgetIdx)
+        if toFront {
+            document.pages[pageIdx].widgets.append(placement)
+        } else {
+            document.pages[pageIdx].widgets.insert(placement, at: 0)
+        }
+        save()
+    }
+
     public func removeWidget(pageId: String, instanceId: String) {
         guard let pageIdx = pageIndex(for: pageId) else { return }
         document.pages[pageIdx].widgets.removeAll { $0.instanceId == instanceId }

@@ -175,10 +175,51 @@ struct GridPageView: View {
                                         )
                                         .allowsHitTesting(false)
 
-                                    // Remove button (top-right)
+                                    // Remove button (top-right); the
+                                    // selected widget also gets stacking
+                                    // controls so overlapped widgets can be
+                                    // pulled out from under one another.
                                     VStack {
                                         HStack {
                                             Spacer()
+                                            if isSelected {
+                                                Button {
+                                                    // Deselect too: selection
+                                                    // floats the widget, which
+                                                    // would keep hiding the
+                                                    // one underneath.
+                                                    layoutEngine.reorderWidget(
+                                                        pageId: page.id,
+                                                        instanceId: placement.instanceId,
+                                                        toFront: false
+                                                    )
+                                                    selectedInstanceId = nil
+                                                } label: {
+                                                    Image(systemName: "square.3.layers.3d.bottom.filled")
+                                                        .font(.system(size: 15))
+                                                        .foregroundStyle(.white.opacity(0.9))
+                                                        .background(Circle().fill(Color.black.opacity(0.6)).padding(-4))
+                                                }
+                                                .buttonStyle(.plain)
+                                                .help("Send to back")
+                                                .padding(.trailing, 6)
+
+                                                Button {
+                                                    layoutEngine.reorderWidget(
+                                                        pageId: page.id,
+                                                        instanceId: placement.instanceId,
+                                                        toFront: true
+                                                    )
+                                                } label: {
+                                                    Image(systemName: "square.3.layers.3d.top.filled")
+                                                        .font(.system(size: 15))
+                                                        .foregroundStyle(.white.opacity(0.9))
+                                                        .background(Circle().fill(Color.black.opacity(0.6)).padding(-4))
+                                                }
+                                                .buttonStyle(.plain)
+                                                .help("Bring to front")
+                                                .padding(.trailing, 6)
+                                            }
                                             Button {
                                                 layoutEngine.removeWidget(pageId: page.id, instanceId: placement.instanceId)
                                             } label: {
