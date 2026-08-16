@@ -28,7 +28,9 @@ struct GuideView: View {
                         ("Drag anywhere", "Widgets go inert while editing; any point on the card drags it."),
                         ("Tap", "Selects a widget (selection floats it above overlaps)."),
                         ("Corner handle", "Drag the bottom-right handle to resize."),
-                        ("Drop on others", "Widgets you drop onto step aside to their nearest free spot; if there's no room they stay overlapped for you to separate."),
+                        ("Drop on others", "Widgets you drop onto step aside to the nearest free spot — shrinking toward their minimum size if that's what it takes. Only when nothing fits do they stay overlapped."),
+                        ("⌘Z / ⇧⌘Z", "Undo / redo layout changes within the edit session."),
+                        ("Esc", "Cancels the session — the layout snaps back to how it was when edit mode began."),
                         ("Layer buttons", "On the selected widget: send to back / bring to front — for reaching widgets stacked on one another."),
                         ("✕", "Removes the widget from the page."),
                     ])

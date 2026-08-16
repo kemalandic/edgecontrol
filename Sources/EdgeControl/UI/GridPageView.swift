@@ -58,6 +58,7 @@ struct GridPageView: View {
                             && NSEvent.modifierFlags.contains(.command)
                         if commandHeld != held { commandHeld = held }
                     }
+                    .background(EditKeyCatcher(layoutEngine: layoutEngine))
 
                 // Drop target highlight during drag
                 if let targetCol = dragTargetCol, let targetRow = dragTargetRow,
@@ -378,7 +379,10 @@ struct GridPageView: View {
                     // Anything the drop landed on steps aside to its
                     // nearest free spot; no room means it stays staged.
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        layoutEngine.resolveOverlaps(pageId: page.id, keeping: placement.instanceId)
+                        layoutEngine.resolveOverlaps(
+                            pageId: page.id, keeping: placement.instanceId,
+                            minSize: { registry.widget(for: $0)?.supportedSizes.min }
+                        )
                     }
                 }
 
@@ -449,7 +453,10 @@ struct GridPageView: View {
                                         newHeight: th
                                     )
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                                        layoutEngine.resolveOverlaps(pageId: page.id, keeping: placement.instanceId)
+                                        layoutEngine.resolveOverlaps(
+                                            pageId: page.id, keeping: placement.instanceId,
+                                            minSize: { registry.widget(for: $0)?.supportedSizes.min }
+                                        )
                                     }
                                 }
                                 withAnimation(.easeOut(duration: 0.2)) {
@@ -518,6 +525,58 @@ private struct WidgetContentView: View, Equatable {
                 config: config
             ))
             .padding(gap)
+        }
+    }
+}
+
+
+/// Edit-session keyboard: Esc cancels back to the last saved layout,
+/// Cmd+Z / Shift+Cmd+Z step through the session's changes. A local event
+/// monitor rather than key-view plumbing, because the kiosk's SwiftUI tree
+/// never takes first responder for these. Claims events only while editing
+/// and only in its own window, before menu dispatch sees them.
+private struct EditKeyCatcher: NSViewRepresentable {
+    let layoutEngine: LayoutEngine
+
+    func makeNSView(context: Context) -> CatcherView {
+        let view = CatcherView()
+        view.engine = layoutEngine
+        return view
+    }
+
+    func updateNSView(_ view: CatcherView, context: Context) {
+        view.engine = layoutEngine
+    }
+
+    final class CatcherView: NSView {
+        weak var engine: LayoutEngine?
+        private var monitor: Any?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil {
+                if let monitor { NSEvent.removeMonitor(monitor) }
+                monitor = nil
+            } else if monitor == nil {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                    guard let self, let engine = self.engine, engine.isEditing,
+                          event.window === self.window else { return event }
+                    if event.keyCode == 53 { // Esc
+                        engine.cancelEditing()
+                        return nil
+                    }
+                    if event.modifierFlags.contains(.command),
+                       event.charactersIgnoringModifiers?.lowercased() == "z" {
+                        if event.modifierFlags.contains(.shift) {
+                            engine.redoLayout()
+                        } else {
+                            engine.undoLayout()
+                        }
+                        return nil
+                    }
+                    return event
+                }
+            }
         }
     }
 }

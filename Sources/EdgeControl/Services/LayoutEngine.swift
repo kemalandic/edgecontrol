@@ -38,8 +38,57 @@ public final class LayoutEngine: ObservableObject {
             // Entering a session: persist the clean pre-session state first,
             // so a write debounced moments earlier can't be swallowed by the
             // session's write suppression.
-            if isEditing && !oldValue { flushSave() }
+            if isEditing && !oldValue {
+                flushSave()
+                editBaseline = document
+                layoutUndoStack.removeAll()
+                layoutRedoStack.removeAll()
+            }
+            if !isEditing && oldValue {
+                editBaseline = nil
+                layoutUndoStack.removeAll()
+                layoutRedoStack.removeAll()
+            }
         }
+    }
+
+    // Edit-session history: Esc restores the baseline, Cmd+Z steps through
+    // the session's mutations. Snapshots are whole documents — small, and
+    // immune to operation-inverse bookkeeping bugs.
+    private var editBaseline: LayoutDocument?
+    private var layoutUndoStack: [LayoutDocument] = []
+    private var layoutRedoStack: [LayoutDocument] = []
+
+    /// One undo step per user gesture: layout mutators call this before
+    /// changing the document during an edit session. resolveOverlaps
+    /// deliberately does not — displacement is part of the drop's step.
+    private func recordLayoutUndo() {
+        guard isEditing else { return }
+        layoutUndoStack.append(document)
+        if layoutUndoStack.count > 100 { layoutUndoStack.removeFirst() }
+        layoutRedoStack.removeAll()
+    }
+
+    public func undoLayout() {
+        guard isEditing, let previous = layoutUndoStack.popLast() else { return }
+        layoutRedoStack.append(document)
+        document = previous
+        save()
+    }
+
+    public func redoLayout() {
+        guard isEditing, let next = layoutRedoStack.popLast() else { return }
+        layoutUndoStack.append(document)
+        document = next
+        save()
+    }
+
+    /// Esc: abandon the session — restore the layout as it was when edit
+    /// mode began (always overlap-free, so the session may legally end).
+    public func cancelEditing() {
+        if let editBaseline { document = editBaseline }
+        isEditing = false
+        save()
     }
     /// Current dynamic grid — updated from DashboardShell's GeometryReader.
     @Published public var currentGrid: DynamicGrid = .xeneonDefault
@@ -143,6 +192,7 @@ public final class LayoutEngine: ObservableObject {
             height: height,
             config: config
         )
+        recordLayoutUndo()
         document.pages[pageIdx].widgets.append(placement)
         save()
         return placement.instanceId
@@ -155,6 +205,7 @@ public final class LayoutEngine: ObservableObject {
     public func reorderWidget(pageId: String, instanceId: String, toFront: Bool) {
         guard let pageIdx = pageIndex(for: pageId),
               let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return }
+        recordLayoutUndo()
         let placement = document.pages[pageIdx].widgets.remove(at: widgetIdx)
         if toFront {
             document.pages[pageIdx].widgets.append(placement)
@@ -166,6 +217,7 @@ public final class LayoutEngine: ObservableObject {
 
     public func removeWidget(pageId: String, instanceId: String) {
         guard let pageIdx = pageIndex(for: pageId) else { return }
+        recordLayoutUndo()
         document.pages[pageIdx].widgets.removeAll { $0.instanceId == instanceId }
         save()
     }
@@ -185,6 +237,7 @@ public final class LayoutEngine: ObservableObject {
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
         guard isEditing || !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
 
+        recordLayoutUndo()
         document.pages[pageIdx].widgets[widgetIdx].col = toCol
         document.pages[pageIdx].widgets[widgetIdx].row = toRow
         save()
@@ -196,7 +249,10 @@ public final class LayoutEngine: ObservableObject {
     /// widget exactly where the user put it. Relocated widgets never bump
     /// others in turn — they only take genuinely free cells — and anything
     /// that fits nowhere stays overlapped, the normal staged edit state.
-    public func resolveOverlaps(pageId: String, keeping keptId: String) {
+    public func resolveOverlaps(
+        pageId: String, keeping keptId: String,
+        minSize: (String) -> WidgetSize? = { _ in nil }
+    ) {
         guard let pageIdx = pageIndex(for: pageId),
               let kept = document.pages[pageIdx].widgets.first(where: { $0.instanceId == keptId })
         else { return }
@@ -230,6 +286,40 @@ public final class LayoutEngine: ObservableObject {
             if let best {
                 document.pages[pageIdx].widgets[idx].col = best.col
                 document.pages[pageIdx].widgets[idx].row = best.row
+                continue
+            }
+            // No room at full size: shrink toward the widget's minimum,
+            // preferring the largest area that fits, nearest its old spot.
+            guard let minimum = minSize(widget.widgetId) else { continue }
+            var candidates: [(w: Int, h: Int)] = []
+            for w in stride(from: widget.width, through: max(1, minimum.width), by: -1) {
+                for h in stride(from: widget.height, through: max(1, minimum.height), by: -1) {
+                    if w == widget.width && h == widget.height { continue }
+                    candidates.append((w, h))
+                }
+            }
+            candidates.sort { ($0.w * $0.h, min($0.w, $0.h)) > ($1.w * $1.h, min($1.w, $1.h)) }
+            for size in candidates {
+                var fit: (col: Int, row: Int)?
+                var fitDistance = Int.max
+                for row in 0...(currentGrid.rows - size.h) {
+                    for col in 0...(currentGrid.columns - size.w) {
+                        let rect = GridRect(col: col, row: row, width: size.w, height: size.h)
+                        guard !others.contains(where: { $0.gridRect.intersects(rect) }) else { continue }
+                        let distance = abs(col - widget.col) + abs(row - widget.row)
+                        if distance < fitDistance {
+                            fitDistance = distance
+                            fit = (col, row)
+                        }
+                    }
+                }
+                if let fit {
+                    document.pages[pageIdx].widgets[idx].col = fit.col
+                    document.pages[pageIdx].widgets[idx].row = fit.row
+                    document.pages[pageIdx].widgets[idx].width = size.w
+                    document.pages[pageIdx].widgets[idx].height = size.h
+                    break
+                }
             }
         }
         save()
@@ -249,6 +339,7 @@ public final class LayoutEngine: ObservableObject {
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
         guard isEditing || !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
 
+        recordLayoutUndo()
         document.pages[pageIdx].widgets[widgetIdx].width = newWidth
         document.pages[pageIdx].widgets[widgetIdx].height = newHeight
         save()
