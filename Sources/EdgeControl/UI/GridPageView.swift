@@ -164,12 +164,14 @@ struct GridPageView: View {
                                 }
                             }
                         }
-                        .offset(isDragging ? dragOffset : .zero)
-                        .position(x: x + w / 2, y: y + h / 2)
                         // Tap: in edit mode selects (selection floats the
                         // widget above staged overlaps so its handles win);
                         // otherwise launches the widget's configured app.
                         // Widget-internal zones are smaller and win hit-tests.
+                        // MUST precede .position: that wraps the card in a
+                        // page-sized container, and a contentShape added after
+                        // it would make every widget swallow the whole page's
+                        // clicks.
                         .touchTappable(id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry) {
                             Task { @MainActor in
                                 if editMode {
@@ -179,6 +181,8 @@ struct GridPageView: View {
                                 }
                             }
                         }
+                        .offset(isDragging ? dragOffset : .zero)
+                        .position(x: x + w / 2, y: y + h / 2)
                         .gesture(editMode ? dragGesture(placement: placement, cellW: cellW, cellH: cellH) : nil)
                         .zIndex(isDragging || isResizing ? 100 : isSelected && editMode ? 50 : 0)
                     }
