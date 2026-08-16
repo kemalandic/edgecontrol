@@ -39,7 +39,10 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         ) { [weak self] _ in
             Task { @MainActor [weak self] in self?.refresh() }
         }
-        store.requestFullAccessToReminders { [weak self] granted, _ in
+        // NOTE: this completion runs on CalendarAgent's XPC queue. It MUST be
+        // @Sendable so it inherits no main-actor isolation — without it the
+        // Swift 6 executor check traps the moment the callback arrives.
+        store.requestFullAccessToReminders { @Sendable [weak self] granted, _ in
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.access = granted ? .granted : .denied
@@ -71,7 +74,8 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         let predicate = store.predicateForIncompleteReminders(
             withDueDateStarting: nil, ending: nil, calendars: [calendar]
         )
-        store.fetchReminders(matching: predicate) { [weak self] reminders in
+        // Same XPC-queue contract as the access completion above.
+        store.fetchReminders(matching: predicate) { @Sendable [weak self] reminders in
             let mapped = (reminders ?? [])
                 .map { reminder in
                     Item(
