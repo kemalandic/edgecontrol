@@ -211,6 +211,7 @@ private struct LinkingTextEditor: View {
     let onPromptLink: (String, Int) -> Void
 
     @State private var selection: TextSelection?
+    @State private var keyMonitor: Any?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -218,23 +219,32 @@ private struct LinkingTextEditor: View {
             .scrollContentBackground(.hidden)
             .scrollIndicators(.never)
             .focused($focused)
-            .onAppear { focused = true }
-            .onPasteCommand(of: [UTType.url, UTType.plainText]) { _ in
-                handlePaste()
+            .onAppear {
+                focused = true
+                // onPasteCommand never fires here: the focused NSTextView
+                // consumes Cmd+V itself. A local monitor sees the keystroke
+                // first; URL pastes are ours, everything else passes through
+                // to the text view's native paste.
+                keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                    guard focused,
+                          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                          event.charactersIgnoringModifiers?.lowercased() == "v",
+                          let pasted = NSPasteboard.general.string(forType: .string)?
+                              .trimmingCharacters(in: .whitespacesAndNewlines),
+                          isLink(pasted)
+                    else { return event }
+                    handleLinkPaste(pasted)
+                    return nil
+                }
+            }
+            .onDisappear {
+                if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+                keyMonitor = nil
             }
     }
 
-    private func handlePaste() {
-        guard let pasted = NSPasteboard.general.string(forType: .string)?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else { return }
-
+    private func handleLinkPaste(_ pasted: String) {
         let selectedRange = currentRange()
-        guard isLink(pasted) else {
-            // Not a URL: reproduce a normal paste at the selection.
-            replace(range: selectedRange, with: pasted)
-            return
-        }
-
         if let range = selectedRange, !range.isEmpty {
             // Slack-style: the selected words become the link title.
             let title = String(text[range])
