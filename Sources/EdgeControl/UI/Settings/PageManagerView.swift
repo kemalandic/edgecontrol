@@ -7,6 +7,7 @@ struct PageManagerView: View {
     @State private var editingName: String = ""
     @State private var selectedPageId: String?
     @State private var showAddPage = false
+    @State private var flashedInstanceId: String?
     @State private var newPageName = ""
 
     private var accent: Color {
@@ -224,6 +225,20 @@ struct PageManagerView: View {
                                                 .frame(width: 3)
                                         }
                                     }
+                                    .overlay {
+                                        // Deep-link arrival flash: marks the
+                                        // row the widget gear jumped to.
+                                        if flashedInstanceId == placement.instanceId {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .fill(accent.opacity(0.12))
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .strokeBorder(accent, lineWidth: 2)
+                                            }
+                                            .allowsHitTesting(false)
+                                            .transition(.opacity)
+                                        }
+                                    }
                                     .id(placement.instanceId)
                             }
                         }
@@ -236,6 +251,14 @@ struct PageManagerView: View {
                         layoutEngine.settingsFocus = nil
                         DispatchQueue.main.async {
                             withAnimation { proxy.scrollTo(focus.instanceId, anchor: .top) }
+                            flashedInstanceId = focus.instanceId
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                                withAnimation(.easeOut(duration: 0.6)) {
+                                    if flashedInstanceId == focus.instanceId {
+                                        flashedInstanceId = nil
+                                    }
+                                }
+                            }
                         }
                     }
                 }
