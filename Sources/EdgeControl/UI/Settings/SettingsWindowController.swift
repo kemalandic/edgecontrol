@@ -42,7 +42,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
         // If window exists and is still valid, just bring to front
         if let win = window {
-            win.level = NSWindow.Level(NSWindow.Level.statusBar.rawValue + 1)
+            win.level = .normal
             win.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -67,7 +67,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         win.setContentSize(NSSize(width: 700, height: 500))
         win.center()
         win.isReleasedWhenClosed = false
-        win.level = NSWindow.Level(NSWindow.Level.statusBar.rawValue + 1)
+        win.level = .normal
         win.delegate = self
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
