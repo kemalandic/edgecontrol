@@ -620,6 +620,18 @@ private final class LinkPasteTextView: NSTextView {
         return s
     }
 
+    /// The flipped replacement for an existing box, carrying over the
+    /// character's current paragraph style — a bare checkboxOnly() has
+    /// none, and normalization would read that as indent level 0,
+    /// outdenting the line on every toggle.
+    private func toggledBox(_ box: CheckboxAttachment, at location: Int) -> NSAttributedString {
+        let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: !box.checked))
+        if let style = textStorage?.attribute(.paragraphStyle, at: location, effectiveRange: nil) {
+            s.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: s.length))
+        }
+        return s
+    }
+
     private func checkboxOnly(checked: Bool) -> NSAttributedString {
         let attachment = CheckboxAttachment.make(
             checked: checked, font: defaultFont,
@@ -1022,7 +1034,7 @@ private final class LinkPasteTextView: NSTextView {
             if let box = textStorage?.attribute(.attachment, at: candidate, effectiveRange: nil) as? CheckboxAttachment {
                 let range = NSRange(location: candidate, length: 1)
                 guard shouldChangeText(in: range, replacementString: nil) else { break }
-                textStorage?.replaceCharacters(in: range, with: checkboxOnly(checked: !box.checked))
+                textStorage?.replaceCharacters(in: range, with: toggledBox(box, at: candidate))
                 didChangeText()
                 return
             }
@@ -1044,7 +1056,7 @@ private final class LinkPasteTextView: NSTextView {
                let box = storage.attribute(.attachment, at: paragraph.location, effectiveRange: nil) as? CheckboxAttachment {
                 let range = NSRange(location: paragraph.location, length: 1)
                 if shouldChangeText(in: range, replacementString: nil) {
-                    storage.replaceCharacters(in: range, with: checkboxOnly(checked: !box.checked))
+                    storage.replaceCharacters(in: range, with: toggledBox(box, at: paragraph.location))
                     didChangeText()
                 }
             }
