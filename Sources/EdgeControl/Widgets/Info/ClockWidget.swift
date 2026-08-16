@@ -167,13 +167,7 @@ private struct ClockContainer: View {
                     Circle().stroke(primary.opacity(0.2), lineWidth: 2)
                     // Hour ticks
                     ForEach(0..<12, id: \.self) { i in
-                        let angle = Double(i) / 12 * 2 * .pi - .pi / 2
-                        let inner = r * (i % 3 == 0 ? 0.75 : 0.85)
-                        Path { p in
-                            p.move(to: CGPoint(x: center.x + cos(angle) * inner, y: center.y + sin(angle) * inner))
-                            p.addLine(to: CGPoint(x: center.x + cos(angle) * r, y: center.y + sin(angle) * r))
-                        }
-                        .stroke(i % 3 == 0 ? primary.opacity(0.6) : Theme.text3(ts), lineWidth: i % 3 == 0 ? 2 : 1)
+                        hourTick(i, center: center, r: r)
                     }
                     // Hour hand
                     clockHand(center: center, length: r * 0.5, width: 3,
@@ -208,6 +202,21 @@ private struct ClockContainer: View {
                 }
             }
         }
+    }
+
+    // Extracted from analogStyle's ZStack: inline, the mixed CGFloat/Double
+    // arithmetic pushes the type checker past its expression time limit on
+    // Xcode 16.4's Swift compiler.
+    private func hourTick(_ i: Int, center: CGPoint, r: CGFloat) -> some View {
+        let angle = Double(i) / 12 * 2 * .pi - .pi / 2
+        let inner = r * (i % 3 == 0 ? 0.75 : 0.85)
+        let cosA = CGFloat(cos(angle))
+        let sinA = CGFloat(sin(angle))
+        return Path { p in
+            p.move(to: CGPoint(x: center.x + cosA * inner, y: center.y + sinA * inner))
+            p.addLine(to: CGPoint(x: center.x + cosA * r, y: center.y + sinA * r))
+        }
+        .stroke(i % 3 == 0 ? primary.opacity(0.6) : Theme.text3(ts), lineWidth: i % 3 == 0 ? 2 : 1)
     }
 
     private func clockHand(center: CGPoint, length: CGFloat, width: CGFloat, angle: Double, color: Color) -> some View {
