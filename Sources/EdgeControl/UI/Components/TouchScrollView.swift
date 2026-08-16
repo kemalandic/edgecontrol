@@ -65,6 +65,24 @@ public struct TouchScrollView<Content: View>: View {
             .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
             .contentShape(Rectangle())
             .clipped()
+            // Trackpad / mouse-wheel scrolling alongside the touch drag.
+            .background(
+                ScrollWheelCatcher { delta in
+                    guard maxScroll > 0 else { return }
+                    fadeOutWorkItem?.cancel()
+                    if scrollbarOpacity < 1 {
+                        withAnimation(.easeOut(duration: 0.12)) { scrollbarOpacity = 1 }
+                    }
+                    let next = min(0, max(-maxScroll, offset + delta))
+                    offset = next
+                    offsetAtDragStart = next
+                    let work = DispatchWorkItem {
+                        withAnimation(.easeIn(duration: 0.45)) { scrollbarOpacity = 0 }
+                    }
+                    fadeOutWorkItem = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: work)
+                }
+            )
             .gesture(
                 DragGesture(minimumDistance: 4, coordinateSpace: .local)
                     .onChanged { value in
@@ -169,5 +187,50 @@ private struct ContentHeightKey: PreferenceKey {
     static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())
+    }
+}
+
+
+/// Feeds scroll-wheel / two-finger-trackpad deltas to the touch scroller.
+/// A hit-test-transparent overlay would never receive scrollWheel (delivery
+/// follows hitTest), so this installs a local event monitor instead and
+/// claims only events that land inside its own bounds in its own window.
+private struct ScrollWheelCatcher: NSViewRepresentable {
+    let onScroll: (CGFloat) -> Void
+
+    func makeNSView(context: Context) -> CatcherView {
+        let view = CatcherView()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ view: CatcherView, context: Context) {
+        view.onScroll = onScroll
+    }
+
+    final class CatcherView: NSView {
+        var onScroll: ((CGFloat) -> Void)?
+        private var monitor: Any?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window == nil {
+                if let monitor { NSEvent.removeMonitor(monitor) }
+                monitor = nil
+            } else if monitor == nil {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                    guard let self, let window = self.window, event.window === window else { return event }
+                    let point = self.convert(event.locationInWindow, from: nil)
+                    guard self.bounds.contains(point) else { return event }
+                    // Trackpads report precise pixel deltas; wheels report
+                    // lines and need scaling to feel comparable.
+                    let delta = event.hasPreciseScrollingDeltas
+                        ? event.scrollingDeltaY
+                        : event.scrollingDeltaY * 12
+                    self.onScroll?(delta)
+                    return nil
+                }
+            }
+        }
     }
 }
