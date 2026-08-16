@@ -211,7 +211,9 @@ struct GeneralSettingsView: View {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "EdgeControl-Layout.json"
         panel.allowedContentTypes = [.json]
-        if panel.runModal() == .OK, let url = panel.url {
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
             try? data.write(to: url, options: .atomic)
         }
     }
@@ -220,7 +222,9 @@ struct GeneralSettingsView: View {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url {
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
             guard let data = try? Data(contentsOf: url) else { return }
             let store = LayoutStore()
             if let doc = store.importData(data) {

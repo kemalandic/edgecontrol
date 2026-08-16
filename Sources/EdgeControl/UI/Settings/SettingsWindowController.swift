@@ -10,6 +10,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
 
+    /// Exposed so file panels can attach as sheets. The settings window sits
+    /// above the status-bar level; a detached NSSavePanel/NSOpenPanel orders
+    /// at the much lower modal-panel level and pops under it, while a sheet
+    /// is a child window and always renders over its parent.
+    var settingsWindow: NSWindow? { window }
+
     private override init() {
         super.init()
     }
