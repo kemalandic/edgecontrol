@@ -90,6 +90,41 @@ private struct CICDRunsWidgetView: View {
         )
     }
 
+    /// Latest run per (account, repository, workflow). The widget is a status
+    /// board, not an activity log: re-runs and repeat deployments (Pages runs
+    /// all share one title) collapse to the workflow's current state.
+    private func latestPerWorkflow(_ runs: [CIRun]) -> [CIRun] {
+        var latest: [String: CIRun] = [:]
+        for run in runs {
+            // run.id is "<accountID>/<repo full name>/<run number>"; dropping
+            // the run number yields a key that survives same-named repos in
+            // different orgs, which repositoryName (the short name) would not.
+            let repoKey = run.id[..<(run.id.lastIndex(of: "/") ?? run.id.endIndex)]
+            let key = "\(repoKey)|\(run.workflowName)"
+            if let existing = latest[key], existing.startedAt >= run.startedAt { continue }
+            latest[key] = run
+        }
+        return latest.values.sorted { $0.startedAt > $1.startedAt }
+    }
+
+    /// The header badge counts what the list shows: distinct workflows, not
+    /// raw runs, once collapsing is in effect.
+    private var headerCount: Int {
+        if case .runs(let runs, _) = state { return latestPerWorkflow(runs).count }
+        return service.runs.count
+    }
+
+    /// Compact age label ("2h"). Empty for runs whose start time is unknown
+    /// (the provider falls back to .distantPast).
+    private func relativeAge(_ date: Date) -> String {
+        guard date != .distantPast else { return "" }
+        let seconds = max(0, Date().timeIntervalSince(date))
+        if seconds < 60 { return "now" }
+        if seconds < 3600 { return "\(Int(seconds / 60))m" }
+        if seconds < 86400 { return "\(Int(seconds / 3600))h" }
+        return "\(Int(seconds / 86400))d"
+    }
+
     var body: some View {
         VStack(spacing: 6) {
             header
@@ -123,7 +158,7 @@ private struct CICDRunsWidgetView: View {
                         Task { @MainActor in SettingsWindowController.shared.show() }
                     }
             }
-            Text("\(service.runs.count)")
+            Text("\(headerCount)")
                 .font(Theme.body(ts))
                 .foregroundStyle(Theme.text3(ts))
         }
@@ -152,7 +187,7 @@ private struct CICDRunsWidgetView: View {
             // the list to 50.
             TouchScrollView {
                 VStack(spacing: 4) {
-                    ForEach(runs) { run in
+                    ForEach(latestPerWorkflow(runs)) { run in
                         runRow(run)
                     }
                 }
@@ -204,6 +239,9 @@ private struct CICDRunsWidgetView: View {
                     .lineLimit(1)
             }
             Spacer()
+            Text(relativeAge(run.startedAt))
+                .font(Theme.label(ts))
+                .foregroundStyle(Theme.text3(ts).opacity(0.7))
             Text(statusLabel(run))
                 .font(Theme.label(ts))
                 .foregroundStyle(statusColor(run))
