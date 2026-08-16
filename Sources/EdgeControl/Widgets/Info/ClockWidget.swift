@@ -428,7 +428,7 @@ private struct ClockContainer: View {
             HStack(spacing: 0) {
                 ForEach(Array(dayNames.enumerated()), id: \.offset) { i, name in
                     Text(name)
-                        .font(.system(size: (isCompact ? 9 : 11) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
+                        .font(.system(size: (isCompact ? 12 : 15) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
                         .foregroundStyle(weekday == i + 1 ? .white : Theme.text3(ts))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, isCompact ? 3 : 5)

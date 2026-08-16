@@ -25,6 +25,7 @@ public final class NetworkStatsWidget: DashboardWidget {
             service: service,
             isCompact: size.height <= 2,
             isBar: size.height <= 1,
+            showTitle: size.width >= 3,
             showCompactTotals: size.width >= 5 && size.height >= 2
         )
     }
@@ -37,6 +38,9 @@ private struct NetworkStatsWidgetView: View {
     // Single grid row: the stacked DOWN/UP rows would overflow ~112px of
     // interior height at larger font scales, so render them side by side.
     let isBar: Bool
+    // Keep the widget's name visible wherever it fits — full header down to
+    // 2 rows, a bare caption in the 1-row layout — matching Disk I/O.
+    let showTitle: Bool
     // Wide-and-tall compact (width >= 5, height >= 2) has room for the
     // DL/UL totals row; the 1-row bar layout never does.
     let showCompactTotals: Bool
@@ -46,8 +50,13 @@ private struct NetworkStatsWidgetView: View {
         let secondary = Theme.widgetSecondary("network-stats", ts: ts, default: .cyan) ?? Theme.accentCyan
 
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact {
+            if !isCompact || (showTitle && !isBar) {
                 WidgetHeader(title: "NETWORK", color: primary)
+            } else if showTitle {
+                Text("NETWORK")
+                    .font(Theme.caption(ts))
+                    .foregroundStyle(Theme.text3(ts))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if !isBar { Spacer(minLength: 0) }
