@@ -26,6 +26,11 @@ struct GridPageView: View {
     // its resize handle and remove button are the reachable ones.
     @State private var selectedInstanceId: String?
     @State private var hoveredInstanceId: String?
+    @State private var commandHeld = false
+    // Modifier changes don't arrive as key events while the kiosk window
+    // isn't key, so the gear's Cmd gate polls the hardware state instead;
+    // state only changes (and re-renders) while a widget is hovered.
+    private let modifierTick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     // Resize state
     @State private var resizingInstanceId: String?
@@ -47,6 +52,11 @@ struct GridPageView: View {
                 Color.clear.frame(width: 0, height: 0)
                     .onChange(of: editMode) { _, editing in
                         if !editing { selectedInstanceId = nil }
+                    }
+                    .onReceive(modifierTick) { _ in
+                        let held = hoveredInstanceId != nil
+                            && NSEvent.modifierFlags.contains(.command)
+                        if commandHeld != held { commandHeld = held }
                     }
 
                 // Drop target highlight during drag
@@ -174,18 +184,15 @@ struct GridPageView: View {
                                 }
                             }
                         }
-                        // Mouse-only affordance: a gear fades in at the
-                        // bottom right on hover and deep-links to this
-                        // widget's settings. Hidden entirely (not just
-                        // transparent) when unhovered so it can't swallow
-                        // touches.
+                        // Mouse-only affordance: while Cmd is held, a gear
+                        // fades in at the bottom right on hover and
+                        // deep-links to this widget's settings. Hidden
+                        // entirely (not just transparent) otherwise so it
+                        // can't swallow touches.
                         .overlay(alignment: .bottomTrailing) {
-                            if !editMode, hoveredInstanceId == placement.instanceId {
+                            if !editMode, commandHeld, hoveredInstanceId == placement.instanceId {
                                 Button {
-                                    layoutEngine.settingsFocus = LayoutEngine.SettingsFocus(
-                                        pageId: page.id, instanceId: placement.instanceId
-                                    )
-                                    SettingsWindowController.shared.show()
+                                    openWidgetSettings(placement)
                                 } label: {
                                     Image(systemName: "gearshape.fill")
                                         .font(.system(size: 13))
@@ -203,6 +210,11 @@ struct GridPageView: View {
                                 hoveredInstanceId = placement.instanceId
                             } else if hoveredInstanceId == placement.instanceId {
                                 hoveredInstanceId = nil
+                            }
+                        }
+                        .contextMenu {
+                            Button("Edit This Widget's Settings") {
+                                openWidgetSettings(placement)
                             }
                         }
                         // Tap: in edit mode selects (selection floats the
@@ -259,6 +271,15 @@ struct GridPageView: View {
 
     /// The app a tap on this widget should open: explicit config first,
     /// per-widget default second; empty means no launcher.
+    /// Deep link into Settings for one widget: Pages tab, its page
+    /// selected, its config row scrolled into view.
+    private func openWidgetSettings(_ placement: WidgetPlacement) {
+        layoutEngine.settingsFocus = LayoutEngine.SettingsFocus(
+            pageId: page.id, instanceId: placement.instanceId
+        )
+        SettingsWindowController.shared.show()
+    }
+
     private func launchTarget(for placement: WidgetPlacement) -> String {
         guard !WidgetLaunch.excluded.contains(placement.widgetId) else { return "" }
         return placement.config.string(WidgetLaunch.configKey, default: WidgetLaunch.defaultApp(for: placement.widgetId))
