@@ -424,9 +424,11 @@ private struct ClockContainer: View {
 
     private var dayBarStyle: some View {
         VStack(spacing: isCompact ? 8 : 14) {
-            // Day bar: a centered cluster of label-hugging chips above the
-            // clock, rather than a justified or column-stretched strip.
-            HStack(spacing: isCompact ? 3 : 6) {
+            // Day bar: justified chips that hug their labels, so the strip's
+            // visible edges equal the container's — and therefore the clock's
+            // — on every day. A first/last-day highlight capsule ends exactly
+            // at the edge instead of overhanging an inset clock.
+            HStack(spacing: 0) {
                 ForEach(Array(dayNames.enumerated()), id: \.offset) { i, name in
                     Text(name)
                         .font(.system(size: (isCompact ? 12 : 15) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
@@ -437,14 +439,16 @@ private struct ClockContainer: View {
                             weekday == i + 1 ? primary.opacity(0.3) : Color.clear,
                             in: RoundedRectangle(cornerRadius: 4, style: .continuous)
                         )
+                    if i < dayNames.count - 1 { Spacer(minLength: 2) }
                 }
             }
-            .frame(maxWidth: .infinity)
 
             // Time — stretches to the same width as the day strip above:
-            // fittedTimeRow starts oversized and scales down to fit.
+            // fittedTimeRow starts oversized and scales down to fit. Width
+            // only: a greedy height would pin the day strip to the top edge,
+            // and the container centers the hugging group vertically instead.
             fittedTimeRow(weight: .semibold)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity)
 
             if showDate && !isCompact {
                 Text(fullDate)
