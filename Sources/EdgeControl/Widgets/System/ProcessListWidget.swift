@@ -24,14 +24,16 @@ public final class ProcessListWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        ProcessListWidgetView(service: service, isCompact: size.height <= 3)
+        ProcessListWidgetView(service: service)
     }
 }
 
 private struct ProcessListWidgetView: View {
     @ObservedObject var service: ProcessMonitorService
     @Environment(\.themeSettings) private var ts
-    let isCompact: Bool
+
+    // Row = 26pt icon + 2x8pt vertical padding + 1pt divider.
+    private let rowHeight: CGFloat = 43
 
     var body: some View {
         VStack(spacing: 0) {
@@ -44,10 +46,8 @@ private struct ProcessListWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("CPU")
                     .frame(width: 70, alignment: .trailing)
-                if !isCompact {
-                    Text("MEM")
-                        .frame(width: 70, alignment: .trailing)
-                }
+                Text("MEM")
+                    .frame(width: 70, alignment: .trailing)
             }
             .font(Theme.label(ts))
             .foregroundStyle(Theme.text3(ts))
@@ -56,22 +56,27 @@ private struct ProcessListWidgetView: View {
 
             Divider().background(Theme.border(ts))
 
-            if service.topProcesses.isEmpty {
-                Text("Loading...")
-                    .font(Theme.body(ts))
-                    .foregroundStyle(Theme.text3(ts))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                let maxCount = isCompact ? 4 : 8
-                ForEach(Array(service.topProcesses.prefix(maxCount))) { proc in
-                    processRow(proc)
-                    if proc.id != service.topProcesses.prefix(maxCount).last?.id {
-                        Divider().background(Theme.border(ts)).padding(.leading, 50)
+            GeometryReader { geo in
+                if service.topProcesses.isEmpty {
+                    Text("Loading...")
+                        .font(Theme.body(ts))
+                        .foregroundStyle(Theme.text3(ts))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Service publishes at most 5 processes, so cap there rather than 12.
+                    let maxCount = min(max(Int(geo.size.height / rowHeight), 3), 12)
+                    let visible = Array(service.topProcesses.prefix(maxCount))
+                    VStack(spacing: 0) {
+                        ForEach(visible) { proc in
+                            processRow(proc)
+                            if proc.id != visible.last?.id {
+                                Divider().background(Theme.border(ts)).padding(.leading, 50)
+                            }
+                        }
+                        Spacer(minLength: 0)
                     }
                 }
             }
-
-            Spacer(minLength: 0)
         }
         .widgetCard()
     }
@@ -102,13 +107,11 @@ private struct ProcessListWidgetView: View {
                 .monospacedDigit()
                 .frame(width: 70, alignment: .trailing)
 
-            if !isCompact {
-                Text(String(format: "%.0f MB", proc.memoryMB))
-                    .font(Theme.body(ts))
-                    .foregroundStyle(proc.memoryMB > 1024 ? Theme.accentOrange : Theme.text2(ts))
-                    .monospacedDigit()
-                    .frame(width: 70, alignment: .trailing)
-            }
+            Text(String(format: "%.0f MB", proc.memoryMB))
+                .font(Theme.body(ts))
+                .foregroundStyle(proc.memoryMB > 1024 ? Theme.accentOrange : Theme.text2(ts))
+                .monospacedDigit()
+                .frame(width: 70, alignment: .trailing)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

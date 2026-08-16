@@ -36,6 +36,8 @@ private struct DiskIOWidgetView: View {
                 WidgetHeader(title: "DISK I/O", color: Theme.widgetPrimary("disk-io", ts: ts, default: .blue))
             }
 
+            Spacer(minLength: 0)
+
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 4) {

@@ -18,12 +18,13 @@ public final class DayProgressWidget: DashboardWidget {
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
         // The ring needs two rows of height; a 1-row placement always gets the
         // linear title+bar layout, which fits a single 120px grid row.
-        DayProgressWidgetView(isCompact: size.width <= 3 && size.height >= 2)
+        DayProgressWidgetView(isCompact: size.width <= 3 && size.height >= 2, isTall: size.height >= 2)
     }
 }
 
 private struct DayProgressWidgetView: View {
     let isCompact: Bool
+    let isTall: Bool
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
@@ -46,7 +47,7 @@ private struct DayProgressWidgetView: View {
     }
 
     var body: some View {
-        VStack(spacing: isCompact ? 6 : 10) {
+        VStack(spacing: isCompact ? 6 : (isTall ? 20 : 10)) {
             if isCompact {
                 // Compact: circular progress
                 ZStack {
@@ -65,6 +66,8 @@ private struct DayProgressWidgetView: View {
                 .aspectRatio(1, contentMode: .fit)
                 .padding(4)
             } else {
+                // Center the linear stack in 2+ row cells; 1-row keeps its top-aligned fit.
+                if isTall { Spacer(minLength: 0) }
                 HStack(spacing: 8) {
                     Image(systemName: "sun.max.fill")
                         .font(.system(size: 18 * ts.fontScale))
@@ -92,7 +95,7 @@ private struct DayProgressWidgetView: View {
                             .frame(width: geo.size.width * dayProgress)
                     }
                 }
-                .frame(height: 10)
+                .frame(height: isTall ? 14 : 10)
 
                 HStack {
                     Text("REMAINING")

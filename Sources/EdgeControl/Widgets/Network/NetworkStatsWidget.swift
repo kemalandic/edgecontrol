@@ -21,7 +21,12 @@ public final class NetworkStatsWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        NetworkStatsWidgetView(service: service, isCompact: size.height <= 2, isBar: size.height <= 1)
+        NetworkStatsWidgetView(
+            service: service,
+            isCompact: size.height <= 2,
+            isBar: size.height <= 1,
+            showCompactTotals: size.width >= 5 && size.height >= 2
+        )
     }
 }
 
@@ -32,6 +37,9 @@ private struct NetworkStatsWidgetView: View {
     // Single grid row: the stacked DOWN/UP rows would overflow ~112px of
     // interior height at larger font scales, so render them side by side.
     let isBar: Bool
+    // Wide-and-tall compact (width >= 5, height >= 2) has room for the
+    // DL/UL totals row; the 1-row bar layout never does.
+    let showCompactTotals: Bool
 
     var body: some View {
         let primary = Theme.widgetPrimary("network-stats", ts: ts, default: .green)
@@ -56,7 +64,7 @@ private struct NetworkStatsWidgetView: View {
                          label: "UP", speed: service.uploadSpeed)
             }
 
-            if !isCompact {
+            if !isBar && (!isCompact || showCompactTotals) {
                 HStack(spacing: 10) {
                     totalChip("DL", value: NetworkMonitorService.formatBytes(service.totalDownloaded), color: primary)
                     totalChip("UL", value: NetworkMonitorService.formatBytes(service.totalUploaded), color: secondary)

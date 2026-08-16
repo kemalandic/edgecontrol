@@ -59,7 +59,7 @@ private struct MemoryGaugeWidgetView: View {
             displayValue: String(format: "%.0f%%", percent),
             unit: unitText,
             accentColor: Theme.widgetPrimary("memory-gauge", ts: ts, default: .purple),
-            showLabel: showLabel && !isCompact
+            showLabel: showLabel
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(Theme.compactPadding)
