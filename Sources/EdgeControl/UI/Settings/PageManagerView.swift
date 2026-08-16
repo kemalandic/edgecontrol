@@ -3,6 +3,7 @@ import SwiftUI
 struct PageManagerView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var registry: WidgetRegistry
+    @EnvironmentObject private var model: AppModel
     @State private var editingPageId: String?
     @State private var editingName: String = ""
     @State private var selectedPageId: String?
@@ -376,7 +377,17 @@ struct PageManagerView: View {
         // also gets the universal "Opens on Tap" launcher field.
         if let widget = registry.widget(for: placement.widgetId) {
             let schema: [ConfigSchemaEntry] = {
-                guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return widget.configSchema }
+                var base = widget.configSchema
+                // Reminders: once the service has discovered the real lists,
+                // the free-text list field becomes a picker of them.
+                if widget.widgetId == "reminders", !model.remindersService.listNames.isEmpty,
+                   let idx = base.firstIndex(where: { $0.key == "list" }) {
+                    base[idx] = ConfigSchemaEntry(
+                        key: "list", label: "List", type: .picker,
+                        defaultValue: .string("default"),
+                        options: ["default"] + model.remindersService.listNames)
+                }
+                guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return base }
                 var extra = [ConfigSchemaEntry(
                     key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
                     type: .text,
@@ -393,7 +404,7 @@ struct PageManagerView: View {
                         defaultValue: .string("CPU"),
                         options: WidgetLaunch.activityMonitorTabs))
                 }
-                return widget.configSchema + extra
+                return base + extra
             }()
             WidgetConfigEditor(
                 schema: schema,

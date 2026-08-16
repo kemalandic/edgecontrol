@@ -11,8 +11,16 @@ public final class RemindersWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        // Empty means the system default list; any real list name works.
-        ConfigSchemaEntry(key: "list", label: "List (empty = default)", type: .text, defaultValue: .string("")),
+        // The page manager swaps this for a picker of real list names once
+        // the service has discovered them; "default" = the system default.
+        ConfigSchemaEntry(key: "list", label: "List", type: .text, defaultValue: .string("default")),
+        // Items with due dates sort due-first (overdue on top); this orders
+        // the undated remainder.
+        ConfigSchemaEntry(key: "undatedSort", label: "Undated Sort", type: .picker,
+                          defaultValue: .string("newest first"),
+                          options: ["newest first", "oldest first", "recently updated", "least recently updated"]),
+        ConfigSchemaEntry(key: "newDueToday", label: "New Reminders Due Today", type: .toggle,
+                          defaultValue: .bool(false)),
     ]
     public let defaultColors = WidgetColors(primary: .orange)
 
@@ -26,7 +34,9 @@ public final class RemindersWidget: DashboardWidget {
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
         RemindersWidgetView(
             service: service,
-            configuredList: config.string("list"),
+            configuredList: config.string("list", default: "default"),
+            undatedSort: config.string("undatedSort", default: "newest first"),
+            newDueToday: config.bool("newDueToday", default: false),
             isCompact: size.height <= 2
         )
     }
@@ -37,6 +47,8 @@ private struct RemindersWidgetView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.themeSettings) private var ts
     let configuredList: String
+    let undatedSort: String
+    let newDueToday: Bool
     let isCompact: Bool
 
     @State private var draft = ""
@@ -47,7 +59,8 @@ private struct RemindersWidgetView: View {
         VStack(spacing: isCompact ? 6 : 10) {
             if !isCompact {
                 WidgetHeader(
-                    title: configuredList.isEmpty ? "REMINDERS" : configuredList.uppercased(),
+                    title: (configuredList.isEmpty || configuredList == "default")
+                        ? "REMINDERS" : configuredList.uppercased(),
                     color: primary
                 )
             }
@@ -63,7 +76,7 @@ private struct RemindersWidgetView: View {
                 } else {
                     TouchScrollView {
                         VStack(spacing: 2) {
-                            ForEach(service.items) { item in
+                            ForEach(sortedItems) { item in
                                 reminderRow(item)
                             }
                         }
@@ -78,7 +91,7 @@ private struct RemindersWidgetView: View {
                     .padding(.vertical, 5)
                     .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                     .onSubmit {
-                        service.add(title: draft)
+                        service.add(title: draft, dueToday: newDueToday)
                         draft = ""
                     }
             }
@@ -88,6 +101,27 @@ private struct RemindersWidgetView: View {
         // The service is shared; the placed widget's config decides the list.
         .onAppear { service.listName = configuredList }
         .onChange(of: configuredList) { _, newValue in service.listName = newValue }
+    }
+
+    /// Due items first, soonest (so overdue tops the list); the undated
+    /// tail ordered by the configured secondary sort.
+    private var sortedItems: [RemindersService.Item] {
+        let items = service.items
+        let dated = items.filter { $0.dueDate != nil }
+            .sorted { ($0.dueDate ?? .distantPast) < ($1.dueDate ?? .distantPast) }
+        let undated = items.filter { $0.dueDate == nil }.sorted { a, b in
+            switch undatedSort {
+            case "oldest first":
+                (a.created ?? .distantPast) < (b.created ?? .distantPast)
+            case "recently updated":
+                (a.modified ?? .distantPast) > (b.modified ?? .distantPast)
+            case "least recently updated":
+                (a.modified ?? .distantPast) < (b.modified ?? .distantPast)
+            default:
+                (a.created ?? .distantPast) > (b.created ?? .distantPast)
+            }
+        }
+        return dated + undated
     }
 
     private func reminderRow(_ item: RemindersService.Item) -> some View {

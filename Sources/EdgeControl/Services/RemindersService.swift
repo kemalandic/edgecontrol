@@ -10,6 +10,8 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         public let id: String
         public let title: String
         public let dueDate: Date?
+        public let created: Date?
+        public let modified: Date?
     }
 
     public enum Access { case unknown, granted, denied }
@@ -60,7 +62,10 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
 
     private var selectedCalendar: EKCalendar? {
         let calendars = store.calendars(for: .reminder)
-        if listName.isEmpty { return store.defaultCalendarForNewReminders() ?? calendars.first }
+        // "default" is the picker's sentinel for the system default list.
+        if listName.isEmpty || listName == "default" {
+            return store.defaultCalendarForNewReminders() ?? calendars.first
+        }
         return calendars.first { $0.title == listName } ?? store.defaultCalendarForNewReminders()
     }
 
@@ -81,7 +86,9 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
                     Item(
                         id: reminder.calendarItemIdentifier,
                         title: reminder.title ?? "",
-                        dueDate: reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) }
+                        dueDate: reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) },
+                        created: reminder.creationDate,
+                        modified: reminder.lastModifiedDate
                     )
                 }
                 .sorted {
@@ -104,13 +111,18 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         refresh()
     }
 
-    /// Creates a real reminder in the selected list.
-    public func add(title: String) {
+    /// Creates a real reminder in the selected list, optionally due today.
+    public func add(title: String, dueToday: Bool = false) {
         let trimmed = title.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, let calendar = selectedCalendar else { return }
         let reminder = EKReminder(eventStore: store)
         reminder.title = trimmed
         reminder.calendar = calendar
+        if dueToday {
+            reminder.dueDateComponents = Calendar.current.dateComponents(
+                [.year, .month, .day], from: Date()
+            )
+        }
         try? store.save(reminder, commit: true)
         refresh()
     }
