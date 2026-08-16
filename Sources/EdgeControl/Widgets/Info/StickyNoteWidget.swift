@@ -86,7 +86,19 @@ private struct StickyNoteWidgetView: View {
             legacyMarkdown: note,
             baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
             textColor: NSColor(Theme.text1(ts)),
-            linkColor: NSColor(primary)
+            linkColor: NSColor(primary),
+            onFontSizeDelta: { delta in
+                guard !instanceId.isEmpty else { return }
+                var config = baseConfig
+                config["fontSize"] = .double(min(24, max(10, fontSize + delta)))
+                // Carry the live drafts so the size write can't clobber
+                // newer text than the config snapshot holds.
+                config["rtf"] = .string(rtfDraft)
+                config["note"] = .string(plainDraft)
+                config["_pageId"] = nil
+                config["_instanceId"] = nil
+                layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
+            }
         )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))
@@ -141,6 +153,7 @@ private struct RichStickyTextView: NSViewRepresentable {
     let baseFont: NSFont
     let textColor: NSColor
     let linkColor: NSColor
+    let onFontSizeDelta: (Double) -> Void
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = LinkPasteTextView()
@@ -174,6 +187,7 @@ private struct RichStickyTextView: NSViewRepresentable {
             )
         }
         textView.accentColor = linkColor
+        textView.onFontSizeDelta = onFontSizeDelta
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
         textView.normalizeCheckboxes()
 
@@ -189,6 +203,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         guard let textView = scroll.documentView as? LinkPasteTextView else { return }
         textView.insertionPointColor = textColor
         textView.accentColor = linkColor
+        textView.onFontSizeDelta = onFontSizeDelta
         // Reflow the whole note when the configured font family/size changes,
         // preserving bold/italic traits and relative (heading) sizes.
         if context.coordinator.appliedFontKey != fontKey {
@@ -344,7 +359,11 @@ private final class LinkPasteTextView: NSTextView {
     var defaultFont: NSFont = .systemFont(ofSize: 13)
     var defaultColor: NSColor = .white
     var accentColor: NSColor = .systemYellow
+    var onFontSizeDelta: ((Double) -> Void)?
     private var isNormalizing = false
+
+    @objc func increaseFontSize(_ sender: Any?) { onFontSizeDelta?(1) }
+    @objc func decreaseFontSize(_ sender: Any?) { onFontSizeDelta?(-1) }
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor,
@@ -495,7 +514,10 @@ private final class LinkPasteTextView: NSTextView {
         // The bullet waits for the first character after "- ": converting on
         // the space itself created a confusing interstitial state and stole
         // the "[" that starts a checkbox.
-        if str.count == 1, str != "[" { convertDashIfPending() }
+        if str.count == 1, str != "[" {
+            if (str == "-" || str == "*"), convertCheckboxToBullet() { return }
+            convertDashIfPending()
+        }
         super.insertText(insertString, replacementRange: replacementRange)
     }
 
@@ -558,8 +580,25 @@ private final class LinkPasteTextView: NSTextView {
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         guard loc - lineRange.location == 2 else { return }
         let prefixRange = NSRange(location: lineRange.location, length: 2)
-        guard ns.substring(with: prefixRange) == "- " else { return }
+        let prefix = ns.substring(with: prefixRange)
+        guard prefix == "- " || prefix == "* " else { return }
         replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+    }
+
+    /// Typing "-" or "*" right after a fresh checkbox marker switches the
+    /// item to a bullet — changing your mind shouldn't need deleting.
+    private func convertCheckboxToBullet() -> Bool {
+        guard let storage = textStorage else { return false }
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        guard loc - lineRange.location == 2,
+              ns.substring(with: NSRange(location: lineRange.location, length: 2)) == "\u{FFFC}\u{00A0}",
+              storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
+        else { return false }
+        let markerRange = NSRange(location: lineRange.location, length: 2)
+        replace(markerRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+        return true
     }
 
     /// Pressing return on a line that is nothing but a list marker deletes

@@ -312,6 +312,10 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         formatMenu.addItem(strikeItem)
         formatMenu.addItem(.separator())
         formatMenu.addItem(NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0"))
+        formatMenu.addItem(.separator())
+        // Cmd+= is the key under the + glyph; both read as Cmd+Plus.
+        formatMenu.addItem(NSMenuItem(title: "Bigger", action: Selector(("increaseFontSize:")), keyEquivalent: "="))
+        formatMenu.addItem(NSMenuItem(title: "Smaller", action: Selector(("decreaseFontSize:")), keyEquivalent: "-"))
         formatMenuItem.submenu = formatMenu
         mainMenu.addItem(formatMenuItem)
         return mainMenu
