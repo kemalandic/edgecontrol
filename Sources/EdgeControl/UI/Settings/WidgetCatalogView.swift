@@ -250,6 +250,9 @@ private struct WidgetSizePreviewSheet: View {
                     let range = widget.supportedSizes
                     ForEach(Array(range.min.height...range.max.height), id: \.self) { h in
                         ForEach(Array(range.min.width...range.max.width), id: \.self) { w in
+                            // Narrow sizes get a larger scale — a 1-column
+                            // preview at audit scale was an illegible sliver.
+                            let s: CGFloat = w <= 3 ? 0.75 : scale
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("\(w)x\(h)")
                                     .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -260,10 +263,10 @@ private struct WidgetSizePreviewSheet: View {
                                 ))
                                 .frame(width: CGFloat(w) * cell, height: CGFloat(h) * cell)
                                 .clipped()
-                                .scaleEffect(scale, anchor: .topLeading)
+                                .scaleEffect(s, anchor: .topLeading)
                                 .frame(
-                                    width: CGFloat(w) * cell * scale,
-                                    height: CGFloat(h) * cell * scale,
+                                    width: CGFloat(w) * cell * s,
+                                    height: CGFloat(h) * cell * s,
                                     alignment: .topLeading
                                 )
                             }

@@ -41,10 +41,11 @@ private struct DiskIOWidgetView: View {
             if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "DISK I/O", color: Theme.widgetPrimary("disk-io", ts: ts, default: .blue))
             } else if showTitle {
-                Text("DISK I/O")
+                // One column can't fit "DISK I/O" legibly; a short name beats
+                // a microscopic one.
+                Text(isNarrow ? "DISK" : "DISK I/O")
                     .font(Theme.caption(ts))
                     .foregroundStyle(Theme.text3(ts))
-                    .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
