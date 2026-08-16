@@ -56,7 +56,7 @@ struct RatePairView: View {
                     .font(Theme.label(ts))
                     .foregroundStyle(Theme.text3(ts))
             }
-            Text(entry.value)
+            Text(Self.padded(entry.value))
                 .font(Theme.value(ts))
                 .foregroundStyle(Theme.text1(ts))
                 .monospacedDigit()
@@ -64,5 +64,16 @@ struct RatePairView: View {
                 .lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Live values arrive at varying widths ("3.5 KB/s" vs "216.5 KB/s"), and
+    /// letting each width pick its own scale made the type pulse with the
+    /// data. Padding every value to the formatters' widest possible output
+    /// ("1023.9 KB/s", 11 figures) with figure spaces holds the measured
+    /// width — and therefore the rendered size — perfectly still.
+    private static func padded(_ value: String) -> String {
+        let target = 11
+        guard value.count < target else { return value }
+        return value + String(repeating: "\u{2007}", count: target - value.count)
     }
 }
