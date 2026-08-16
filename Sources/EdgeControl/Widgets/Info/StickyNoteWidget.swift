@@ -174,6 +174,7 @@ private struct RichStickyTextView: NSViewRepresentable {
             )
         }
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
+        textView.applyCheckboxCursors()
 
         let scroll = NSScrollView()
         scroll.documentView = textView
@@ -200,6 +201,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         if Self.rtfString(textView.attributedString()) != rtfBase64,
            let restored = Self.fromRTF(rtfBase64) {
             textView.textStorage?.setAttributedString(restored)
+            textView.applyCheckboxCursors()
         }
     }
 
@@ -326,6 +328,28 @@ private final class LinkPasteTextView: NSTextView {
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor]
+    }
+
+    /// Checkbox glyphs behave like controls, so hovering shows the hand, not
+    /// the I-beam. The .cursor attribute is hover-only and never serializes
+    /// into the RTF.
+    override func didChangeText() {
+        super.didChangeText()
+        applyCheckboxCursors()
+    }
+
+    func applyCheckboxCursors() {
+        guard let storage = textStorage else { return }
+        let ns = storage.string as NSString
+        var idx = 0
+        while idx < ns.length {
+            let ch = ns.substring(with: NSRange(location: idx, length: 1))
+            if ch == "☐" || ch == "☑" {
+                storage.addAttribute(.cursor, value: NSCursor.pointingHand,
+                                     range: NSRange(location: idx, length: 1))
+            }
+            idx += 1
+        }
     }
 
     private func headingFont(_ level: Int) -> NSFont {
