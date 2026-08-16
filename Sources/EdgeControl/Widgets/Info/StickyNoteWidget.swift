@@ -490,17 +490,22 @@ private final class LinkPasteTextView: NSTextView {
     }
 
     override func didChangeText() {
-        super.didChangeText()
-        guard !isNormalizing else { return }
-        isNormalizing = true
-        normalizeCheckboxes()
-        isNormalizing = false
-        // Deleting everything must also clear the invisible pen: with no
-        // neighbor to inherit from, stale heading attributes would make an
-        // emptied note type headings forever.
-        if textStorage?.length == 0 {
-            typingAttributes = bodyAttributes
+        // Normalize BEFORE notifying: renumbering can rewrite characters,
+        // and observers (the SwiftUI binding) must capture the final text.
+        // A stale capture makes the next render reload the view from old
+        // RTF, throwing the caret to the end of the note.
+        if !isNormalizing {
+            isNormalizing = true
+            normalizeCheckboxes()
+            isNormalizing = false
+            // Deleting everything must also clear the invisible pen: with no
+            // neighbor to inherit from, stale heading attributes would make
+            // an emptied note type headings forever.
+            if textStorage?.length == 0 {
+                typingAttributes = bodyAttributes
+            }
         }
+        super.didChangeText()
     }
 
     /// Format > Body Text: strips heading size, bold/italic, underline and
