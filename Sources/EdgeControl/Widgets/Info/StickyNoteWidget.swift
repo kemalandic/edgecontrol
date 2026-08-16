@@ -404,38 +404,55 @@ private final class LinkPasteTextView: NSTextView {
 
     /// Shared rhythm for body, bullet and checkbox lines.
     private var bodyParagraph: NSParagraphStyle {
-        paragraphStyle(isHeading: false, isList: false, isBullet: false, level: 0)
+        paragraphStyle(isHeading: false, isList: false, markerInset: 0, level: 0)
     }
 
-    /// Column where list text begins; markers sit before a tab.
-    private var listTextIndent: CGFloat { (defaultFont.pointSize * 1.8).rounded() }
+    /// Column where list text begins; markers sit before a tab. Wide
+    /// enough for a two-digit number and its dot, whatever the note font —
+    /// a marker wider than its column would push the tab a full extra
+    /// column to the right.
+    private var listTextIndent: CGFloat {
+        let twoDigits = ("88." as NSString).size(withAttributes: [.font: defaultFont]).width
+        return max((defaultFont.pointSize * 1.8).rounded(),
+                   (twoDigits + defaultFont.pointSize * 0.5).rounded())
+    }
 
     /// One Tab/Shift-Tab step — the width of the list column, so nested
     /// list text lands exactly one column further in.
     private var indentStep: CGFloat { listTextIndent }
     private let maxIndentLevel = 6
 
-    /// Narrow bullets get inset so they sit centered under the wider
-    /// checkbox column instead of hugging the left edge.
-    private var bulletInset: CGFloat {
-        let bulletWidth = ("•" as NSString).size(withAttributes: [.font: defaultFont]).width
-        return max(0, ((defaultFont.pointSize * 1.2 - bulletWidth) / 2).rounded())
+    /// Markers right-align to a shared edge just before the text column:
+    /// number dots line up regardless of digit count, the checkbox's right
+    /// side sits on that edge, and the narrow bullet is centered over the
+    /// checkbox. Keeps every marker close to its text.
+    private func markerInset(for line: String) -> CGFloat {
+        let columnEnd = listTextIndent - defaultFont.pointSize * 0.45
+        let boxWidth = defaultFont.pointSize * 1.2
+        if line.hasPrefix("\u{FFFC}\t") { return max(0, (columnEnd - boxWidth).rounded()) }
+        if line.hasPrefix("•\t") {
+            let bulletWidth = ("•" as NSString).size(withAttributes: [.font: defaultFont]).width
+            return max(0, (columnEnd - boxWidth + (boxWidth - bulletWidth) / 2).rounded())
+        }
+        guard let tab = line.firstIndex(of: "\t") else { return 0 }
+        let width = (String(line[..<tab]) as NSString).size(withAttributes: [.font: defaultFont]).width
+        return max(0, (columnEnd - width).rounded())
     }
 
     private var listParagraph: NSParagraphStyle {
-        paragraphStyle(isHeading: false, isList: true, isBullet: false, level: 0)
+        paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: 0)
     }
 
     /// Headings breathe a little more, especially above.
     private var headingParagraph: NSParagraphStyle {
-        paragraphStyle(isHeading: true, isList: false, isBullet: false, level: 0)
+        paragraphStyle(isHeading: true, isList: false, markerInset: 0, level: 0)
     }
 
     /// Single source of paragraph geometry: spacing rhythm per line kind
     /// plus the Tab/Shift-Tab indent level. List lines keep one shared
     /// text column (marker, tab, text) shifted right per level, with
     /// wrapped lines hanging under the text.
-    private func paragraphStyle(isHeading: Bool, isList: Bool, isBullet: Bool, level: Int) -> NSParagraphStyle {
+    private func paragraphStyle(isHeading: Bool, isList: Bool, markerInset: CGFloat, level: Int) -> NSParagraphStyle {
         let p = NSMutableParagraphStyle()
         let indent = CGFloat(level) * indentStep
         if isHeading {
@@ -445,7 +462,7 @@ private final class LinkPasteTextView: NSTextView {
             p.headIndent = indent
         } else if isList {
             p.paragraphSpacing = defaultFont.pointSize * 0.22
-            p.firstLineHeadIndent = indent + (isBullet ? bulletInset : 0)
+            p.firstLineHeadIndent = indent + markerInset
             p.tabStops = [NSTextTab(textAlignment: .left, location: indent + listTextIndent)]
             p.defaultTabInterval = listTextIndent
             p.headIndent = indent + listTextIndent
@@ -485,7 +502,7 @@ private final class LinkPasteTextView: NSTextView {
 
     private func listAttributes(level: Int) -> [NSAttributedString.Key: Any] {
         var a = bodyAttributes
-        a[.paragraphStyle] = paragraphStyle(isHeading: false, isList: true, isBullet: false, level: level)
+        a[.paragraphStyle] = paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: level)
         return a
     }
 
@@ -535,7 +552,7 @@ private final class LinkPasteTextView: NSTextView {
         let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
         s.append(NSAttributedString(string: "\t", attributes: listAttributes(level: level)))
         s.addAttribute(.paragraphStyle,
-                       value: paragraphStyle(isHeading: false, isList: true, isBullet: false, level: level),
+                       value: paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: level),
                        range: NSRange(location: 0, length: s.length))
         return s
     }
@@ -599,7 +616,7 @@ private final class LinkPasteTextView: NSTextView {
             let style = paragraphStyle(
                 isHeading: !isList && (firstFont?.pointSize ?? 0) > headingThreshold,
                 isList: isList,
-                isBullet: line.hasPrefix("•\t"),
+                markerInset: markerInset(for: line),
                 level: indentLevel(of: existing, isList: isList)
             )
             storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
@@ -710,7 +727,7 @@ private final class LinkPasteTextView: NSTextView {
         guard lines.length > 0 else {
             let existing = typingAttributes[.paragraphStyle] as? NSParagraphStyle
             let level = max(0, min(maxIndentLevel, indentLevel(of: existing, isList: false) + delta))
-            typingAttributes[.paragraphStyle] = paragraphStyle(isHeading: false, isList: false, isBullet: false, level: level)
+            typingAttributes[.paragraphStyle] = paragraphStyle(isHeading: false, isList: false, markerInset: 0, level: level)
             return
         }
         guard shouldChangeText(in: lines, replacementString: nil) else { return }
@@ -726,7 +743,7 @@ private final class LinkPasteTextView: NSTextView {
             storage.addAttribute(.paragraphStyle, value: paragraphStyle(
                 isHeading: !isList && (firstFont?.pointSize ?? 0) > defaultFont.pointSize * 1.1,
                 isList: isList,
-                isBullet: line.hasPrefix("•\t"),
+                markerInset: markerInset(for: line),
                 level: level
             ), range: paragraph)
             location = paragraph.location + paragraph.length
