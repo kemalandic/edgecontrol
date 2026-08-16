@@ -59,7 +59,7 @@ private struct NetworkStatsWidgetView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            if !isBar { Spacer(minLength: 0) }
+            Spacer(minLength: 0)
 
             // Same component Disk I/O renders — equal boxes, equal layout.
             RatePairView(
