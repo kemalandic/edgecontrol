@@ -65,10 +65,24 @@ public final class LayoutEngine: ObservableObject {
 
     public func movePage(id: String, toOrder: Int) {
         guard let index = pageIndex(for: id) else { return }
+        // The dashboard tracks the current page by index into sortedPages, so
+        // remember which page is showing and follow it to its new position —
+        // otherwise reordering silently changes what's on screen.
+        let activeId = currentPage?.id
         let page = document.pages.remove(at: index)
-        let clampedOrder = min(max(toOrder, 0), document.pages.count)
-        document.pages.insert(page, at: clampedOrder)
+        // Normalize to order-sorted before inserting: array position and the
+        // persisted `order` field are usually in lockstep (reindexPages), but
+        // an imported or hand-edited document may disagree, and this method is
+        // user-reachable now.
+        var ordered = document.pages.sorted { $0.order < $1.order }
+        let clampedOrder = min(max(toOrder, 0), ordered.count)
+        ordered.insert(page, at: clampedOrder)
+        document.pages = ordered
         reindexPages()
+        if let activeId, let newIdx = sortedPages.firstIndex(where: { $0.id == activeId }),
+           currentPageIndex != newIdx {
+            currentPageIndex = newIdx
+        }
         save()
     }
 

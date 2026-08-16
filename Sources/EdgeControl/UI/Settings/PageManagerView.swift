@@ -134,6 +134,15 @@ struct PageManagerView: View {
                 editingPageId = page.id
                 editingName = page.name
             }
+            let idx = layoutEngine.sortedPages.firstIndex { $0.id == page.id } ?? 0
+            Button("Move Up") {
+                layoutEngine.movePage(id: page.id, toOrder: idx - 1)
+            }
+            .disabled(idx == 0)
+            Button("Move Down") {
+                layoutEngine.movePage(id: page.id, toOrder: idx + 1)
+            }
+            .disabled(idx >= layoutEngine.pageCount - 1)
             if layoutEngine.pageCount > 1 {
                 Button("Delete", role: .destructive) {
                     layoutEngine.removePage(id: page.id)

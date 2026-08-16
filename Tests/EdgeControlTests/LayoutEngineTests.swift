@@ -163,4 +163,21 @@ final class LayoutEngineTests: XCTestCase {
         )
         XCTAssertFalse(engine.hasOverlaps)
     }
+
+    // MARK: - Page reordering
+
+    func testMovingPagesKeepsTheVisiblePageVisible() {
+        engine.document.pages = [
+            PageConfig(name: "A", order: 0),
+            PageConfig(name: "B", order: 1),
+            PageConfig(name: "C", order: 2),
+        ]
+        engine.currentPageIndex = 1  // viewing B
+
+        // Move A to the end; B shifts to index 0 and must stay on screen.
+        engine.movePage(id: engine.document.pages[0].id, toOrder: 2)
+
+        XCTAssertEqual(engine.sortedPages.map(\.name), ["B", "C", "A"])
+        XCTAssertEqual(engine.sortedPages[engine.currentPageIndex].name, "B")
+    }
 }
