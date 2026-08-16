@@ -25,7 +25,7 @@ public final class NetworkStatsWidget: DashboardWidget {
             service: service,
             isCompact: size.height <= 2,
             isBar: size.height <= 1,
-            showTitle: size.width >= 3,
+            showTitle: true,
             showCompactTotals: size.width >= 5 && size.height >= 2
         )
     }
