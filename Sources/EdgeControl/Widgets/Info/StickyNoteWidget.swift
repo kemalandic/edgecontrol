@@ -15,6 +15,10 @@ public final class StickyNoteWidget: DashboardWidget {
         ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
         ConfigSchemaEntry(key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
                           options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
+        ConfigSchemaEntry(key: "textColor", label: "Text Color", type: .picker,
+                          defaultValue: .string("soft white"),
+                          options: ["soft white", "white", "gray", "black", "yellow", "orange",
+                                    "pink", "red", "green", "mint", "blue", "purple"]),
         ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.5),
                           minValue: 0.0, maxValue: 1.0, step: 0.05),
         ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("mono"),
@@ -32,6 +36,7 @@ public final class StickyNoteWidget: DashboardWidget {
             note: config.string("note"),
             rtf: config.string("rtf"),
             colorName: config.string("color", default: "yellow"),
+            textColorName: config.string("textColor", default: "soft white"),
             tintOpacity: config.double("opacity", default: 0.5),
             fontFamily: config.string("font", default: "mono"),
             fontSize: config.double("fontSize", default: 18),
@@ -51,6 +56,7 @@ private struct StickyNoteWidgetView: View {
     let note: String
     let rtf: String
     let colorName: String
+    let textColorName: String
     let tintOpacity: Double
     let fontFamily: String
     let fontSize: Double
@@ -79,13 +85,32 @@ private struct StickyNoteWidgetView: View {
         }
     }
 
+    /// "soft white" is a touch darker than pure white — easier on the eyes
+    /// against the tinted card.
+    private var textNSColor: NSColor {
+        switch textColorName {
+        case "white": .white
+        case "gray": .systemGray
+        case "black": .black
+        case "yellow": .systemYellow
+        case "orange": .systemOrange
+        case "pink": .systemPink
+        case "red": .systemRed
+        case "green": .systemGreen
+        case "mint": .systemMint
+        case "blue": .systemBlue
+        case "purple": .systemPurple
+        default: NSColor(white: 0.85, alpha: 1)
+        }
+    }
+
     var body: some View {
         RichStickyTextView(
             rtfBase64: $rtfDraft,
             plainText: $plainDraft,
             legacyMarkdown: note,
             baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
-            textColor: NSColor(Theme.text1(ts)),
+            textColor: textNSColor,
             linkColor: NSColor(primary),
             onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
             onFontSizeReset: { persistFontSize(18) }
@@ -183,6 +208,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         textView.defaultColor = textColor
         textView.insertionPointColor = textColor
         context.coordinator.appliedFontKey = fontKey
+        context.coordinator.appliedColorKey = colorKey
 
         if let restored = Self.fromRTF(rtfBase64) {
             textView.textStorage?.setAttributedString(restored)
@@ -212,11 +238,12 @@ private struct RichStickyTextView: NSViewRepresentable {
         textView.onFontSizeDelta = onFontSizeDelta
         textView.onFontSizeReset = onFontSizeReset
         let fontChanged = context.coordinator.appliedFontKey != fontKey
+        let colorChanged = context.coordinator.appliedColorKey != colorKey
         // Reload only on a genuine external change — and never on the pass
-        // that changes the font: the binding still holds pre-reflow RTF then,
-        // and reloading from it would undo the text scaling while the
-        // checkbox images resized (the bug that shipped first).
-        if !fontChanged,
+        // that changes the font or color: the binding still holds the
+        // pre-restyle RTF then, and reloading from it would undo the reflow
+        // or recolor (the bug that shipped first).
+        if !fontChanged, !colorChanged,
            Self.rtfString(textView.attributedString()) != rtfBase64,
            let restored = Self.fromRTF(rtfBase64) {
             textView.textStorage?.setAttributedString(restored)
@@ -236,9 +263,35 @@ private struct RichStickyTextView: NSViewRepresentable {
             let coordinator = context.coordinator
             DispatchQueue.main.async { coordinator.pushChanges(from: textView) }
         }
+        // Recolor when the configured text color changes: every non-link
+        // run takes the new color (dimmed runs like rules keep their alpha),
+        // and the checkboxes redraw their strokes to match.
+        if colorChanged {
+            textView.defaultColor = textColor
+            recolorText(in: textView)
+            context.coordinator.appliedColorKey = colorKey
+            textView.refreshCheckboxImages()
+            textView.normalizeCheckboxes()
+            let coordinator = context.coordinator
+            DispatchQueue.main.async { coordinator.pushChanges(from: textView) }
+        }
     }
 
     private var fontKey: String { "\(baseFont.fontName)-\(baseFont.pointSize)" }
+    private var colorKey: String { textColor.description }
+
+    private func recolorText(in textView: LinkPasteTextView) {
+        guard let storage = textView.textStorage, storage.length > 0 else { return }
+        storage.beginEditing()
+        storage.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+            if storage.attribute(.link, at: range.location, effectiveRange: nil) != nil { return }
+            let alpha = (value as? NSColor)?.alphaComponent ?? 1
+            let color = alpha < 1 ? textColor.withAlphaComponent(alpha) : textColor
+            storage.addAttribute(.foregroundColor, value: color, range: range)
+        }
+        storage.endEditing()
+        textView.typingAttributes[.foregroundColor] = textColor
+    }
 
     private func reapplyBaseFont(in textView: LinkPasteTextView, ratio: CGFloat) {
         guard let storage = textView.textStorage else { return }
@@ -282,6 +335,7 @@ private struct RichStickyTextView: NSViewRepresentable {
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: RichStickyTextView
         var appliedFontKey = ""
+        var appliedColorKey = ""
         init(_ parent: RichStickyTextView) { self.parent = parent }
 
         func textDidChange(_ notification: Notification) {
