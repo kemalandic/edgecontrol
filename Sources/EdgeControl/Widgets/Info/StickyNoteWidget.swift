@@ -347,7 +347,23 @@ private final class LinkPasteTextView: NSTextView {
     private var isNormalizing = false
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
-        [.font: defaultFont, .foregroundColor: defaultColor]
+        [.font: defaultFont, .foregroundColor: defaultColor,
+         .paragraphStyle: bodyParagraph]
+    }
+
+    /// Shared rhythm for body, bullet and checkbox lines.
+    private var bodyParagraph: NSParagraphStyle {
+        let p = NSMutableParagraphStyle()
+        p.paragraphSpacing = defaultFont.pointSize * 0.22
+        return p
+    }
+
+    /// Headings breathe a little more, especially above.
+    private var headingParagraph: NSParagraphStyle {
+        let p = NSMutableParagraphStyle()
+        p.paragraphSpacing = defaultFont.pointSize * 0.3
+        p.paragraphSpacingBefore = defaultFont.pointSize * 0.5
+        return p
     }
 
     override func didChangeText() {
@@ -379,6 +395,7 @@ private final class LinkPasteTextView: NSTextView {
         }
         guard shouldChangeText(in: range, replacementString: nil) else { return }
         storage.addAttribute(.font, value: defaultFont, range: range)
+        storage.addAttribute(.paragraphStyle, value: bodyParagraph, range: range)
         storage.removeAttribute(.strikethroughStyle, range: range)
         storage.removeAttribute(.underlineStyle, range: range)
         didChangeText()
@@ -418,6 +435,24 @@ private final class LinkPasteTextView: NSTextView {
                 storage.replaceCharacters(in: range, with: checkboxOnly(checked: ch == "☑"))
             }
             idx -= 1
+        }
+        applyParagraphSpacing()
+    }
+
+    /// Every paragraph gets its rhythm: heading-sized first characters get
+    /// the heading spacing, everything else the body spacing. Runs as part
+    /// of normalization so loaded and pasted content is covered too.
+    private func applyParagraphSpacing() {
+        guard let storage = textStorage, storage.length > 0 else { return }
+        let ns = storage.string as NSString
+        let headingThreshold = defaultFont.pointSize * 1.1
+        var location = 0
+        while location < ns.length {
+            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
+            let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
+            let style = (firstFont?.pointSize ?? 0) > headingThreshold ? headingParagraph : bodyParagraph
+            storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
+            location = paragraph.location + paragraph.length
         }
     }
 
@@ -489,6 +524,7 @@ private final class LinkPasteTextView: NSTextView {
             replace(prefixRange, with: NSAttributedString(string: ""))
             var attrs = bodyAttributes
             attrs[.font] = headingFont(prefix.count)
+            attrs[.paragraphStyle] = headingParagraph
             typingAttributes = attrs
             return true
         default:
