@@ -38,6 +38,10 @@ public final class ProcessListWidget: DashboardWidget {
 private struct ProcessListWidgetView: View {
     @ObservedObject var service: ProcessMonitorService
     @Environment(\.themeSettings) private var ts
+    @EnvironmentObject private var model: AppModel
+    // Tapping a column header re-sorts live, overriding the configured
+    // default for this on-screen session; tap again to flip direction.
+    @State private var tappedSort: (memory: Bool, ascending: Bool)?
     let sortByMemory: Bool
     /// nil = fit rows to the widget height; a number pins the count.
     let fixedRows: Int?
@@ -54,10 +58,8 @@ private struct ProcessListWidgetView: View {
             HStack {
                 Text("APP")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("CPU")
-                    .frame(width: 70, alignment: .trailing)
-                Text("MEM")
-                    .frame(width: 70, alignment: .trailing)
+                sortHeader("CPU", memory: false)
+                sortHeader("MEM", memory: true)
             }
             .font(Theme.label(ts))
             .foregroundStyle(Theme.text3(ts))
@@ -75,9 +77,12 @@ private struct ProcessListWidgetView: View {
                 } else {
                     let fitCount = min(max(Int(geo.size.height / rowHeight), 3), 16)
                     let maxCount = fixedRows ?? fitCount
-                    let ranked = sortByMemory
-                        ? service.topProcesses.sorted { $0.memoryMB > $1.memoryMB }
-                        : service.topProcesses
+                    let memSort = tappedSort?.memory ?? sortByMemory
+                    let ascending = tappedSort?.ascending ?? false
+                    let ranked = service.topProcesses.sorted {
+                        let (a, b) = memSort ? ($0.memoryMB, $1.memoryMB) : ($0.cpuPercent, $1.cpuPercent)
+                        return ascending ? a < b : a > b
+                    }
                     let visible = Array(ranked.prefix(maxCount))
                     // Scrolls only when a pinned row count exceeds the height.
                     TouchScrollView {
@@ -94,6 +99,24 @@ private struct ProcessListWidgetView: View {
             }
         }
         .widgetCard()
+    }
+
+    private func sortHeader(_ label: String, memory: Bool) -> some View {
+        let memSort = tappedSort?.memory ?? sortByMemory
+        let ascending = tappedSort?.ascending ?? false
+        let active = memSort == memory
+        return Text(active ? label + (ascending ? " ▲" : " ▼") : label)
+            .foregroundStyle(active ? Theme.text1(ts) : Theme.text3(ts))
+            .frame(width: 70, alignment: .trailing)
+            .touchTappable(id: "proc-sort-\(label)", registry: model.touchService.zoneRegistry) {
+                Task { @MainActor in
+                    if active {
+                        tappedSort = (memory, !ascending)
+                    } else {
+                        tappedSort = (memory, false)
+                    }
+                }
+            }
     }
 
     private func processRow(_ proc: ProcessInfo_EC) -> some View {
