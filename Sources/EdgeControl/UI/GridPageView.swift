@@ -375,6 +375,11 @@ struct GridPageView: View {
                         toCol: col,
                         toRow: row
                     )
+                    // Anything the drop landed on steps aside to its
+                    // nearest free spot; no room means it stays staged.
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        layoutEngine.resolveOverlaps(pageId: page.id, keeping: placement.instanceId)
+                    }
                 }
 
                 // Reset drag state
@@ -443,6 +448,9 @@ struct GridPageView: View {
                                         newWidth: tw,
                                         newHeight: th
                                     )
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                        layoutEngine.resolveOverlaps(pageId: page.id, keeping: placement.instanceId)
+                                    }
                                 }
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     resizingInstanceId = nil

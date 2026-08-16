@@ -191,6 +191,50 @@ public final class LayoutEngine: ObservableObject {
         return true
     }
 
+    /// After a drop, move the widgets the dropped widget now covers to
+    /// their nearest free spots (Manhattan distance), keeping the dropped
+    /// widget exactly where the user put it. Relocated widgets never bump
+    /// others in turn — they only take genuinely free cells — and anything
+    /// that fits nowhere stays overlapped, the normal staged edit state.
+    public func resolveOverlaps(pageId: String, keeping keptId: String) {
+        guard let pageIdx = pageIndex(for: pageId),
+              let kept = document.pages[pageIdx].widgets.first(where: { $0.instanceId == keptId })
+        else { return }
+        let keptRect = kept.gridRect
+        let displacedIds = document.pages[pageIdx].widgets
+            .filter { $0.instanceId != keptId && $0.gridRect.intersects(keptRect) }
+            .map(\.instanceId)
+        guard !displacedIds.isEmpty else { return }
+
+        for id in displacedIds {
+            guard let idx = document.pages[pageIdx].widgets.firstIndex(where: { $0.instanceId == id })
+            else { continue }
+            let widget = document.pages[pageIdx].widgets[idx]
+            guard currentGrid.columns >= widget.width, currentGrid.rows >= widget.height else { continue }
+            // Earlier relocations are already in the document, so each
+            // displaced widget sees the true occupancy when it searches.
+            let others = document.pages[pageIdx].widgets.filter { $0.instanceId != id }
+            var best: (col: Int, row: Int)?
+            var bestDistance = Int.max
+            for row in 0...(currentGrid.rows - widget.height) {
+                for col in 0...(currentGrid.columns - widget.width) {
+                    let rect = GridRect(col: col, row: row, width: widget.width, height: widget.height)
+                    guard !others.contains(where: { $0.gridRect.intersects(rect) }) else { continue }
+                    let distance = abs(col - widget.col) + abs(row - widget.row)
+                    if distance < bestDistance {
+                        bestDistance = distance
+                        best = (col, row)
+                    }
+                }
+            }
+            if let best {
+                document.pages[pageIdx].widgets[idx].col = best.col
+                document.pages[pageIdx].widgets[idx].row = best.row
+            }
+        }
+        save()
+    }
+
     /// Resize a widget. Returns true on success.
     @discardableResult
     public func resizeWidget(pageId: String, instanceId: String, newWidth: Int, newHeight: Int) -> Bool {
