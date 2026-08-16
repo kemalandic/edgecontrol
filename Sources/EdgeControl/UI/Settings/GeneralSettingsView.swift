@@ -84,6 +84,21 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // System panel coexistence
+            settingsToggle(
+                "Allow System Panels Over Dashboard",
+                subtitle: "Clipboard managers (Paste) and similar hotkey panels can appear above the dashboard; the menu bar can too",
+                icon: "rectangle.stack",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.allowSystemPanels },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.allowSystemPanels = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                    }
+                )
+            )
+
             // Units
             HStack(spacing: 10) {
                 Image(systemName: "ruler")
