@@ -370,6 +370,9 @@ private final class LinkPasteTextView: NSTextView {
         if str == " ", convertLinePrefix() { return }
 
         if str == "\n" {
+            // Enter on an empty bullet/checkbox line ends the list: the
+            // marker disappears instead of a new one being created.
+            if removeBareListMarker() { return }
             if convertHorizontalRule() { return }
             let continuation = listContinuation()
             super.insertText(insertString, replacementRange: replacementRange)
@@ -381,6 +384,10 @@ private final class LinkPasteTextView: NSTextView {
             return
         }
 
+        // The bullet waits for the first character after "- ": converting on
+        // the space itself created a confusing interstitial state and stole
+        // the "[" that starts a checkbox.
+        if str.count == 1, str != "[" { convertDashIfPending() }
         super.insertText(insertString, replacementRange: replacementRange)
     }
 
@@ -395,9 +402,6 @@ private final class LinkPasteTextView: NSTextView {
         let prefix = ns.substring(with: prefixRange)
 
         switch prefix {
-        case "-":
-            replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
-            return true
         // "- " already became a bullet by the time "[ ]" is typed, so the
         // checkbox forms chain off the bullet. Conversion waits for the
         // CLOSING bracket — converting at "[" would make "[x]" untypeable.
@@ -417,6 +421,35 @@ private final class LinkPasteTextView: NSTextView {
         default:
             return false
         }
+    }
+
+    /// A line whose full content is "- " becomes a bullet the moment a
+    /// non-bracket character follows — no interstitial bullet while a
+    /// checkbox is being typed.
+    private func convertDashIfPending() {
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        guard loc - lineRange.location == 2 else { return }
+        let prefixRange = NSRange(location: lineRange.location, length: 2)
+        guard ns.substring(with: prefixRange) == "- " else { return }
+        replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+    }
+
+    /// Pressing return on a line that is nothing but a list marker deletes
+    /// the marker (ending the list) rather than continuing it.
+    private func removeBareListMarker() -> Bool {
+        let ns = string as NSString
+        let loc = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        var content = ns.substring(with: lineRange)
+        if content.hasSuffix("\n") { content.removeLast() }
+        let markers = ["•\u{00A0}", "☐\u{00A0}", "☑\u{00A0}", "•", "☐", "☑"]
+        guard markers.contains(content) else { return false }
+        let deleteRange = NSRange(location: lineRange.location, length: (content as NSString).length)
+        replace(deleteRange, with: NSAttributedString(string: ""))
+        typingAttributes = bodyAttributes
+        return true
     }
 
     /// A line reading exactly "---" becomes a dim horizontal rule on return.
