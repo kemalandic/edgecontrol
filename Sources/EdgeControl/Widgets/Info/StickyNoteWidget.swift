@@ -374,10 +374,13 @@ private final class LinkPasteTextView: NSTextView {
         case "-":
             replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
             return true
-        case "- [", "- [ ]", "- []":
+        // "- " already became a bullet by the time "[ ]" is typed, so the
+        // checkbox forms chain off the bullet: "• [" + space completes it.
+        case "- [", "- [ ]", "- []",
+             "•\u{00A0}[", "•\u{00A0}[ ]", "•\u{00A0}[]":
             replace(prefixRange, with: NSAttributedString(string: "☐\u{00A0}", attributes: bodyAttributes))
             return true
-        case "- [x]", "- [X]":
+        case "- [x]", "- [X]", "•\u{00A0}[x]", "•\u{00A0}[X]":
             replace(prefixRange, with: NSAttributedString(string: "☑\u{00A0}", attributes: bodyAttributes))
             return true
         case "#", "##", "###":
