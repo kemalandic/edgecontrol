@@ -3,6 +3,7 @@ import SwiftUI
 enum SettingsTab: String, CaseIterable {
     case pages = "Pages"
     case widgets = "Widgets"
+    case guide = "Guide"
     case theme = "Theme"
     case plugins = "Plugins"
     case cicd = "CI/CD"
@@ -13,6 +14,7 @@ enum SettingsTab: String, CaseIterable {
         switch self {
         case .pages: "rectangle.stack"
         case .widgets: "square.grid.2x2"
+        case .guide: "book"
         case .theme: "paintbrush"
         case .plugins: "puzzlepiece.extension"
         case .cicd: "arrow.triangle.branch"
@@ -104,6 +106,8 @@ struct SettingsView: View {
                     PageManagerView()
                 case .widgets:
                     WidgetCatalogView()
+                case .guide:
+                    GuideView()
                 case .theme:
                     ThemeSettingsView()
                 case .plugins:
