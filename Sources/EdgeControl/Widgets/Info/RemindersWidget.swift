@@ -20,10 +20,13 @@ public final class RemindersWidget: DashboardWidget {
                           defaultValue: .string("newest first"),
                           options: ["newest first", "oldest first", "recently updated", "least recently updated"]),
         ConfigSchemaEntry(key: "newDueToday", label: "New Reminders Due Today", type: .toggle,
-                          defaultValue: .bool(false)),
-        // The time a due-today reminder fires when no sooner time was given.
-        ConfigSchemaEntry(key: "dueTime", label: "Due Time (HH:mm)", type: .text,
-                          defaultValue: .string("18:00")),
+                          defaultValue: .bool(false),
+                          help: "Reminders added from this widget get a due date of today."),
+        ConfigSchemaEntry(key: "dueTime", label: "Due Time", type: .time,
+                          defaultValue: .string("18:00"),
+                          help: "When Due Today is on and no \"in…\" offset is typed, "
+                              + "new reminders come due — and notify — at this time. "
+                              + "A typed offset like \":30\" or \"2:15\" always wins."),
     ]
     public let defaultColors = WidgetColors(primary: .orange)
 

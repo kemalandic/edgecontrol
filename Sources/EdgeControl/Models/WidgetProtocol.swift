@@ -267,6 +267,9 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
     public let minValue: Double?
     public let maxValue: Double?
     public let step: Double?
+    /// Optional caption rendered under the control explaining what the
+    /// setting actually does.
+    public let help: String?
 
     public init(
         key: String,
@@ -276,7 +279,8 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         options: [String]? = nil,
         minValue: Double? = nil,
         maxValue: Double? = nil,
-        step: Double? = nil
+        step: Double? = nil,
+        help: String? = nil
     ) {
         self.key = key
         self.label = label
@@ -286,6 +290,7 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         self.minValue = minValue
         self.maxValue = maxValue
         self.step = step
+        self.help = help
     }
 }
 
@@ -296,6 +301,8 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case text
     case picker
     case colorPicker
+    /// A time of day, stored as an "HH:mm" string.
+    case time
 }
 
 // MARK: - Service Key
