@@ -7,6 +7,12 @@ public final class LayoutEngine: ObservableObject {
     @Published public var currentPageIndex: Int = 0
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
+    /// True while the dashboard is in edit mode. Placement rules relax so
+    /// widgets can overlap as a staging state while rearranging; store writes
+    /// pause until the session ends, and a session cannot end (or flush at
+    /// quit) while overlaps remain, so an overlapping layout is never
+    /// persisted.
+    @Published public var isEditing: Bool = false
     /// Current dynamic grid — updated from DashboardShell's GeometryReader.
     @Published public var currentGrid: DynamicGrid = .xeneonDefault
 
@@ -85,7 +91,7 @@ public final class LayoutEngine: ObservableObject {
         guard rect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return nil }
 
         let existing = document.pages[pageIdx].widgets
-        guard !existing.contains(where: { $0.gridRect.intersects(rect) }) else { return nil }
+        guard isEditing || !existing.contains(where: { $0.gridRect.intersects(rect) }) else { return nil }
 
         let placement = WidgetPlacement(
             widgetId: widgetId,
@@ -120,7 +126,7 @@ public final class LayoutEngine: ObservableObject {
 
         // Check collision with all other widgets on the page
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
-        guard !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
+        guard isEditing || !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
 
         document.pages[pageIdx].widgets[widgetIdx].col = toCol
         document.pages[pageIdx].widgets[widgetIdx].row = toRow
@@ -140,7 +146,7 @@ public final class LayoutEngine: ObservableObject {
         guard newRect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return false }
 
         let others = document.pages[pageIdx].widgets.filter { $0.instanceId != instanceId }
-        guard !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
+        guard isEditing || !others.contains(where: { $0.gridRect.intersects(newRect) }) else { return false }
 
         document.pages[pageIdx].widgets[widgetIdx].width = newWidth
         document.pages[pageIdx].widgets[widgetIdx].height = newHeight
@@ -200,14 +206,43 @@ public final class LayoutEngine: ObservableObject {
     }
 
     /// Check if a specific placement is valid (no collision, within bounds).
+    /// While editing, overlap is a permitted staging state, so only bounds
+    /// disqualify; use `wouldOverlap` to color-code staged collisions.
     public func isValidPlacement(pageId: String, col: Int, row: Int, width: Int, height: Int, excludeInstanceId: String? = nil) -> Bool {
-        guard let pageIdx = pageIndex(for: pageId) else { return false }
+        guard pageIndex(for: pageId) != nil else { return false }
 
         let rect = GridRect(col: col, row: row, width: width, height: height)
         guard rect.fitsInGrid(columns: currentGrid.columns, rows: currentGrid.rows) else { return false }
 
+        return isEditing || !wouldOverlap(pageId: pageId, rect: rect, excludeInstanceId: excludeInstanceId)
+    }
+
+    /// Pure collision query, independent of edit mode.
+    public func wouldOverlap(pageId: String, rect: GridRect, excludeInstanceId: String? = nil) -> Bool {
+        guard let pageIdx = pageIndex(for: pageId) else { return false }
         let widgets = document.pages[pageIdx].widgets.filter { $0.instanceId != excludeInstanceId }
-        return !widgets.contains(where: { $0.gridRect.intersects(rect) })
+        return widgets.contains(where: { $0.gridRect.intersects(rect) })
+    }
+
+    /// Instance ids of widgets that overlap another widget on the page.
+    public func overlappingInstanceIds(pageId: String) -> Set<String> {
+        guard let pageIdx = pageIndex(for: pageId) else { return [] }
+        let widgets = document.pages[pageIdx].widgets
+        var result: Set<String> = []
+        for (i, a) in widgets.enumerated() {
+            for b in widgets[(i + 1)...] where a.gridRect.intersects(b.gridRect) {
+                result.insert(a.instanceId)
+                result.insert(b.instanceId)
+            }
+        }
+        return result
+    }
+
+    /// Whether any page holds overlapping widgets. Document-wide because page
+    /// switching stays live during edit mode, so staged overlaps can sit on a
+    /// page other than the visible one.
+    public var hasOverlaps: Bool {
+        document.pages.contains { !overlappingInstanceIds(pageId: $0.id).isEmpty }
     }
 
     // MARK: - Global Settings
@@ -228,12 +263,19 @@ public final class LayoutEngine: ObservableObject {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(500))
             self.saveScheduled = false
+            // Mid-edit the document may legally hold overlaps; the write
+            // happens when the edit session ends (the exit path calls save()
+            // with isEditing already false).
+            guard !self.isEditing else { return }
             self.store.save(self.document)
         }
     }
 
-    /// Immediately save pending changes (called on app quit).
+    /// Immediately save pending changes (called on app quit). Refuses while
+    /// overlaps exist so a quit mid-edit cannot persist an overlapping
+    /// layout — the file keeps its pre-session state instead.
     public func flushSave() {
+        guard !hasOverlaps else { return }
         store.save(document)
         saveScheduled = false
     }

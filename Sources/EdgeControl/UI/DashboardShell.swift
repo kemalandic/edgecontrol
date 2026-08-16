@@ -149,6 +149,14 @@ struct DashboardShell: View {
             let needed = registry.requiredServices(for: layoutEngine.document)
             model.updateActiveServices(neededServices: needed)
         }
+        // The engine owns the edit session (the widget catalog can start one
+        // by parking a widget on a full page); the local flag just mirrors it
+        // for gesture gating and overlays.
+        .onChange(of: layoutEngine.isEditing) { _, editing in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                editMode = editing
+            }
+        }
     }
 
     // MARK: - Page Indicator
@@ -188,8 +196,23 @@ struct DashboardShell: View {
                 // The zone registry runs actions on the main actor, but the
                 // closure itself is @Sendable, so hop explicitly for Swift 6.
                 Task { @MainActor in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        editMode.toggle()
+                    if layoutEngine.isEditing {
+                        // Staged overlaps cannot be saved: keep the session
+                        // open and bring the first offending page into view.
+                        if layoutEngine.hasOverlaps {
+                            if let idx = layoutEngine.sortedPages.firstIndex(where: {
+                                !layoutEngine.overlappingInstanceIds(pageId: $0.id).isEmpty
+                            }) {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    layoutEngine.currentPageIndex = idx
+                                }
+                            }
+                            return
+                        }
+                        layoutEngine.isEditing = false
+                        layoutEngine.save()
+                    } else {
+                        layoutEngine.isEditing = true
                     }
                 }
             }

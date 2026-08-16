@@ -130,4 +130,37 @@ final class LayoutEngineTests: XCTestCase {
             "orders have to stay contiguous or sortedPages stops matching the array"
         )
     }
+
+    // MARK: - Edit session (staged overlaps)
+
+    func testEditingAllowsOverlapAsAStagingState() throws {
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        engine.isEditing = true
+
+        // Place, move and resize onto occupied cells all succeed mid-edit.
+        let staged = engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 2, row: 1, width: 4, height: 3)
+        XCTAssertNotNil(staged)
+        XCTAssertTrue(engine.moveWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), toCol: 0, toRow: 0))
+        XCTAssertTrue(engine.resizeWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), newWidth: 5, newHeight: 3))
+
+        XCTAssertTrue(engine.hasOverlaps)
+        XCTAssertEqual(engine.overlappingInstanceIds(pageId: pageId).count, 2)
+
+        // Off-grid stays refused even while editing.
+        XCTAssertFalse(engine.moveWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), toCol: 50, toRow: 0))
+    }
+
+    func testEndingEditRestoresStrictPlacement() {
+        engine.isEditing = true
+        engine.isEditing = false
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        XCTAssertNil(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 2, row: 1, width: 4, height: 3)
+        )
+        XCTAssertFalse(engine.hasOverlaps)
+    }
 }

@@ -31,6 +31,9 @@ struct GridPageView: View {
         GeometryReader { geo in
             let cellW = geo.size.width / CGFloat(gridColumns)
             let cellH = geo.size.height / CGFloat(gridRows)
+            // Overlaps are a legal staging state while editing, marked so the
+            // user knows what still needs separating before edit mode can end.
+            let overlappedIds = editMode ? layoutEngine.overlappingInstanceIds(pageId: page.id) : []
 
             ZStack(alignment: .topLeading) {
                 // Grid lines — more visible in edit mode
@@ -39,12 +42,17 @@ struct GridPageView: View {
                 // Drop target highlight during drag
                 if let targetCol = dragTargetCol, let targetRow = dragTargetRow,
                    let dragging = page.widgets.first(where: { $0.instanceId == draggingInstanceId }) {
+                    // Green = free, orange = staged overlap, red = off-grid.
+                    let targetRect = GridRect(col: targetCol, row: targetRow, width: dragging.width, height: dragging.height)
+                    let tint: Color = !dragIsValid ? Theme.accentRed
+                        : layoutEngine.wouldOverlap(pageId: page.id, rect: targetRect, excludeInstanceId: dragging.instanceId)
+                            ? Theme.accentOrange : Theme.accentGreen
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(dragIsValid ? Theme.accentGreen.opacity(0.15) : Theme.accentRed.opacity(0.15))
+                        .fill(tint.opacity(0.15))
                         .overlay(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .strokeBorder(
-                                    dragIsValid ? Theme.accentGreen.opacity(0.5) : Theme.accentRed.opacity(0.5),
+                                    tint.opacity(0.5),
                                     style: StrokeStyle(lineWidth: 2, dash: [6, 4])
                                 )
                         )
@@ -63,12 +71,18 @@ struct GridPageView: View {
                 if let resId = resizingInstanceId,
                    let resPlacement = page.widgets.first(where: { $0.instanceId == resId }),
                    let tw = resizeTargetW, let th = resizeTargetH {
+                    // Purple = free, orange = staged overlap, red = size the
+                    // widget doesn't support (or off-grid).
+                    let resRect = GridRect(col: resPlacement.col, row: resPlacement.row, width: tw, height: th)
+                    let resTint: Color = !resizeIsValid ? Theme.accentRed
+                        : layoutEngine.wouldOverlap(pageId: page.id, rect: resRect, excludeInstanceId: resId)
+                            ? Theme.accentOrange : Theme.accentPurple
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(resizeIsValid ? Theme.accentPurple.opacity(0.12) : Theme.accentRed.opacity(0.12))
+                        .fill(resTint.opacity(0.12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .strokeBorder(
-                                    resizeIsValid ? Theme.accentPurple.opacity(0.5) : Theme.accentRed.opacity(0.5),
+                                    resTint.opacity(0.5),
                                     style: StrokeStyle(lineWidth: 2, dash: [6, 4])
                                 )
                         )
@@ -105,9 +119,14 @@ struct GridPageView: View {
                         .overlay {
                             if editMode {
                                 ZStack {
-                                    // Edit mode border
+                                    // Edit mode border; overlapped widgets are
+                                    // flagged orange until separated.
+                                    let isOverlapped = overlappedIds.contains(placement.instanceId)
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .strokeBorder(accent.opacity(0.4), lineWidth: 1.5)
+                                        .strokeBorder(
+                                            isOverlapped ? Theme.accentOrange.opacity(0.9) : accent.opacity(0.4),
+                                            lineWidth: isOverlapped ? 2.5 : 1.5
+                                        )
                                         .allowsHitTesting(false)
 
                                     // Remove button (top-right)
@@ -143,11 +162,15 @@ struct GridPageView: View {
                 // Edit mode label
                 if editMode {
                     HStack(spacing: 6) {
-                        Circle().fill(accent).frame(width: 8, height: 8)
+                        Circle()
+                            .fill(overlappedIds.isEmpty ? accent : Theme.accentOrange)
+                            .frame(width: 8, height: 8)
                         Text("EDIT MODE")
                             .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .foregroundStyle(accent)
-                        Text("— drag widgets to reposition")
+                            .foregroundStyle(overlappedIds.isEmpty ? accent : Theme.accentOrange)
+                        Text(overlappedIds.isEmpty
+                            ? "— drag widgets to reposition"
+                            : "— separate overlapping widgets to finish")
                             .font(.system(size: 11, weight: .medium, design: .rounded))
                             .foregroundStyle(Theme.textTertiary)
                     }
