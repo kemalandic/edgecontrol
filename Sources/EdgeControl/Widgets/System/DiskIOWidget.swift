@@ -7,7 +7,7 @@ public final class DiskIOWidget: DashboardWidget {
     public let iconName = "internaldrive"
     public let category: WidgetCategory = .system
     public let requiredServices: Set<ServiceKey> = [.diskIO]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []

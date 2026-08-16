@@ -6,7 +6,7 @@ public final class DayProgressWidget: DashboardWidget {
     public let description = "Visual progress of the current day with time remaining"
     public let iconName = "sun.max"
     public let category: WidgetCategory = .info
-    public let supportedSizes = WidgetSizeRange(min: .size(2, 2), max: .size(6, 3))
+    public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(6, 3))
     public let defaultSize = WidgetSize.size(4, 2)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -16,7 +16,9 @@ public final class DayProgressWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DayProgressWidgetView(isCompact: size.width <= 3)
+        // The ring needs two rows of height; a 1-row placement always gets the
+        // linear title+bar layout, which fits a single 120px grid row.
+        DayProgressWidgetView(isCompact: size.width <= 3 && size.height >= 2)
     }
 }
 

@@ -7,7 +7,7 @@ public final class NetworkStatsWidget: DashboardWidget {
     public let iconName = "network"
     public let category: WidgetCategory = .network
     public let requiredServices: Set<ServiceKey> = [.network]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(3, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -21,7 +21,7 @@ public final class NetworkStatsWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        NetworkStatsWidgetView(service: service, isCompact: size.height <= 2)
+        NetworkStatsWidgetView(service: service, isCompact: size.height <= 2, isBar: size.height <= 1)
     }
 }
 
@@ -29,6 +29,9 @@ private struct NetworkStatsWidgetView: View {
     @ObservedObject var service: NetworkMonitorService
     @Environment(\.themeSettings) private var ts
     let isCompact: Bool
+    // Single grid row: the stacked DOWN/UP rows would overflow ~112px of
+    // interior height at larger font scales, so render them side by side.
+    let isBar: Bool
 
     var body: some View {
         let primary = Theme.widgetPrimary("network-stats", ts: ts, default: .green)
@@ -39,38 +42,18 @@ private struct NetworkStatsWidgetView: View {
                 WidgetHeader(title: "NETWORK", color: primary)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
-                        .foregroundStyle(primary)
-                    Text("DOWN")
-                        .font(Theme.label(ts))
-                        .foregroundStyle(Theme.text3(ts))
-                    Spacer()
-                    Text(NetworkMonitorService.formatSpeed(service.downloadSpeed))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
+            if isBar {
+                HStack(spacing: 12) {
+                    barGroup(icon: "arrow.down.circle.fill", color: primary,
+                             speed: service.downloadSpeed)
+                    barGroup(icon: "arrow.up.circle.fill", color: secondary,
+                             speed: service.uploadSpeed)
                 }
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
-                        .foregroundStyle(secondary)
-                    Text("UP")
-                        .font(Theme.label(ts))
-                        .foregroundStyle(Theme.text3(ts))
-                    Spacer()
-                    Text(NetworkMonitorService.formatSpeed(service.uploadSpeed))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                }
+            } else {
+                speedRow(icon: "arrow.down.circle.fill", color: primary,
+                         label: "DOWN", speed: service.downloadSpeed)
+                speedRow(icon: "arrow.up.circle.fill", color: secondary,
+                         label: "UP", speed: service.uploadSpeed)
             }
 
             if !isCompact {
@@ -84,6 +67,38 @@ private struct NetworkStatsWidgetView: View {
         }
         .padding(isCompact ? Theme.compactPadding : Theme.widgetPadding)
         .widgetCard()
+    }
+
+    private func speedRow(icon: String, color: Color, label: String, speed: Double) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
+                .foregroundStyle(color)
+            Text(label)
+                .font(Theme.label(ts))
+                .foregroundStyle(Theme.text3(ts))
+            Spacer()
+            Text(NetworkMonitorService.formatSpeed(speed))
+                .font(Theme.value(ts))
+                .foregroundStyle(Theme.text1(ts))
+                .monospacedDigit()
+                .minimumScaleFactor(0.5)
+        }
+    }
+
+    private func barGroup(icon: String, color: Color, speed: Double) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 14 * ts.fontScale))
+                .foregroundStyle(color)
+            Text(NetworkMonitorService.formatSpeed(speed))
+                .font(Theme.value(ts))
+                .foregroundStyle(Theme.text1(ts))
+                .monospacedDigit()
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func totalChip(_ label: String, value: String, color: Color) -> some View {
