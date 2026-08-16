@@ -275,6 +275,23 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         fileMenu.addItem(closeItem)
         fileMenuItem.submenu = fileMenu
         mainMenu.addItem(fileMenuItem)
+
+        // Editing shortcuts are MENU key equivalents on macOS — without an
+        // Edit menu, Cmd+A/C/V/X/Z reach no text field in the whole app.
+        let editMenuItem = NSMenuItem()
+        let editMenu = NSMenu(title: "Edit")
+        let undoItem = NSMenuItem(title: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(undoItem)
+        let redoItem = NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(redoItem)
+        editMenu.addItem(.separator())
+        editMenu.addItem(NSMenuItem(title: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+        editMenu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+        editMenu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+        editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+        editMenuItem.submenu = editMenu
+        mainMenu.addItem(editMenuItem)
         return mainMenu
     }
 
