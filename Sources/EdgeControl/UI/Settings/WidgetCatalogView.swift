@@ -105,7 +105,9 @@ struct WidgetCatalogView: View {
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Spacer()
-                if placedCount > 0 {
+                // The checkmark already says "placed"; the count badge
+                // only earns its pixels once there's more than one.
+                if placedCount > 1 {
                     Text("x\(placedCount)")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(Theme.accentGreen)
