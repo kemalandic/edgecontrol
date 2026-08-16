@@ -5,27 +5,13 @@ import Foundation
 public final class LayoutEngine: ObservableObject {
     @Published public var document: LayoutDocument
     @Published public var currentPageIndex: Int = 0
-    /// Direction of the next page change; drives the slide transition.
-    /// Published deliberately: SwiftUI animates a removed view with the
-    /// transition recorded at its LAST committed render, so the direction must
-    /// be committed in its own body pass (re-baking the outgoing page's
-    /// transition) before the index moves — see navigate(to:).
-    @Published public private(set) var navigatingForward = true
-
-    /// The one entry point for changing pages. Commits the travel direction
-    /// first, then moves the index on the next runloop tick so both the
-    /// outgoing and incoming pages resolve their transition edges from the
-    /// fresh direction.
+    /// The one entry point for changing pages. With offset-based paging the
+    /// travel direction is pure geometry, so this is a plain clamped set;
+    /// callers wrap it in withAnimation when the move should slide.
     public func navigate(to target: Int) {
         let clamped = min(max(target, 0), max(pageCount - 1, 0))
         guard clamped != currentPageIndex else { return }
-        navigatingForward = clamped >= currentPageIndex
-        // Next runloop tick, not the same transaction: the direction change
-        // must commit its own body pass first. Animation comes from the
-        // shell's .animation(value: currentPageIndex) modifier.
-        Task { @MainActor in
-            self.currentPageIndex = clamped
-        }
+        currentPageIndex = clamped
     }
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
