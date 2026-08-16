@@ -87,18 +87,8 @@ private struct StickyNoteWidgetView: View {
             baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
             textColor: NSColor(Theme.text1(ts)),
             linkColor: NSColor(primary),
-            onFontSizeDelta: { delta in
-                guard !instanceId.isEmpty else { return }
-                var config = baseConfig
-                config["fontSize"] = .double(min(24, max(10, fontSize + delta)))
-                // Carry the live drafts so the size write can't clobber
-                // newer text than the config snapshot holds.
-                config["rtf"] = .string(rtfDraft)
-                config["note"] = .string(plainDraft)
-                config["_pageId"] = nil
-                config["_instanceId"] = nil
-                layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
-            }
+            onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
+            onFontSizeReset: { persistFontSize(13) }
         )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))
@@ -131,6 +121,20 @@ private struct StickyNoteWidgetView: View {
         }
     }
 
+    /// 13 is the schema default; Cmd+0 snaps back to it.
+    private func persistFontSize(_ newSize: Double) {
+        guard !instanceId.isEmpty else { return }
+        var config = baseConfig
+        config["fontSize"] = .double(min(24, max(10, newSize)))
+        // Carry the live drafts so the size write can't clobber newer text
+        // than the config snapshot holds.
+        config["rtf"] = .string(rtfDraft)
+        config["note"] = .string(plainDraft)
+        config["_pageId"] = nil
+        config["_instanceId"] = nil
+        layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
+    }
+
     private func save() {
         guard !instanceId.isEmpty, rtfDraft != rtf else { return }
         // Strip the injected identity keys: they describe the render pass,
@@ -154,6 +158,7 @@ private struct RichStickyTextView: NSViewRepresentable {
     let textColor: NSColor
     let linkColor: NSColor
     let onFontSizeDelta: (Double) -> Void
+    let onFontSizeReset: () -> Void
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = LinkPasteTextView()
@@ -188,6 +193,7 @@ private struct RichStickyTextView: NSViewRepresentable {
         }
         textView.accentColor = linkColor
         textView.onFontSizeDelta = onFontSizeDelta
+        textView.onFontSizeReset = onFontSizeReset
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
         textView.normalizeCheckboxes()
 
@@ -204,21 +210,31 @@ private struct RichStickyTextView: NSViewRepresentable {
         textView.insertionPointColor = textColor
         textView.accentColor = linkColor
         textView.onFontSizeDelta = onFontSizeDelta
-        // Reflow the whole note when the configured font family/size changes,
-        // preserving bold/italic traits and relative (heading) sizes.
-        if context.coordinator.appliedFontKey != fontKey {
+        textView.onFontSizeReset = onFontSizeReset
+        let fontChanged = context.coordinator.appliedFontKey != fontKey
+        // Reload only on a genuine external change — and never on the pass
+        // that changes the font: the binding still holds pre-reflow RTF then,
+        // and reloading from it would undo the text scaling while the
+        // checkbox images resized (the bug that shipped first).
+        if !fontChanged,
+           Self.rtfString(textView.attributedString()) != rtfBase64,
+           let restored = Self.fromRTF(rtfBase64) {
+            textView.textStorage?.setAttributedString(restored)
+            textView.normalizeCheckboxes()
+        }
+        // Reflow when the configured family/size changes, preserving traits
+        // and relative heading sizes; checkboxes redraw to match.
+        if fontChanged {
             let ratio = baseFont.pointSize / textView.defaultFont.pointSize
             reapplyBaseFont(in: textView, ratio: ratio)
             textView.defaultFont = baseFont
             context.coordinator.appliedFontKey = fontKey
-            context.coordinator.pushChanges(from: textView)
-        }
-        // Reload only on a genuine external change; echoing our own
-        // keystrokes back through setAttributedString would fight the cursor.
-        if Self.rtfString(textView.attributedString()) != rtfBase64,
-           let restored = Self.fromRTF(rtfBase64) {
-            textView.textStorage?.setAttributedString(restored)
+            textView.refreshCheckboxImages()
             textView.normalizeCheckboxes()
+            // Push the scaled content on the next runloop tick: binding
+            // writes during a SwiftUI update pass are unreliable.
+            let coordinator = context.coordinator
+            DispatchQueue.main.async { coordinator.pushChanges(from: textView) }
         }
     }
 
@@ -360,10 +376,26 @@ private final class LinkPasteTextView: NSTextView {
     var defaultColor: NSColor = .white
     var accentColor: NSColor = .systemYellow
     var onFontSizeDelta: ((Double) -> Void)?
+    var onFontSizeReset: (() -> Void)?
     private var isNormalizing = false
 
     @objc func increaseFontSize(_ sender: Any?) { onFontSizeDelta?(1) }
     @objc func decreaseFontSize(_ sender: Any?) { onFontSizeDelta?(-1) }
+    @objc func resetFontSize(_ sender: Any?) { onFontSizeReset?() }
+
+    /// Checkbox images are sized against the body font; redraw them when it
+    /// changes so boxes and text scale together.
+    func refreshCheckboxImages() {
+        guard let storage = textStorage else { return }
+        storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+            guard let box = value as? CheckboxAttachment else { return }
+            let fresh = CheckboxAttachment.make(
+                checked: box.checked, font: defaultFont,
+                stroke: defaultColor, accent: accentColor
+            )
+            storage.addAttribute(.attachment, value: fresh, range: range)
+        }
+    }
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor,
