@@ -333,10 +333,17 @@ struct PageManagerView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
 
-        // Widget config editor (if widget has configurable options)
-        if let widget = registry.widget(for: placement.widgetId), !widget.configSchema.isEmpty {
+        // Widget config editor. Every widget without its own tap behavior
+        // also gets the universal "Opens on Tap" launcher field.
+        if let widget = registry.widget(for: placement.widgetId) {
+            let schema = WidgetLaunch.excluded.contains(widget.widgetId)
+                ? widget.configSchema
+                : widget.configSchema + [ConfigSchemaEntry(
+                    key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
+                    type: .text,
+                    defaultValue: .string(WidgetLaunch.defaultApp(for: widget.widgetId)))]
             WidgetConfigEditor(
-                schema: widget.configSchema,
+                schema: schema,
                 config: Binding(
                     get: { placement.config },
                     set: { newConfig in

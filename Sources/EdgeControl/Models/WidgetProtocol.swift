@@ -361,3 +361,42 @@ extension DashboardWidget {
         return config
     }
 }
+
+// MARK: - Tap-to-Launch
+
+/// Widgets that aren't otherwise interactive can launch an app when tapped
+/// (config key "launchApp"; clearing the field disables it). These are the
+/// out-of-the-box pairings; every other widget starts with none.
+public enum WidgetLaunch {
+    public static let configKey = "launchApp"
+    /// Widgets whose taps already do something keep their behavior.
+    public static let excluded: Set<String> = ["cicd-runs"]
+
+    public static func defaultApp(for widgetId: String) -> String {
+        switch widgetId {
+        case "process-list": "Activity Monitor"
+        case "storage-bars": "DaisyDisk"
+        case "clock": "Calendar"
+        default: ""
+        }
+    }
+
+    /// Launches by app name from the standard app folders; a configured app
+    /// that isn't installed (DaisyDisk, say) falls back to Finder.
+    @MainActor
+    public static func launch(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        let fm = FileManager.default
+        let candidates = [
+            "/Applications/\(trimmed).app",
+            "/System/Applications/\(trimmed).app",
+            "/System/Applications/Utilities/\(trimmed).app",
+        ]
+        if let path = candidates.first(where: { fm.fileExists(atPath: $0) }) {
+            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
+        } else if trimmed != "Finder" {
+            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+        }
+    }
+}

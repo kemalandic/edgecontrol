@@ -9,6 +9,7 @@ struct GridPageView: View {
     let gridRows: Int
     @Binding var editMode: Bool
     @ObservedObject var layoutEngine: LayoutEngine
+    @EnvironmentObject private var model: AppModel
 
     // Drag state
     @State private var draggingInstanceId: String?
@@ -165,10 +166,18 @@ struct GridPageView: View {
                         }
                         .offset(isDragging ? dragOffset : .zero)
                         .position(x: x + w / 2, y: y + h / 2)
-                        // Tap selects; selection floats the widget above any
-                        // staged overlap so ITS handles are the clickable ones.
-                        .onTapGesture {
-                            if editMode { selectedInstanceId = placement.instanceId }
+                        // Tap: in edit mode selects (selection floats the
+                        // widget above staged overlaps so its handles win);
+                        // otherwise launches the widget's configured app.
+                        // Widget-internal zones are smaller and win hit-tests.
+                        .touchTappable(id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry) {
+                            Task { @MainActor in
+                                if editMode {
+                                    selectedInstanceId = placement.instanceId
+                                } else {
+                                    WidgetLaunch.launch(launchTarget(for: placement))
+                                }
+                            }
                         }
                         .gesture(editMode ? dragGesture(placement: placement, cellW: cellW, cellH: cellH) : nil)
                         .zIndex(isDragging || isResizing ? 100 : isSelected && editMode ? 50 : 0)
@@ -198,6 +207,13 @@ struct GridPageView: View {
                 }
             }
         }
+    }
+
+    /// The app a tap on this widget should open: explicit config first,
+    /// per-widget default second; empty means no launcher.
+    private func launchTarget(for placement: WidgetPlacement) -> String {
+        guard !WidgetLaunch.excluded.contains(placement.widgetId) else { return "" }
+        return placement.config.string(WidgetLaunch.configKey, default: WidgetLaunch.defaultApp(for: placement.widgetId))
     }
 
     // MARK: - Drag Gesture
