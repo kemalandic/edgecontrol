@@ -115,9 +115,18 @@ struct GridPageView: View {
                         let h = CGFloat(placement.height) * cellH
 
                         ZStack {
+                            // Placement identity rides along in the config so
+                            // self-editing widgets (sticky note) can write
+                            // their state back through the layout engine.
+                            let cfg: WidgetConfig = {
+                                var c = placement.config
+                                c["_pageId"] = .string(page.id)
+                                c["_instanceId"] = .string(placement.instanceId)
+                                return c
+                            }()
                             AnyView(widget.body(
                                 size: WidgetSize(width: placement.width, height: placement.height),
-                                config: placement.config
+                                config: cfg
                             ))
                             .padding(CGFloat(layoutEngine.document.globalSettings.theme.widgetGap))
                         }
