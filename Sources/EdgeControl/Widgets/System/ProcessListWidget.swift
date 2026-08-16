@@ -12,7 +12,10 @@ public final class ProcessListWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(6, 4)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu")),
+        ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu"), options: ["cpu", "memory"]),
+        // "auto" fills whatever height the widget has; a number pins the row
+        // count and scrolls past it.
+        ConfigSchemaEntry(key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"), options: ["auto", "4", "6", "8", "10", "12"]),
     ]
     public let defaultColors = WidgetColors(primary: .purple, secondary: .cyan)
 
@@ -24,13 +27,20 @@ public final class ProcessListWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        ProcessListWidgetView(service: service)
+        ProcessListWidgetView(
+            service: service,
+            sortByMemory: config.string("sortBy", default: "cpu") == "memory",
+            fixedRows: Int(config.string("rows", default: "auto"))
+        )
     }
 }
 
 private struct ProcessListWidgetView: View {
     @ObservedObject var service: ProcessMonitorService
     @Environment(\.themeSettings) private var ts
+    let sortByMemory: Bool
+    /// nil = fit rows to the widget height; a number pins the count.
+    let fixedRows: Int?
 
     // Row = 26pt icon + 2x8pt vertical padding + 1pt divider.
     private let rowHeight: CGFloat = 43
@@ -63,17 +73,22 @@ private struct ProcessListWidgetView: View {
                         .foregroundStyle(Theme.text3(ts))
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    // Service publishes at most 5 processes, so cap there rather than 12.
-                    let maxCount = min(max(Int(geo.size.height / rowHeight), 3), 12)
-                    let visible = Array(service.topProcesses.prefix(maxCount))
-                    VStack(spacing: 0) {
-                        ForEach(visible) { proc in
-                            processRow(proc)
-                            if proc.id != visible.last?.id {
-                                Divider().background(Theme.border(ts)).padding(.leading, 50)
+                    let fitCount = min(max(Int(geo.size.height / rowHeight), 3), 12)
+                    let maxCount = fixedRows ?? fitCount
+                    let ranked = sortByMemory
+                        ? service.topProcesses.sorted { $0.memoryMB > $1.memoryMB }
+                        : service.topProcesses
+                    let visible = Array(ranked.prefix(maxCount))
+                    // Scrolls only when a pinned row count exceeds the height.
+                    TouchScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(visible) { proc in
+                                processRow(proc)
+                                if proc.id != visible.last?.id {
+                                    Divider().background(Theme.border(ts)).padding(.leading, 50)
+                                }
                             }
                         }
-                        Spacer(minLength: 0)
                     }
                 }
             }
