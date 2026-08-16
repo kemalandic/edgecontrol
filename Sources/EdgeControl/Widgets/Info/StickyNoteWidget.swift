@@ -341,16 +341,28 @@ private final class LinkPasteTextView: NSTextView {
     func applyCheckboxCursors() {
         guard let storage = textStorage else { return }
         let ns = storage.string as NSString
-        // Twice the body size: the glyph is a tap target, not a character.
-        let size = defaultFont.pointSize * 2
+        // Enlarged as a tap target — but the line height is clamped to the
+        // body's, because the caret spans the line: an unclamped 2x glyph
+        // made the insertion cursor giant. The box's ink is small within its
+        // em square, so 1.5x fits a body-height line.
+        let size = defaultFont.pointSize * 1.5
         let glyphFont = NSFont(descriptor: defaultFont.fontDescriptor, size: size)
             ?? NSFont.systemFont(ofSize: size)
+        let bodyLine = defaultFont.ascender + abs(defaultFont.descender) + defaultFont.leading
+        let para = NSMutableParagraphStyle()
+        para.minimumLineHeight = bodyLine
+        para.maximumLineHeight = bodyLine * 1.12
         var idx = 0
         while idx < ns.length {
             let ch = ns.substring(with: NSRange(location: idx, length: 1))
             if ch == "☐" || ch == "☑" {
                 storage.addAttributes(
-                    [.cursor: NSCursor.pointingHand, .font: glyphFont],
+                    [
+                        .cursor: NSCursor.pointingHand,
+                        .font: glyphFont,
+                        .paragraphStyle: para,
+                        .baselineOffset: -(size - defaultFont.pointSize) * 0.15,
+                    ],
                     range: NSRange(location: idx, length: 1)
                 )
             }
