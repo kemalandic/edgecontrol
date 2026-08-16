@@ -409,6 +409,26 @@ private final class LinkPasteTextView: NSTextView {
         return p
     }
 
+    /// Column where list text begins; markers sit flush left before a tab.
+    private var listTextIndent: CGFloat { (defaultFont.pointSize * 2.1).rounded() }
+
+    /// List lines: marker, tab, text — one shared text column for bullets,
+    /// checkboxes and numerals, with wrapped lines hanging under the text.
+    private var listParagraph: NSParagraphStyle {
+        let p = NSMutableParagraphStyle()
+        p.paragraphSpacing = defaultFont.pointSize * 0.22
+        p.tabStops = [NSTextTab(textAlignment: .left, location: listTextIndent)]
+        p.defaultTabInterval = listTextIndent
+        p.headIndent = listTextIndent
+        return p
+    }
+
+    private var listAttributes: [NSAttributedString.Key: Any] {
+        var a = bodyAttributes
+        a[.paragraphStyle] = listParagraph
+        return a
+    }
+
     /// Headings breathe a little more, especially above.
     private var headingParagraph: NSParagraphStyle {
         let p = NSMutableParagraphStyle()
@@ -456,7 +476,7 @@ private final class LinkPasteTextView: NSTextView {
     /// One drawn checkbox (attachment) plus its following no-break space.
     private func checkboxMarker(checked: Bool) -> NSAttributedString {
         let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
-        s.append(NSAttributedString(string: "\u{00A0}", attributes: bodyAttributes))
+        s.append(NSAttributedString(string: "\t", attributes: listAttributes))
         return s
     }
 
@@ -495,13 +515,31 @@ private final class LinkPasteTextView: NSTextView {
     /// of normalization so loaded and pasted content is covered too.
     private func applyParagraphSpacing() {
         guard let storage = textStorage, storage.length > 0 else { return }
-        let ns = storage.string as NSString
         let headingThreshold = defaultFont.pointSize * 1.1
         var location = 0
-        while location < ns.length {
+        while location < (storage.string as NSString).length {
+            let ns = storage.string as NSString
             let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
+            var line = ns.substring(with: paragraph)
+            if line.hasSuffix("\n") { line.removeLast() }
+
+            // Migrate legacy no-break-space separators to tabs so old notes
+            // pick up the aligned list column; re-run the same paragraph.
+            if line.count >= 2, line.hasPrefix("•\u{00A0}") || line.hasPrefix("\u{FFFC}\u{00A0}") {
+                storage.replaceCharacters(
+                    in: NSRange(location: paragraph.location + 1, length: 1), with: "\t"
+                )
+                continue
+            }
+
+            let isList = line.hasPrefix("•\t") || line.hasPrefix("\u{FFFC}\t") || {
+                guard let tab = line.firstIndex(of: "\t") else { return false }
+                let head = line[..<tab]
+                return head.hasSuffix(".") && Int(head.dropLast()) != nil && !head.dropLast().isEmpty
+            }()
             let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
-            let style = (firstFont?.pointSize ?? 0) > headingThreshold ? headingParagraph : bodyParagraph
+            let isHeading = (firstFont?.pointSize ?? 0) > headingThreshold
+            let style = isHeading ? headingParagraph : (isList ? listParagraph : bodyParagraph)
             storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
             location = paragraph.location + paragraph.length
         }
@@ -567,11 +605,11 @@ private final class LinkPasteTextView: NSTextView {
         // "- " already became a bullet by the time "[ ]" is typed, so the
         // checkbox forms chain off the bullet. Conversion waits for the
         // CLOSING bracket — converting at "[" would make "[x]" untypeable.
-        case "- [ ]", "- []", "•\u{00A0}[ ]", "•\u{00A0}[]":
+        case "- [ ]", "- []", "•\u{00A0}[ ]", "•\u{00A0}[]", "•\t[ ]", "•\t[]":
             replace(prefixRange, with: checkboxMarker(checked: false))
             return true
         case "- [x]", "- [X]", "•\u{00A0}[x]", "•\u{00A0}[X]",
-             "•\u{00A0}[ x]", "•\u{00A0}[ X]":
+             "•\u{00A0}[ x]", "•\u{00A0}[ X]", "•\t[x]", "•\t[X]", "•\t[ x]", "•\t[ X]":
             replace(prefixRange, with: checkboxMarker(checked: true))
             return true
         case "#", "##", "###":
@@ -582,6 +620,11 @@ private final class LinkPasteTextView: NSTextView {
             typingAttributes = attrs
             return true
         default:
+            // Ordered list: any number followed by "." and a space.
+            if prefix.hasSuffix("."), prefix.count <= 5, Int(prefix.dropLast()) != nil {
+                replace(prefixRange, with: NSAttributedString(string: prefix + "\t", attributes: listAttributes))
+                return true
+            }
             return false
         }
     }
@@ -614,7 +657,7 @@ private final class LinkPasteTextView: NSTextView {
         let prefixRange = NSRange(location: lineRange.location, length: 2)
         let prefix = ns.substring(with: prefixRange)
         guard prefix == "- " || prefix == "* " else { return }
-        replace(prefixRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+        replace(prefixRange, with: NSAttributedString(string: "•\t", attributes: listAttributes))
     }
 
     /// Typing "-" or "*" right after a fresh checkbox marker switches the
@@ -624,12 +667,13 @@ private final class LinkPasteTextView: NSTextView {
         let ns = string as NSString
         let loc = selectedRange().location
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
+        let marker = ns.substring(with: NSRange(location: lineRange.location, length: min(2, ns.length - lineRange.location)))
         guard loc - lineRange.location == 2,
-              ns.substring(with: NSRange(location: lineRange.location, length: 2)) == "\u{FFFC}\u{00A0}",
+              marker == "\u{FFFC}\t" || marker == "\u{FFFC}\u{00A0}",
               storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
         else { return false }
         let markerRange = NSRange(location: lineRange.location, length: 2)
-        replace(markerRange, with: NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes))
+        replace(markerRange, with: NSAttributedString(string: "•\t", attributes: listAttributes))
         return true
     }
 
@@ -642,8 +686,12 @@ private final class LinkPasteTextView: NSTextView {
         var content = ns.substring(with: lineRange)
         if content.hasSuffix("\n") { content.removeLast() }
         let markers = ["•\u{00A0}", "☐\u{00A0}", "☑\u{00A0}", "•", "☐", "☑",
-                       "\u{FFFC}\u{00A0}", "\u{FFFC}"]
-        guard markers.contains(content) else { return false }
+                       "\u{FFFC}\u{00A0}", "\u{FFFC}", "•\t", "\u{FFFC}\t"]
+        let bareNumber: Bool = {
+            let head = content.hasSuffix("\t") ? String(content.dropLast()) : content
+            return head.hasSuffix(".") && Int(head.dropLast()) != nil && !head.dropLast().isEmpty
+        }()
+        guard markers.contains(content) || bareNumber else { return false }
         let deleteRange = NSRange(location: lineRange.location, length: (content as NSString).length)
         replace(deleteRange, with: NSAttributedString(string: ""))
         typingAttributes = bodyAttributes
@@ -674,14 +722,25 @@ private final class LinkPasteTextView: NSTextView {
         let ns = string as NSString
         let loc = selectedRange().location
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
-        let line = ns.substring(with: lineRange)
-        if line.hasPrefix("•\u{00A0}"), line.trimmingCharacters(in: .whitespacesAndNewlines) != "•" {
-            return NSAttributedString(string: "•\u{00A0}", attributes: bodyAttributes)
+        var line = ns.substring(with: lineRange)
+        if line.hasSuffix("\n") { line.removeLast() }
+        func hasContent(after marker: String) -> Bool {
+            !line.dropFirst(marker.count).trimmingCharacters(in: .whitespaces).isEmpty
         }
-        // Drawn checkbox lines start with the attachment character.
-        if line.hasPrefix("\u{FFFC}") {
-            let stripped = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            if stripped != "\u{FFFC}" { return checkboxMarker(checked: false) }
+        for sep in ["\t", "\u{00A0}"] {
+            if line.hasPrefix("•" + sep) {
+                return hasContent(after: "•" + sep)
+                    ? NSAttributedString(string: "•\t", attributes: listAttributes) : nil
+            }
+            if line.hasPrefix("\u{FFFC}" + sep) {
+                return hasContent(after: "\u{FFFC}" + sep) ? checkboxMarker(checked: false) : nil
+            }
+        }
+        // Numbered: "N.<tab>" continues as "N+1.<tab>".
+        if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
+           let n = Int(line[..<tab].dropLast()) {
+            return hasContent(after: String(line[...tab]))
+                ? NSAttributedString(string: "\(n + 1).\t", attributes: listAttributes) : nil
         }
         return nil
     }
