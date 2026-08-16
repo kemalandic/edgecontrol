@@ -15,11 +15,11 @@ public final class StickyNoteWidget: DashboardWidget {
         ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
         ConfigSchemaEntry(key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
                           options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
-        ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.12),
+        ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.5),
                           minValue: 0.0, maxValue: 1.0, step: 0.05),
-        ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("system"),
+        ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("mono"),
                           options: ["system", "rounded", "serif", "mono", "marker", "noteworthy"]),
-        ConfigSchemaEntry(key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(13),
+        ConfigSchemaEntry(key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(18),
                           minValue: 10, maxValue: 24, step: 1),
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
@@ -32,9 +32,9 @@ public final class StickyNoteWidget: DashboardWidget {
             note: config.string("note"),
             rtf: config.string("rtf"),
             colorName: config.string("color", default: "yellow"),
-            tintOpacity: config.double("opacity", default: 0.12),
-            fontFamily: config.string("font", default: "system"),
-            fontSize: config.double("fontSize", default: 13),
+            tintOpacity: config.double("opacity", default: 0.5),
+            fontFamily: config.string("font", default: "mono"),
+            fontSize: config.double("fontSize", default: 18),
             pageId: config.string("_pageId"),
             instanceId: config.string("_instanceId"),
             baseConfig: config
@@ -88,7 +88,7 @@ private struct StickyNoteWidgetView: View {
             textColor: NSColor(Theme.text1(ts)),
             linkColor: NSColor(primary),
             onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
-            onFontSizeReset: { persistFontSize(13) }
+            onFontSizeReset: { persistFontSize(18) }
         )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))
@@ -121,7 +121,7 @@ private struct StickyNoteWidgetView: View {
         }
     }
 
-    /// 13 is the schema default; Cmd+0 snaps back to it.
+    /// 18 is the schema default; Cmd+0 snaps back to it.
     private func persistFontSize(_ newSize: Double) {
         guard !instanceId.isEmpty else { return }
         var config = baseConfig
@@ -372,7 +372,7 @@ private struct RichStickyTextView: NSViewRepresentable {
 /// checkboxes that toggle on click, and a strikethrough action for the
 /// Format menu.
 private final class LinkPasteTextView: NSTextView {
-    var defaultFont: NSFont = .systemFont(ofSize: 13)
+    var defaultFont: NSFont = .systemFont(ofSize: 18)
     var defaultColor: NSColor = .white
     var accentColor: NSColor = .systemYellow
     var onFontSizeDelta: ((Double) -> Void)?
@@ -397,9 +397,18 @@ private final class LinkPasteTextView: NSTextView {
         }
     }
 
+    /// Marker Felt and Noteworthy set their letters so tight on the small
+    /// panel that they blur together; a little tracking keeps them legible.
+    private var noteKern: CGFloat {
+        switch defaultFont.familyName {
+        case "Marker Felt", "Noteworthy": return defaultFont.pointSize * 0.08
+        default: return 0
+        }
+    }
+
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor,
-         .paragraphStyle: bodyParagraph]
+         .paragraphStyle: bodyParagraph, .kern: noteKern]
     }
 
     /// Shared rhythm for body, bullet and checkbox lines.
@@ -586,6 +595,19 @@ private final class LinkPasteTextView: NSTextView {
         }
         applyParagraphSpacing()
         renumberOrderedLists()
+        applyTracking()
+    }
+
+    /// Stamps the family's tracking over everything so loaded and pasted
+    /// text is covered, and clears it when the family doesn't need it.
+    private func applyTracking() {
+        guard let storage = textStorage, storage.length > 0 else { return }
+        let all = NSRange(location: 0, length: storage.length)
+        if noteKern > 0 {
+            storage.addAttribute(.kern, value: noteKern, range: all)
+        } else {
+            storage.removeAttribute(.kern, range: all)
+        }
     }
 
     /// Every paragraph gets its rhythm: heading-sized first characters get
