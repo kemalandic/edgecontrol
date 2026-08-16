@@ -21,11 +21,11 @@ public final class StorageBarsWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        // Full ring needs 3 rows, or 2 rows when at least 4 columns wide;
-        // smaller cells fall back to the bar-only layout.
+        // The ring scales itself to the cell, so every multi-row size keeps
+        // the ring look; only single-row placements fall back to the bar.
         StorageBarsWidgetView(
             metricsService: metricsService,
-            isCompact: size.height == 1 || (size.height == 2 && size.width <= 3),
+            isCompact: size.height == 1,
             isBar: size.height == 1
         )
     }

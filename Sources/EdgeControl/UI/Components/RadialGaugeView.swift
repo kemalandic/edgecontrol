@@ -72,7 +72,7 @@ struct RadialGaugeView: View {
                         .foregroundStyle(Theme.text1(ts))
                         .contentTransition(.numericText())
                         .minimumScaleFactor(0.5)
-                    if !unit.isEmpty && !isCompact {
+                    if !unit.isEmpty {
                         Text(unit)
                             .font(.system(size: unitFontSize, weight: .semibold, design: design))
                             .foregroundStyle(Theme.text2(ts))

@@ -21,7 +21,7 @@ public final class DiskIOWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DiskIOWidgetView(service: service, isCompact: size.height <= 2)
+        DiskIOWidgetView(service: service, isCompact: size.height <= 2, showTitle: size.width >= 3, isBar: size.height <= 1)
     }
 }
 
@@ -29,11 +29,20 @@ private struct DiskIOWidgetView: View {
     @ObservedObject var service: DiskIOService
     @Environment(\.themeSettings) private var ts
     let isCompact: Bool
+    // Keep the widget's name visible wherever it fits: the full header down
+    // to 2 rows, a bare caption in the 1-row layout.
+    let showTitle: Bool
+    let isBar: Bool
 
     var body: some View {
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact {
+            if !isCompact || (showTitle && !isBar) {
                 WidgetHeader(title: "DISK I/O", color: Theme.widgetPrimary("disk-io", ts: ts, default: .blue))
+            } else if showTitle {
+                Text("DISK I/O")
+                    .font(Theme.caption(ts))
+                    .foregroundStyle(Theme.text3(ts))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Spacer(minLength: 0)

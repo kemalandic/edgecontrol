@@ -47,7 +47,6 @@ private struct MemoryGaugeWidgetView: View {
         let totalGB = mem?.memoryTotalGB ?? 0
 
         let unitText: String = {
-            if isCompact { return "" }
             if showUsedGB { return String(format: "%.1f / %.0f GB", usedGB, totalGB) }
             return ""
         }()
