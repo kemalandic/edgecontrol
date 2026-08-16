@@ -4,15 +4,29 @@ import Foundation
 @MainActor
 public final class LayoutEngine: ObservableObject {
     @Published public var document: LayoutDocument
-    @Published public var currentPageIndex: Int = 0 {
-        willSet { navigatingForward = newValue >= currentPageIndex }
+    @Published public var currentPageIndex: Int = 0
+    /// Direction of the next page change; drives the slide transition.
+    /// Published deliberately: SwiftUI animates a removed view with the
+    /// transition recorded at its LAST committed render, so the direction must
+    /// be committed in its own body pass (re-baking the outgoing page's
+    /// transition) before the index moves — see navigate(to:).
+    @Published public private(set) var navigatingForward = true
+
+    /// The one entry point for changing pages. Commits the travel direction
+    /// first, then moves the index on the next runloop tick so both the
+    /// outgoing and incoming pages resolve their transition edges from the
+    /// fresh direction.
+    public func navigate(to target: Int) {
+        let clamped = min(max(target, 0), max(pageCount - 1, 0))
+        guard clamped != currentPageIndex else { return }
+        navigatingForward = clamped >= currentPageIndex
+        // Next runloop tick, not the same transaction: the direction change
+        // must commit its own body pass first. Animation comes from the
+        // shell's .animation(value: currentPageIndex) modifier.
+        Task { @MainActor in
+            self.currentPageIndex = clamped
+        }
     }
-    /// Direction of the last page change; drives the slide transition. Every
-    /// path that changes pages (touch swipe, drag, page dots, page manager)
-    /// assigns currentPageIndex, so the willSet covers them all. Deliberately
-    /// not @Published: the flag must hold its value through the body pass the
-    /// index change triggers, not cause another evaluation mid-animation.
-    public private(set) var navigatingForward = true
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
     /// True while the dashboard is in edit mode. Placement rules relax so
@@ -20,7 +34,14 @@ public final class LayoutEngine: ObservableObject {
     /// pause until the session ends, and a session cannot end (or flush at
     /// quit) while overlaps remain, so an overlapping layout is never
     /// persisted.
-    @Published public var isEditing: Bool = false
+    @Published public var isEditing: Bool = false {
+        didSet {
+            // Entering a session: persist the clean pre-session state first,
+            // so a write debounced moments earlier can't be swallowed by the
+            // session's write suppression.
+            if isEditing && !oldValue { flushSave() }
+        }
+    }
     /// Current dynamic grid — updated from DashboardShell's GeometryReader.
     @Published public var currentGrid: DynamicGrid = .xeneonDefault
 

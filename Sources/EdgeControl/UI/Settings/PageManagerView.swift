@@ -172,7 +172,7 @@ struct PageManagerView: View {
                 // Navigate to this page
                 Button {
                     if let idx = layoutEngine.sortedPages.firstIndex(where: { $0.id == page.id }) {
-                        layoutEngine.currentPageIndex = idx
+                        layoutEngine.navigate(to: idx)
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -196,10 +196,30 @@ struct PageManagerView: View {
                     .frame(maxWidth: .infinity)
                 Spacer()
             } else {
+                // During an edit session the steppers and size menu can stage
+                // collisions (deliberately); this pane has no grid to show
+                // them on, so say it in words.
+                let overlapped = layoutEngine.overlappingInstanceIds(pageId: page.id)
+                if !overlapped.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11))
+                        Text("Overlapping widgets — separate them on the dashboard to finish editing")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(Theme.accentOrange)
+                }
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 4) {
                         ForEach(page.widgets) { placement in
                             widgetRow(pageId: page.id, placement: placement)
+                                .overlay(alignment: .leading) {
+                                    if overlapped.contains(placement.instanceId) {
+                                        RoundedRectangle(cornerRadius: 1.5)
+                                            .fill(Theme.accentOrange)
+                                            .frame(width: 3)
+                                    }
+                                }
                         }
                     }
                 }

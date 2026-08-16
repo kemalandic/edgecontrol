@@ -81,12 +81,10 @@ struct DashboardShell: View {
                         editMode ? nil : DragGesture(minimumDistance: 60)
                             .onEnded { value in
                                 guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                                withAnimation {
-                                    if value.translation.width < 0 && layoutEngine.currentPageIndex < pages.count - 1 {
-                                        layoutEngine.currentPageIndex += 1
-                                    } else if value.translation.width > 0 && layoutEngine.currentPageIndex > 0 {
-                                        layoutEngine.currentPageIndex -= 1
-                                    }
+                                if value.translation.width < 0 {
+                                    layoutEngine.navigate(to: layoutEngine.currentPageIndex + 1)
+                                } else if value.translation.width > 0 {
+                                    layoutEngine.navigate(to: layoutEngine.currentPageIndex - 1)
                                 }
                             }
                     )
@@ -136,9 +134,7 @@ struct DashboardShell: View {
             let clamped = min(max(newPage, 0), layoutEngine.pageCount - 1)
             if model.currentPage != clamped { model.currentPage = clamped }
             if layoutEngine.currentPageIndex != clamped {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    layoutEngine.currentPageIndex = clamped
-                }
+                layoutEngine.navigate(to: clamped)
             }
         }
         // UI swipe → layoutEngine.currentPageIndex → sync back to model
@@ -175,7 +171,7 @@ struct DashboardShell: View {
                     )
                     .animation(.easeInOut(duration: 0.2), value: layoutEngine.currentPageIndex)
                     .onTapGesture {
-                        withAnimation { layoutEngine.currentPageIndex = index }
+                        layoutEngine.navigate(to: index)
                     }
             }
         }
@@ -206,9 +202,7 @@ struct DashboardShell: View {
                             if let idx = layoutEngine.sortedPages.firstIndex(where: {
                                 !layoutEngine.overlappingInstanceIds(pageId: $0.id).isEmpty
                             }) {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    layoutEngine.currentPageIndex = idx
-                                }
+                                layoutEngine.navigate(to: idx)
                             }
                             return
                         }
