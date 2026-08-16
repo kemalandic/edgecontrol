@@ -12,6 +12,10 @@ public final class StickyNoteWidget: DashboardWidget {
 
     public let configSchema: [ConfigSchemaEntry] = [
         ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
+        ConfigSchemaEntry(key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
+                          options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
+        ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.12),
+                          minValue: 0.0, maxValue: 1.0, step: 0.05),
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
 
@@ -21,6 +25,8 @@ public final class StickyNoteWidget: DashboardWidget {
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
         StickyNoteWidgetView(
             note: config.string("note"),
+            colorName: config.string("color", default: "yellow"),
+            tintOpacity: config.double("opacity", default: 0.12),
             pageId: config.string("_pageId"),
             instanceId: config.string("_instanceId"),
             baseConfig: config
@@ -30,6 +36,8 @@ public final class StickyNoteWidget: DashboardWidget {
 
 private struct StickyNoteWidgetView: View {
     let note: String
+    let colorName: String
+    let tintOpacity: Double
     let pageId: String
     let instanceId: String
     let baseConfig: WidgetConfig
@@ -39,7 +47,19 @@ private struct StickyNoteWidgetView: View {
     @State private var draft = ""
     @State private var seeded = false
 
-    private var primary: Color { Theme.widgetPrimary("sticky-note", ts: ts, default: .yellow) }
+    private var primary: Color {
+        switch colorName {
+        case "orange": .orange
+        case "pink": .pink
+        case "red": .red
+        case "green": .green
+        case "mint": .mint
+        case "blue": .blue
+        case "purple": .purple
+        case "gray": .gray
+        default: Theme.widgetPrimary("sticky-note", ts: ts, default: .yellow)
+        }
+    }
 
     var body: some View {
         TextEditor(text: $draft)
@@ -48,7 +68,7 @@ private struct StickyNoteWidgetView: View {
             .scrollContentBackground(.hidden)
             .scrollIndicators(.never)
             .padding(Theme.compactPadding)
-            .background(primary.opacity(0.10))
+            .background(primary.opacity(tintOpacity))
             .widgetCard()
             .onAppear {
                 if !seeded {
