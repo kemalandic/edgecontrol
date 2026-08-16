@@ -1,5 +1,5 @@
+import AppKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 public final class StickyNoteWidget: DashboardWidget {
     public let widgetId = "sticky-note"
@@ -35,8 +35,9 @@ public final class StickyNoteWidget: DashboardWidget {
     }
 }
 
-/// The note stores links as inline markdown — `[title](url)` — and renders
-/// them as tappable titles. No other markdown is interpreted.
+/// Always-editable rich text: links live inline as styled, clickable titles.
+/// Storage stays plain — links serialize to `[title](url)` in the config, so
+/// notes round-trip through export/import and the settings field.
 private struct StickyNoteWidgetView: View {
     let note: String
     let colorName: String
@@ -49,12 +50,7 @@ private struct StickyNoteWidgetView: View {
     @Environment(\.themeSettings) private var ts
     @State private var draft = ""
     @State private var seeded = false
-    @State private var isEditingNote = false
-    // A bare-URL paste prompts for a title; the URL and the cursor offset it
-    // will be inserted at wait here while the prompt is up.
-    @State private var pendingLinkURL: String?
-    @State private var pendingInsertOffset: Int = 0
-    @State private var linkTitle = ""
+    @State private var saveTask: Task<Void, Never>?
 
     private var primary: Color {
         switch colorName {
@@ -71,13 +67,12 @@ private struct StickyNoteWidgetView: View {
     }
 
     var body: some View {
-        Group {
-            if isEditingNote {
-                editor
-            } else {
-                display
-            }
-        }
+        RichStickyTextView(
+            markdown: $draft,
+            font: NSFont.systemFont(ofSize: 13 * ts.fontScale),
+            textColor: NSColor(Theme.text1(ts)),
+            linkColor: NSColor(primary)
+        )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))
         .widgetCard()
@@ -87,103 +82,25 @@ private struct StickyNoteWidgetView: View {
                 seeded = true
             }
         }
-        // External edits (settings field, layout import) win over a
-        // stale on-screen draft only when they actually differ.
+        // External edits (settings field, layout import) win over a stale
+        // on-screen draft only when they actually differ.
         .onChange(of: note) { _, newValue in
             if newValue != draft { draft = newValue }
         }
+        // Debounced: saving mutates the layout document, and doing that per
+        // keystroke re-rendered every widget on the dashboard per character.
         .onChange(of: draft) { _, newValue in
-            save(newValue)
-        }
-        .alert("Name this link", isPresented: Binding(
-            get: { pendingLinkURL != nil },
-            set: { if !$0 { pendingLinkURL = nil } }
-        )) {
-            TextField("Title", text: $linkTitle)
-            Button("Add Link") { commitPendingLink() }
-            Button("Cancel", role: .cancel) { pendingLinkURL = nil }
-        } message: {
-            Text("The note shows the title; the link stays underneath.")
-        }
-    }
-
-    // MARK: - Display mode
-
-    private var display: some View {
-        ZStack(alignment: .topLeading) {
-            // Empty-area clicks enter editing; clicks on rendered text (and
-            // its links) go to the Text itself.
-            Color.white.opacity(0.001)
-                .onTapGesture { isEditingNote = true }
-            if draft.isEmpty {
-                Text("Click to write…")
-                    .font(Theme.body(ts))
-                    .foregroundStyle(Theme.text3(ts))
-            } else {
-                Text(rendered)
-                    .font(Theme.body(ts))
-                    .foregroundStyle(Theme.text1(ts))
-                    .tint(primary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            saveTask?.cancel()
+            saveTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(800))
+                guard !Task.isCancelled else { return }
+                save(newValue)
             }
         }
-        .overlay(alignment: .bottomTrailing) {
-            Button {
-                isEditingNote = true
-            } label: {
-                Image(systemName: "pencil.circle.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.text3(ts).opacity(0.6))
-            }
-            .buttonStyle(.plain)
-            .help("Edit note")
+        .onDisappear {
+            saveTask?.cancel()
+            save(draft)
         }
-    }
-
-    private var rendered: AttributedString {
-        let options = AttributedString.MarkdownParsingOptions(
-            interpretedSyntax: .inlineOnlyPreservingWhitespace
-        )
-        return (try? AttributedString(markdown: draft, options: options))
-            ?? AttributedString(draft)
-    }
-
-    // MARK: - Edit mode
-
-    @ViewBuilder
-    private var editor: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            if #available(macOS 15.0, *) {
-                LinkingTextEditor(
-                    text: $draft,
-                    onPromptLink: { url, offset in
-                        linkTitle = ""
-                        pendingInsertOffset = offset
-                        pendingLinkURL = url
-                    }
-                )
-                .font(Theme.body(ts))
-            } else {
-                TextEditor(text: $draft)
-                    .font(Theme.body(ts))
-                    .scrollContentBackground(.hidden)
-                    .scrollIndicators(.never)
-            }
-            Button("Done") { isEditingNote = false }
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .keyboardShortcut(.escape, modifiers: [])
-        }
-    }
-
-    private func commitPendingLink() {
-        guard let url = pendingLinkURL else { return }
-        let title = linkTitle.trimmingCharacters(in: .whitespaces)
-        let display = title.isEmpty ? (URL(string: url)?.host ?? "link") : title
-        let insertion = "[\(display)](\(url))"
-        let offset = min(max(pendingInsertOffset, 0), draft.count)
-        let idx = draft.index(draft.startIndex, offsetBy: offset)
-        draft.insert(contentsOf: insertion, at: idx)
-        pendingLinkURL = nil
     }
 
     private func save(_ text: String) {
@@ -198,76 +115,146 @@ private struct StickyNoteWidgetView: View {
     }
 }
 
-// MARK: - Linking editor (macOS 15+)
+// MARK: - Rich text view
 
-/// TextEditor with selection tracking and paste interception: pasting a URL
-/// over selected text turns the selection into `[selection](url)`; pasting a
-/// bare URL asks the parent to prompt for a title. Everything else pastes
-/// normally.
-@available(macOS 15.0, *)
-private struct LinkingTextEditor: View {
-    @Binding var text: String
-    /// (url, character offset to insert at) — parent shows the title prompt.
-    let onPromptLink: (String, Int) -> Void
+/// NSTextView wrapper: rich in the view, `[title](url)` in storage. Pasting
+/// a URL over selected text linkifies the selection; pasting a bare URL asks
+/// for a title. Clicking a link opens it, even while editable.
+private struct RichStickyTextView: NSViewRepresentable {
+    @Binding var markdown: String
+    let font: NSFont
+    let textColor: NSColor
+    let linkColor: NSColor
 
-    @State private var selection: TextSelection?
-    @State private var keyMonitor: Any?
-    @FocusState private var focused: Bool
+    func makeNSView(context: Context) -> NSScrollView {
+        let textView = LinkPasteTextView()
+        textView.delegate = context.coordinator
+        textView.isRichText = true
+        textView.allowsUndo = true
+        textView.drawsBackground = false
+        textView.focusRingType = .none
+        textView.isAutomaticQuoteSubstitutionEnabled = false
+        textView.isAutomaticDashSubstitutionEnabled = false
+        textView.textContainerInset = .zero
+        textView.autoresizingMask = [.width]
+        textView.isVerticallyResizable = true
+        textView.textContainer?.widthTracksTextView = true
+        textView.linkTextAttributes = [
+            .foregroundColor: linkColor,
+            .underlineStyle: NSUnderlineStyle.single.rawValue,
+            .cursor: NSCursor.pointingHand,
+        ]
+        applyStyle(to: textView)
+        textView.textStorage?.setAttributedString(
+            Self.parse(markdown, font: font, textColor: textColor)
+        )
 
-    var body: some View {
-        TextEditor(text: $text, selection: $selection)
-            .scrollContentBackground(.hidden)
-            .scrollIndicators(.never)
-            .focused($focused)
-            .onAppear {
-                focused = true
-                // onPasteCommand never fires here: the focused NSTextView
-                // consumes Cmd+V itself. A local monitor sees the keystroke
-                // first; URL pastes are ours, everything else passes through
-                // to the text view's native paste.
-                keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                    guard focused,
-                          event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-                          event.charactersIgnoringModifiers?.lowercased() == "v",
-                          let pasted = NSPasteboard.general.string(forType: .string)?
-                              .trimmingCharacters(in: .whitespacesAndNewlines),
-                          isLink(pasted)
-                    else { return event }
-                    handleLinkPaste(pasted)
-                    return nil
-                }
-            }
-            .onDisappear {
-                if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
-                keyMonitor = nil
-            }
+        let scroll = NSScrollView()
+        scroll.documentView = textView
+        scroll.drawsBackground = false
+        scroll.hasVerticalScroller = false
+        scroll.verticalScrollElasticity = .none
+        return scroll
     }
 
-    private func handleLinkPaste(_ pasted: String) {
-        let selectedRange = currentRange()
-        if let range = selectedRange, !range.isEmpty {
-            // Slack-style: the selected words become the link title.
-            let title = String(text[range])
-            replace(range: range, with: "[\(title)](\(pasted))")
-        } else {
-            let idx = selectedRange?.lowerBound ?? text.endIndex
-            onPromptLink(pasted, text.distance(from: text.startIndex, to: idx))
+    func updateNSView(_ scroll: NSScrollView, context: Context) {
+        guard let textView = scroll.documentView as? LinkPasteTextView else { return }
+        applyStyle(to: textView)
+        // Only reload content on a genuine external change; echoing our own
+        // keystrokes back through setAttributedString would fight the cursor.
+        if Self.serialize(textView.attributedString()) != markdown {
+            textView.textStorage?.setAttributedString(
+                Self.parse(markdown, font: font, textColor: textColor)
+            )
         }
     }
 
-    private func currentRange() -> Range<String.Index>? {
-        guard let selection, case .selection(let range) = selection.indices else { return nil }
-        return range
+    private func applyStyle(to textView: LinkPasteTextView) {
+        textView.font = font
+        textView.textColor = textColor
+        textView.insertionPointColor = textColor
+        textView.defaultFont = font
+        textView.defaultColor = textColor
     }
 
-    private func replace(range: Range<String.Index>?, with insertion: String) {
-        // Selection indices go stale the moment the string changes; clear
-        // first so SwiftUI never resolves them against the new text.
-        selection = nil
-        if let range {
-            text.replaceSubrange(range, with: insertion)
-        } else {
-            text.append(insertion)
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var parent: RichStickyTextView
+        init(_ parent: RichStickyTextView) { self.parent = parent }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+            parent.markdown = RichStickyTextView.serialize(textView.attributedString())
+        }
+
+        func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
+            let url = (link as? URL) ?? (link as? String).flatMap(URL.init(string:))
+            if let url { NSWorkspace.shared.open(url) }
+            return true
+        }
+    }
+
+    // MARK: Markdown round-trip (links only, nothing else interpreted)
+
+    static func serialize(_ attributed: NSAttributedString) -> String {
+        var out = ""
+        attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
+            let text = attributed.attributedSubstring(from: range).string
+            if let link = attrs[.link] {
+                let url = (link as? URL)?.absoluteString ?? (link as? String ?? "")
+                out += "[\(text)](\(url))"
+            } else {
+                out += text
+            }
+        }
+        return out
+    }
+
+    static func parse(_ markdown: String, font: NSFont, textColor: NSColor) -> NSAttributedString {
+        let plain: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        let result = NSMutableAttributedString()
+        var rest = Substring(markdown)
+        let pattern = /\[([^\]]+)\]\(([^)\s]+)\)/
+        while let match = rest.firstMatch(of: pattern) {
+            result.append(NSAttributedString(string: String(rest[rest.startIndex..<match.range.lowerBound]), attributes: plain))
+            var linkAttrs = plain
+            linkAttrs[.link] = String(match.2)
+            result.append(NSAttributedString(string: String(match.1), attributes: linkAttrs))
+            rest = rest[match.range.upperBound...]
+        }
+        result.append(NSAttributedString(string: String(rest), attributes: plain))
+        return result
+    }
+}
+
+/// The paste override that makes URLs become links instead of sprawling text.
+private final class LinkPasteTextView: NSTextView {
+    var defaultFont: NSFont = .systemFont(ofSize: 13)
+    var defaultColor: NSColor = .white
+
+    override func paste(_ sender: Any?) {
+        guard let pasted = NSPasteboard.general.string(forType: .string)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+            isLink(pasted)
+        else {
+            super.paste(sender)
+            return
+        }
+
+        let range = selectedRange()
+        if range.length > 0 {
+            // Slack-style: the selected words become the link title.
+            guard shouldChangeText(in: range, replacementString: nil) else { return }
+            textStorage?.addAttribute(.link, value: pasted, range: range)
+            didChangeText()
+        } else if let title = Self.promptForTitle(defaultTitle: URL(string: pasted)?.host ?? "link") {
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: defaultFont, .foregroundColor: defaultColor, .link: pasted,
+            ]
+            insertText(NSAttributedString(string: title, attributes: attrs), replacementRange: range)
+            // Continued typing must not extend the link.
+            typingAttributes[.link] = nil
         }
     }
 
@@ -275,5 +262,20 @@ private struct LinkingTextEditor: View {
         guard !s.contains(" "), let url = URL(string: s),
               let scheme = url.scheme?.lowercased() else { return false }
         return (scheme == "http" || scheme == "https") && url.host != nil
+    }
+
+    private static func promptForTitle(defaultTitle: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = "Name this link"
+        alert.informativeText = "The note shows the title; the link stays underneath."
+        alert.addButton(withTitle: "Add Link")
+        alert.addButton(withTitle: "Cancel")
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        field.placeholderString = defaultTitle
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let typed = field.stringValue.trimmingCharacters(in: .whitespaces)
+        return typed.isEmpty ? defaultTitle : typed
     }
 }
