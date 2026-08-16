@@ -27,6 +27,7 @@
 		16431CC6842AC82817F6E9C2 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10418B6B91599F07758AB415 /* AppLog.swift */; };
 		166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA543427009BD3A3885D3DFA /* SettingsWindowController.swift */; };
 		16BB7D94190899C7839C72CD /* PulsingDot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D785B83D133CA91BDEC3FF8F /* PulsingDot.swift */; };
+		1859C9AE054890B528C7E6A0 /* StickyNoteWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E436294F9872E45C67C87BD1 /* StickyNoteWidget.swift */; };
 		1CDB3C0856C7915A2DB6D64C /* BluetoothWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */; };
 		1DFA6EA4E2C0BD5D4AC953B2 /* GitHubProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA75D888D822B244E302D7A0 /* GitHubProvider.swift */; };
 		21D9F1ACCE921F7EF6CD43BA /* CICDSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2240A912641ADEE2291695AB /* CICDSettingsTests.swift */; };
@@ -321,6 +322,7 @@
 		E0A1E5BA2EF262CBAB96AA5F /* NowPlayingWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingWidget.swift; sourceTree = "<group>"; };
 		E148907F28B14BDBA1564F42 /* PluginWidgetRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginWidgetRenderer.swift; sourceTree = "<group>"; };
 		E18C869626E48E882115BBEF /* GridPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridPageView.swift; sourceTree = "<group>"; };
+		E436294F9872E45C67C87BD1 /* StickyNoteWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickyNoteWidget.swift; sourceTree = "<group>"; };
 		E4E52144F8D00F3651D539D8 /* TouchScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchScrollView.swift; sourceTree = "<group>"; };
 		E5092E6C4ED1EE637B47295B /* PluginDataBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDataBridge.swift; sourceTree = "<group>"; };
 		E74CFD789D359E31C58B617F /* CICDAccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CICDAccountSheet.swift; sourceTree = "<group>"; };
@@ -717,6 +719,7 @@
 				C405C399C83734FEF0840A72 /* DayProgressWidget.swift */,
 				F5C3DE287AC52599D26E9642 /* MoonPhaseWidget.swift */,
 				A6DE6D98E3E3EBCA851937B3 /* RemindersWidget.swift */,
+				E436294F9872E45C67C87BD1 /* StickyNoteWidget.swift */,
 				ED9B68226BF6912CE2E69CEB /* WeatherWidget.swift */,
 				C5F0BBCB88FED899455146B4 /* WorldClocksWidget.swift */,
 			);
@@ -932,6 +935,7 @@
 				814C3B299B4CDDDCA0C4BD4C /* SSDTempWidget.swift in Sources */,
 				C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */,
 				166763F84C72FF0A1C61360A /* SettingsWindowController.swift in Sources */,
+				1859C9AE054890B528C7E6A0 /* StickyNoteWidget.swift in Sources */,
 				6B428F8C3D8786FC9A3A0DAD /* StorageBarsWidget.swift in Sources */,
 				FE102C99FE9EB3BB68BB2947 /* SystemMetrics.swift in Sources */,
 				3A1A9122DA44B67625E6635A /* SystemMetricsService.swift in Sources */,
