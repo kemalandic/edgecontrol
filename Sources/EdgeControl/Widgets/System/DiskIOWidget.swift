@@ -7,7 +7,7 @@ public final class DiskIOWidget: DashboardWidget {
     public let iconName = "internaldrive"
     public let category: WidgetCategory = .system
     public let requiredServices: Set<ServiceKey> = [.diskIO]
-    public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(1, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -21,7 +21,7 @@ public final class DiskIOWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DiskIOWidgetView(service: service, isCompact: size.height <= 2, showTitle: true, isBar: size.height <= 1)
+        DiskIOWidgetView(service: service, isCompact: size.height <= 2, showTitle: true, isBar: size.height <= 1, isNarrow: size.width <= 1)
     }
 }
 
@@ -33,15 +33,19 @@ private struct DiskIOWidgetView: View {
     // to 2 rows, a bare caption in the 1-row layout.
     let showTitle: Bool
     let isBar: Bool
+    // One grid column: stacked groups under a slim caption.
+    let isNarrow: Bool
 
     var body: some View {
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact || (showTitle && !isBar) {
+            if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "DISK I/O", color: Theme.widgetPrimary("disk-io", ts: ts, default: .blue))
             } else if showTitle {
                 Text("DISK I/O")
                     .font(Theme.caption(ts))
                     .foregroundStyle(Theme.text3(ts))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -58,7 +62,8 @@ private struct DiskIOWidgetView: View {
                     value: formatSpeed(service.writeBytesPerSec),
                     color: Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange
                 ),
-                compact: isCompact
+                compact: isCompact,
+                vertical: isNarrow
             )
 
             Spacer(minLength: 0)

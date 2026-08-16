@@ -36,13 +36,22 @@ struct RatePairView: View {
     let first: Entry
     let second: Entry
     var compact: Bool = false
+    /// One-column cells stack the groups; anything wider sits side by side.
+    var vertical: Bool = false
 
     @Environment(\.themeSettings) private var ts
 
     var body: some View {
-        HStack(spacing: 12) {
-            group(first)
-            group(second)
+        if vertical {
+            VStack(alignment: .leading, spacing: 8) {
+                group(first)
+                group(second)
+            }
+        } else {
+            HStack(spacing: 12) {
+                group(first)
+                group(second)
+            }
         }
     }
 

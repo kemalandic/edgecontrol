@@ -7,7 +7,7 @@ public final class NetworkStatsWidget: DashboardWidget {
     public let iconName = "network"
     public let category: WidgetCategory = .network
     public let requiredServices: Set<ServiceKey> = [.network]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 1), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(1, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -25,6 +25,7 @@ public final class NetworkStatsWidget: DashboardWidget {
             service: service,
             isCompact: size.height <= 2,
             isBar: size.height <= 1,
+            isNarrow: size.width <= 1,
             showTitle: true,
             showCompactTotals: size.width >= 5 && size.height >= 2
         )
@@ -38,6 +39,8 @@ private struct NetworkStatsWidgetView: View {
     // Single grid row: the stacked DOWN/UP rows would overflow ~112px of
     // interior height at larger font scales, so render them side by side.
     let isBar: Bool
+    // One grid column: stacked groups under a slim caption.
+    let isNarrow: Bool
     // Keep the widget's name visible wherever it fits — full header down to
     // 2 rows, a bare caption in the 1-row layout — matching Disk I/O.
     let showTitle: Bool
@@ -50,12 +53,14 @@ private struct NetworkStatsWidgetView: View {
         let secondary = Theme.widgetSecondary("network-stats", ts: ts, default: .cyan) ?? Theme.accentCyan
 
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact || (showTitle && !isBar) {
+            if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "NETWORK", color: primary)
             } else if showTitle {
                 Text("NETWORK")
                     .font(Theme.caption(ts))
                     .foregroundStyle(Theme.text3(ts))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
@@ -73,7 +78,8 @@ private struct NetworkStatsWidgetView: View {
                     value: NetworkMonitorService.formatSpeed(service.uploadSpeed),
                     color: secondary
                 ),
-                compact: isCompact
+                compact: isCompact,
+                vertical: isNarrow
             )
 
             if !isBar && (!isCompact || showCompactTotals) {
