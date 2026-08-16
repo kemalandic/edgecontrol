@@ -190,6 +190,13 @@ private struct CICDRunsWidgetView: View {
                             .font(Theme.label(ts))
                             .foregroundStyle(Theme.text3(ts).opacity(0.6))
                     }
+                    // One commit can fan out to several workflows, and some runs
+                    // share a constant title ("pages build and deployment"), so
+                    // without the workflow name such rows are indistinguishable.
+                    Text("· \(run.workflowName)")
+                        .font(Theme.label(ts))
+                        .foregroundStyle(Theme.text3(ts).opacity(0.6))
+                        .lineLimit(1)
                 }
                 Text(run.title)
                     .font(Theme.body(ts))
