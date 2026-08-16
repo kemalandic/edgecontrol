@@ -310,6 +310,8 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         let strikeItem = NSMenuItem(title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
         strikeItem.keyEquivalentModifierMask = [.command, .shift]
         formatMenu.addItem(strikeItem)
+        formatMenu.addItem(.separator())
+        formatMenu.addItem(NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0"))
         formatMenuItem.submenu = formatMenu
         mainMenu.addItem(formatMenuItem)
         return mainMenu

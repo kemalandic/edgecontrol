@@ -356,6 +356,33 @@ private final class LinkPasteTextView: NSTextView {
         isNormalizing = true
         normalizeCheckboxes()
         isNormalizing = false
+        // Deleting everything must also clear the invisible pen: with no
+        // neighbor to inherit from, stale heading attributes would make an
+        // emptied note type headings forever.
+        if textStorage?.length == 0 {
+            typingAttributes = bodyAttributes
+        }
+    }
+
+    /// Format > Body Text: strips heading size, bold/italic, underline and
+    /// strikethrough from the selection (or the current line), keeping links.
+    @objc func resetToBodyText(_ sender: Any?) {
+        guard let storage = textStorage else { return }
+        let ns = string as NSString
+        var range = selectedRange()
+        if range.length == 0 {
+            range = ns.lineRange(for: NSRange(location: range.location, length: 0))
+        }
+        guard range.length > 0 else {
+            typingAttributes = bodyAttributes
+            return
+        }
+        guard shouldChangeText(in: range, replacementString: nil) else { return }
+        storage.addAttribute(.font, value: defaultFont, range: range)
+        storage.removeAttribute(.strikethroughStyle, range: range)
+        storage.removeAttribute(.underlineStyle, range: range)
+        didChangeText()
+        typingAttributes = bodyAttributes
     }
 
     /// One drawn checkbox (attachment) plus its following no-break space.
