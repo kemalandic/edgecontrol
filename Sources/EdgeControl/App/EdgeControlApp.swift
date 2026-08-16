@@ -311,6 +311,9 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         strikeItem.keyEquivalentModifierMask = [.command, .shift]
         formatMenu.addItem(strikeItem)
         formatMenu.addItem(.separator())
+        // Cmd+Return: the "complete the item" convention (Obsidian, Todoist).
+        formatMenu.addItem(NSMenuItem(title: "Toggle Checked", action: Selector(("toggleChecked:")), keyEquivalent: "\r"))
+        formatMenu.addItem(.separator())
         let bodyTextItem = NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0")
         bodyTextItem.keyEquivalentModifierMask = [.command, .shift]
         formatMenu.addItem(bodyTextItem)

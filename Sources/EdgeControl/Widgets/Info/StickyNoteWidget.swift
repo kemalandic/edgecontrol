@@ -1030,6 +1030,28 @@ private final class LinkPasteTextView: NSTextView {
         super.mouseDown(with: event)
     }
 
+    /// Format > Toggle Checked (Cmd+Return): flips the checkbox of every
+    /// checkbox line the caret or selection touches; other lines are left
+    /// alone. Same write path as clicking the box.
+    @objc func toggleChecked(_ sender: Any?) {
+        guard let storage = textStorage, storage.length > 0 else { return }
+        let ns = string as NSString
+        let lines = ns.lineRange(for: selectedRange())
+        var location = lines.location
+        while location < max(NSMaxRange(lines), lines.location + 1), location < ns.length {
+            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
+            if paragraph.length > 0,
+               let box = storage.attribute(.attachment, at: paragraph.location, effectiveRange: nil) as? CheckboxAttachment {
+                let range = NSRange(location: paragraph.location, length: 1)
+                if shouldChangeText(in: range, replacementString: nil) {
+                    storage.replaceCharacters(in: range, with: checkboxOnly(checked: !box.checked))
+                    didChangeText()
+                }
+            }
+            location = paragraph.location + paragraph.length
+        }
+    }
+
     // MARK: Strikethrough (Format menu)
 
     @objc func toggleStrikethrough(_ sender: Any?) {
