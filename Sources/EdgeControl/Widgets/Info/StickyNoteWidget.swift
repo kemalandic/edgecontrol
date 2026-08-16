@@ -341,12 +341,18 @@ private final class LinkPasteTextView: NSTextView {
     func applyCheckboxCursors() {
         guard let storage = textStorage else { return }
         let ns = storage.string as NSString
+        // Twice the body size: the glyph is a tap target, not a character.
+        let size = defaultFont.pointSize * 2
+        let glyphFont = NSFont(descriptor: defaultFont.fontDescriptor, size: size)
+            ?? NSFont.systemFont(ofSize: size)
         var idx = 0
         while idx < ns.length {
             let ch = ns.substring(with: NSRange(location: idx, length: 1))
             if ch == "☐" || ch == "☑" {
-                storage.addAttribute(.cursor, value: NSCursor.pointingHand,
-                                     range: NSRange(location: idx, length: 1))
+                storage.addAttributes(
+                    [.cursor: NSCursor.pointingHand, .font: glyphFont],
+                    range: NSRange(location: idx, length: 1)
+                )
             }
             idx += 1
         }
@@ -370,6 +376,10 @@ private final class LinkPasteTextView: NSTextView {
         if str == " ", convertLinePrefix() { return }
 
         if str == "\n" {
+            // Enter with the cursor inside a link opens it instead of
+            // breaking the line. Strictly inside: at the link's trailing
+            // edge, return still makes a newline so writing can continue.
+            if openLinkAtCursorInstead() { return }
             // Enter on an empty bullet/checkbox line ends the list: the
             // marker disappears instead of a new one being created.
             if removeBareListMarker() { return }
@@ -421,6 +431,23 @@ private final class LinkPasteTextView: NSTextView {
         default:
             return false
         }
+    }
+
+    /// Pressing return inside a link's text opens the link. Both neighbors
+    /// of the insertion point must carry the same link, so the boundaries
+    /// (just before or just after the link) still insert a newline.
+    private func openLinkAtCursorInstead() -> Bool {
+        guard selectedRange().length == 0, let storage = textStorage else { return false }
+        let loc = selectedRange().location
+        guard loc > 0, loc < storage.length,
+              let before = storage.attribute(.link, at: loc - 1, effectiveRange: nil),
+              let after = storage.attribute(.link, at: loc, effectiveRange: nil)
+        else { return false }
+        let a = (after as? URL)?.absoluteString ?? (after as? String ?? "")
+        let b = (before as? URL)?.absoluteString ?? (before as? String ?? "")
+        guard !a.isEmpty, a == b, let url = URL(string: a) else { return false }
+        NSWorkspace.shared.open(url)
+        return true
     }
 
     /// A line whose full content is "- " becomes a bullet the moment a
