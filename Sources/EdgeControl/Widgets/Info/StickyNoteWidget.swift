@@ -404,37 +404,89 @@ private final class LinkPasteTextView: NSTextView {
 
     /// Shared rhythm for body, bullet and checkbox lines.
     private var bodyParagraph: NSParagraphStyle {
-        let p = NSMutableParagraphStyle()
-        p.paragraphSpacing = defaultFont.pointSize * 0.22
-        return p
+        paragraphStyle(isHeading: false, isList: false, isBullet: false, level: 0)
     }
 
-    /// Column where list text begins; markers sit flush left before a tab.
-    private var listTextIndent: CGFloat { (defaultFont.pointSize * 2.1).rounded() }
+    /// Column where list text begins; markers sit before a tab.
+    private var listTextIndent: CGFloat { (defaultFont.pointSize * 1.8).rounded() }
 
-    /// List lines: marker, tab, text — one shared text column for bullets,
-    /// checkboxes and numerals, with wrapped lines hanging under the text.
+    /// One Tab/Shift-Tab step — the width of the list column, so nested
+    /// list text lands exactly one column further in.
+    private var indentStep: CGFloat { listTextIndent }
+    private let maxIndentLevel = 6
+
+    /// Narrow bullets get inset so they sit centered under the wider
+    /// checkbox column instead of hugging the left edge.
+    private var bulletInset: CGFloat {
+        let bulletWidth = ("•" as NSString).size(withAttributes: [.font: defaultFont]).width
+        return max(0, ((defaultFont.pointSize * 1.2 - bulletWidth) / 2).rounded())
+    }
+
     private var listParagraph: NSParagraphStyle {
-        let p = NSMutableParagraphStyle()
-        p.paragraphSpacing = defaultFont.pointSize * 0.22
-        p.tabStops = [NSTextTab(textAlignment: .left, location: listTextIndent)]
-        p.defaultTabInterval = listTextIndent
-        p.headIndent = listTextIndent
-        return p
-    }
-
-    private var listAttributes: [NSAttributedString.Key: Any] {
-        var a = bodyAttributes
-        a[.paragraphStyle] = listParagraph
-        return a
+        paragraphStyle(isHeading: false, isList: true, isBullet: false, level: 0)
     }
 
     /// Headings breathe a little more, especially above.
     private var headingParagraph: NSParagraphStyle {
+        paragraphStyle(isHeading: true, isList: false, isBullet: false, level: 0)
+    }
+
+    /// Single source of paragraph geometry: spacing rhythm per line kind
+    /// plus the Tab/Shift-Tab indent level. List lines keep one shared
+    /// text column (marker, tab, text) shifted right per level, with
+    /// wrapped lines hanging under the text.
+    private func paragraphStyle(isHeading: Bool, isList: Bool, isBullet: Bool, level: Int) -> NSParagraphStyle {
         let p = NSMutableParagraphStyle()
-        p.paragraphSpacing = defaultFont.pointSize * 0.3
-        p.paragraphSpacingBefore = defaultFont.pointSize * 0.5
+        let indent = CGFloat(level) * indentStep
+        if isHeading {
+            p.paragraphSpacing = defaultFont.pointSize * 0.3
+            p.paragraphSpacingBefore = defaultFont.pointSize * 0.5
+            p.firstLineHeadIndent = indent
+            p.headIndent = indent
+        } else if isList {
+            p.paragraphSpacing = defaultFont.pointSize * 0.22
+            p.firstLineHeadIndent = indent + (isBullet ? bulletInset : 0)
+            p.tabStops = [NSTextTab(textAlignment: .left, location: indent + listTextIndent)]
+            p.defaultTabInterval = listTextIndent
+            p.headIndent = indent + listTextIndent
+        } else {
+            p.paragraphSpacing = defaultFont.pointSize * 0.22
+            p.firstLineHeadIndent = indent
+            p.headIndent = indent
+        }
         return p
+    }
+
+    /// The indent level is never stored separately — it is recovered from
+    /// the geometry of the line's current style, so it survives saves,
+    /// loads and every re-normalization pass.
+    private func indentLevel(of style: NSParagraphStyle?, isList: Bool) -> Int {
+        guard let style else { return 0 }
+        let base = isList
+            ? (style.tabStops.first?.location ?? listTextIndent) - listTextIndent
+            : style.firstLineHeadIndent
+        return max(0, min(maxIndentLevel, Int((base / indentStep).rounded())))
+    }
+
+    /// Leading marker of a line — "•", a drawn checkbox, or "N." — with its
+    /// trailing tab. 0 when the line is not a list item.
+    private func markerLength(of line: String) -> Int {
+        if line.hasPrefix("•\t") || line.hasPrefix("\u{FFFC}\t") { return 2 }
+        guard let tab = line.firstIndex(of: "\t") else { return 0 }
+        let head = line[..<tab]
+        guard head.hasSuffix("."), head.count <= 6, !head.dropLast().isEmpty,
+              Int(head.dropLast()) != nil else { return 0 }
+        return (String(line[...tab]) as NSString).length
+    }
+
+    private var listAttributes: [NSAttributedString.Key: Any] {
+        listAttributes(level: 0)
+    }
+
+    private func listAttributes(level: Int) -> [NSAttributedString.Key: Any] {
+        var a = bodyAttributes
+        a[.paragraphStyle] = paragraphStyle(isHeading: false, isList: true, isBullet: false, level: level)
+        return a
     }
 
     override func didChangeText() {
@@ -473,10 +525,13 @@ private final class LinkPasteTextView: NSTextView {
         typingAttributes = bodyAttributes
     }
 
-    /// One drawn checkbox (attachment) plus its following no-break space.
-    private func checkboxMarker(checked: Bool) -> NSAttributedString {
+    /// One drawn checkbox (attachment) plus its following tab.
+    private func checkboxMarker(checked: Bool, level: Int = 0) -> NSAttributedString {
         let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
-        s.append(NSAttributedString(string: "\t", attributes: listAttributes))
+        s.append(NSAttributedString(string: "\t", attributes: listAttributes(level: level)))
+        s.addAttribute(.paragraphStyle,
+                       value: paragraphStyle(isHeading: false, isList: true, isBullet: false, level: level),
+                       range: NSRange(location: 0, length: s.length))
         return s
     }
 
@@ -532,14 +587,15 @@ private final class LinkPasteTextView: NSTextView {
                 continue
             }
 
-            let isList = line.hasPrefix("•\t") || line.hasPrefix("\u{FFFC}\t") || {
-                guard let tab = line.firstIndex(of: "\t") else { return false }
-                let head = line[..<tab]
-                return head.hasSuffix(".") && Int(head.dropLast()) != nil && !head.dropLast().isEmpty
-            }()
+            let isList = markerLength(of: line) > 0
             let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
-            let isHeading = (firstFont?.pointSize ?? 0) > headingThreshold
-            let style = isHeading ? headingParagraph : (isList ? listParagraph : bodyParagraph)
+            let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+            let style = paragraphStyle(
+                isHeading: !isList && (firstFont?.pointSize ?? 0) > headingThreshold,
+                isList: isList,
+                isBullet: line.hasPrefix("•\t"),
+                level: indentLevel(of: existing, isList: isList)
+            )
             storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
             location = paragraph.location + paragraph.length
         }
@@ -591,42 +647,96 @@ private final class LinkPasteTextView: NSTextView {
         super.insertText(insertString, replacementRange: replacementRange)
     }
 
-    /// "- " → bullet, "- [ ] " → checkbox, "# "/"## "/"### " → heading.
-    /// Called when a space is typed; returns true when the space is consumed.
+    /// Tab and Shift-Tab indent and unindent the line the caret is on (or
+    /// every line the selection touches), wherever the caret sits in it.
+    override func insertTab(_ sender: Any?) { changeIndent(by: 1) }
+    override func insertBacktab(_ sender: Any?) { changeIndent(by: -1) }
+
+    private func changeIndent(by delta: Int) {
+        guard let storage = textStorage else { return }
+        let ns = storage.string as NSString
+        let lines = ns.lineRange(for: selectedRange())
+        // The empty last line has no characters to restyle; move the pen.
+        guard lines.length > 0 else {
+            let existing = typingAttributes[.paragraphStyle] as? NSParagraphStyle
+            let level = max(0, min(maxIndentLevel, indentLevel(of: existing, isList: false) + delta))
+            typingAttributes[.paragraphStyle] = paragraphStyle(isHeading: false, isList: false, isBullet: false, level: level)
+            return
+        }
+        guard shouldChangeText(in: lines, replacementString: nil) else { return }
+        var location = lines.location
+        while location < NSMaxRange(lines) {
+            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
+            var line = ns.substring(with: paragraph)
+            if line.hasSuffix("\n") { line.removeLast() }
+            let isList = markerLength(of: line) > 0
+            let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
+            let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+            let level = max(0, min(maxIndentLevel, indentLevel(of: existing, isList: isList) + delta))
+            storage.addAttribute(.paragraphStyle, value: paragraphStyle(
+                isHeading: !isList && (firstFont?.pointSize ?? 0) > defaultFont.pointSize * 1.1,
+                isList: isList,
+                isBullet: line.hasPrefix("•\t"),
+                level: level
+            ), range: paragraph)
+            location = paragraph.location + paragraph.length
+        }
+        didChangeText()
+    }
+
+    /// Space-triggered conversions: "[ ]" forms → checkbox, "#" → heading,
+    /// "N." → numbered item. On a line that is already a list item the
+    /// typed marker replaces the existing one, so any list type turns into
+    /// any other by typing its trigger right after the marker.
     private func convertLinePrefix() -> Bool {
         let ns = string as NSString
         let loc = selectedRange().location
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         guard loc >= lineRange.location else { return false }
-        let prefixRange = NSRange(location: lineRange.location, length: loc - lineRange.location)
-        let prefix = ns.substring(with: prefixRange)
+        var fullLine = ns.substring(with: lineRange)
+        if fullLine.hasSuffix("\n") { fullLine.removeLast() }
+        let markerLen = markerLength(of: fullLine)
+        guard loc - lineRange.location >= markerLen else { return false }
+        let typed = ns.substring(with: NSRange(
+            location: lineRange.location + markerLen,
+            length: loc - lineRange.location - markerLen
+        ))
+        // Replacements swallow the existing marker along with the trigger.
+        let fullRange = NSRange(location: lineRange.location, length: loc - lineRange.location)
+        let existing = textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let level = indentLevel(of: existing, isList: markerLen > 0)
 
-        switch prefix {
-        // "- " already became a bullet by the time "[ ]" is typed, so the
-        // checkbox forms chain off the bullet. Conversion waits for the
-        // CLOSING bracket — converting at "[" would make "[x]" untypeable.
-        case "- [ ]", "- []", "•\u{00A0}[ ]", "•\u{00A0}[]", "•\t[ ]", "•\t[]":
-            replace(prefixRange, with: checkboxMarker(checked: false))
+        // Checkbox conversion waits for the CLOSING bracket — converting at
+        // "[" would make "[x]" untypeable. Bare bracket forms need an
+        // existing marker; on plain text the leading "- " is required.
+        let boxForms: [String: Bool] = ["[ ]": false, "[]": false,
+                                        "[x]": true, "[X]": true, "[ x]": true, "[ X]": true]
+        let boxTyped = typed.hasPrefix("- ") ? String(typed.dropFirst(2)) : typed
+        if let checked = boxForms[boxTyped], typed.hasPrefix("- ") || markerLen > 0 {
+            replace(fullRange, with: checkboxMarker(checked: checked, level: level))
             return true
-        case "- [x]", "- [X]", "•\u{00A0}[x]", "•\u{00A0}[X]",
-             "•\u{00A0}[ x]", "•\u{00A0}[ X]", "•\t[x]", "•\t[X]", "•\t[ x]", "•\t[ X]":
-            replace(prefixRange, with: checkboxMarker(checked: true))
-            return true
-        case "#", "##", "###":
-            replace(prefixRange, with: NSAttributedString(string: ""))
+        }
+        if typed == "#" || typed == "##" || typed == "###" {
+            replace(fullRange, with: NSAttributedString(string: ""))
             var attrs = bodyAttributes
-            attrs[.font] = headingFont(prefix.count)
+            attrs[.font] = headingFont(typed.count)
             attrs[.paragraphStyle] = headingParagraph
             typingAttributes = attrs
             return true
-        default:
-            // Ordered list: any number followed by "." and a space.
-            if prefix.hasSuffix("."), prefix.count <= 5, Int(prefix.dropLast()) != nil {
-                replace(prefixRange, with: NSAttributedString(string: prefix + "\t", attributes: listAttributes))
-                return true
-            }
-            return false
         }
+        // "- "/"* " on a plain line stays deferred (convertDashIfPending);
+        // on an existing list item it switches the item to a bullet now.
+        if typed == "-" || typed == "*", markerLen > 0 {
+            replace(fullRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
+            return true
+        }
+        // Ordered list: any number followed by "." and a space.
+        if typed.hasSuffix("."), typed.count <= 5, !typed.dropLast().isEmpty,
+           Int(typed.dropLast()) != nil {
+            replace(fullRange, with: NSAttributedString(string: typed + "\t", attributes: listAttributes(level: level)))
+            return true
+        }
+        return false
     }
 
     /// Pressing return inside a link's text opens the link. Both neighbors
@@ -657,7 +767,9 @@ private final class LinkPasteTextView: NSTextView {
         let prefixRange = NSRange(location: lineRange.location, length: 2)
         let prefix = ns.substring(with: prefixRange)
         guard prefix == "- " || prefix == "* " else { return }
-        replace(prefixRange, with: NSAttributedString(string: "•\t", attributes: listAttributes))
+        let existing = textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let level = indentLevel(of: existing, isList: false)
+        replace(prefixRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
     }
 
     /// Typing "-" or "*" right after a fresh checkbox marker switches the
@@ -673,7 +785,9 @@ private final class LinkPasteTextView: NSTextView {
               storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
         else { return false }
         let markerRange = NSRange(location: lineRange.location, length: 2)
-        replace(markerRange, with: NSAttributedString(string: "•\t", attributes: listAttributes))
+        let existing = storage.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let level = indentLevel(of: existing, isList: true)
+        replace(markerRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
         return true
     }
 
@@ -727,20 +841,25 @@ private final class LinkPasteTextView: NSTextView {
         func hasContent(after marker: String) -> Bool {
             !line.dropFirst(marker.count).trimmingCharacters(in: .whitespaces).isEmpty
         }
+        // The new item continues at the same indent level as the current one.
+        let existing = lineRange.length > 0
+            ? textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+            : nil
+        let level = indentLevel(of: existing, isList: true)
         for sep in ["\t", "\u{00A0}"] {
             if line.hasPrefix("•" + sep) {
                 return hasContent(after: "•" + sep)
-                    ? NSAttributedString(string: "•\t", attributes: listAttributes) : nil
+                    ? NSAttributedString(string: "•\t", attributes: listAttributes(level: level)) : nil
             }
             if line.hasPrefix("\u{FFFC}" + sep) {
-                return hasContent(after: "\u{FFFC}" + sep) ? checkboxMarker(checked: false) : nil
+                return hasContent(after: "\u{FFFC}" + sep) ? checkboxMarker(checked: false, level: level) : nil
             }
         }
         // Numbered: "N.<tab>" continues as "N+1.<tab>".
         if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
            let n = Int(line[..<tab].dropLast()) {
             return hasContent(after: String(line[...tab]))
-                ? NSAttributedString(string: "\(n + 1).\t", attributes: listAttributes) : nil
+                ? NSAttributedString(string: "\(n + 1).\t", attributes: listAttributes(level: level)) : nil
         }
         return nil
     }
