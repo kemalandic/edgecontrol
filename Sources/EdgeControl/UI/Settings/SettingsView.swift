@@ -88,6 +88,9 @@ struct SettingsView: View {
             .frame(width: 140)
             .padding(14)
             .background(Color.black.opacity(0.3))
+            .onReceive(layoutEngine.$settingsFocus) { focus in
+                if focus != nil { selectedTab = .pages }
+            }
 
             // Divider
             Rectangle()

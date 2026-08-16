@@ -3,6 +3,15 @@ import Foundation
 /// Manages grid layout: validates placements, detects collisions, finds available cells.
 @MainActor
 public final class LayoutEngine: ObservableObject {
+    public struct SettingsFocus: Equatable {
+        public let pageId: String
+        public let instanceId: String
+        public init(pageId: String, instanceId: String) {
+            self.pageId = pageId
+            self.instanceId = instanceId
+        }
+    }
+
     @Published public var document: LayoutDocument
     @Published public var currentPageIndex: Int = 0
     /// The one entry point for changing pages. With offset-based paging the
@@ -15,6 +24,10 @@ public final class LayoutEngine: ObservableObject {
     }
     /// Increments on every layout mutation (widget add/remove/move). Used to trigger service activation updates.
     @Published public var layoutVersion: Int = 0
+    /// One-shot deep link from a widget's hover gear into Settings: the
+    /// settings views consume it (Pages tab, page selected, widget row
+    /// scrolled into view) and clear it.
+    @Published public var settingsFocus: SettingsFocus?
     /// True while the dashboard is in edit mode. Placement rules relax so
     /// widgets can overlap as a staging state while rearranging; store writes
     /// pause until the session ends, and a session cannot end (or flush at

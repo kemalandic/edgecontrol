@@ -25,6 +25,7 @@ struct GridPageView: View {
     // Selection: with overlaps staged, the selected widget renders on top so
     // its resize handle and remove button are the reachable ones.
     @State private var selectedInstanceId: String?
+    @State private var hoveredInstanceId: String?
 
     // Resize state
     @State private var resizingInstanceId: String?
@@ -171,6 +172,36 @@ struct GridPageView: View {
                                     // Resize handle (bottom-right corner)
                                     resizeHandle(placement: placement, cellW: cellW, cellH: cellH)
                                 }
+                            }
+                        }
+                        // Mouse-only affordance: a gear fades in at the top
+                        // right on hover and deep-links to this widget's
+                        // settings. Hidden entirely (not just transparent)
+                        // when unhovered so it can't swallow touches.
+                        .overlay(alignment: .topTrailing) {
+                            if !editMode, hoveredInstanceId == placement.instanceId {
+                                Button {
+                                    layoutEngine.settingsFocus = LayoutEngine.SettingsFocus(
+                                        pageId: page.id, instanceId: placement.instanceId
+                                    )
+                                    SettingsWindowController.shared.show()
+                                } label: {
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.system(size: 13))
+                                        .foregroundStyle(.white.opacity(0.85))
+                                        .padding(5)
+                                        .background(Circle().fill(Color.black.opacity(0.55)))
+                                }
+                                .buttonStyle(.plain)
+                                .padding(6)
+                                .transition(.opacity)
+                            }
+                        }
+                        .onHover { inside in
+                            if inside {
+                                hoveredInstanceId = placement.instanceId
+                            } else if hoveredInstanceId == placement.instanceId {
+                                hoveredInstanceId = nil
                             }
                         }
                         // Tap: in edit mode selects (selection floats the

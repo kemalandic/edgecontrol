@@ -72,6 +72,9 @@ struct PageManagerView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .onReceive(layoutEngine.$settingsFocus) { focus in
+            if let focus { selectedPageId = focus.pageId }
+        }
         .onAppear {
             // Auto-select active page
             if selectedPageId == nil, let page = layoutEngine.currentPage {
@@ -209,17 +212,30 @@ struct PageManagerView: View {
                     }
                     .foregroundStyle(Theme.accentOrange)
                 }
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 4) {
-                        ForEach(page.widgets) { placement in
-                            widgetRow(pageId: page.id, placement: placement)
-                                .overlay(alignment: .leading) {
-                                    if overlapped.contains(placement.instanceId) {
-                                        RoundedRectangle(cornerRadius: 1.5)
-                                            .fill(Theme.accentOrange)
-                                            .frame(width: 3)
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 4) {
+                            ForEach(page.widgets) { placement in
+                                widgetRow(pageId: page.id, placement: placement)
+                                    .overlay(alignment: .leading) {
+                                        if overlapped.contains(placement.instanceId) {
+                                            RoundedRectangle(cornerRadius: 1.5)
+                                                .fill(Theme.accentOrange)
+                                                .frame(width: 3)
+                                        }
                                     }
-                                }
+                                    .id(placement.instanceId)
+                            }
+                        }
+                    }
+                    // @Published replays the pending focus to new
+                    // subscribers, so this fires even when the pane is
+                    // created by the focus itself (page just selected).
+                    .onReceive(layoutEngine.$settingsFocus) { focus in
+                        guard let focus, focus.pageId == page.id else { return }
+                        layoutEngine.settingsFocus = nil
+                        DispatchQueue.main.async {
+                            withAnimation { proxy.scrollTo(focus.instanceId, anchor: .top) }
                         }
                     }
                 }
