@@ -267,6 +267,9 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
     public let minValue: Double?
     public let maxValue: Double?
     public let step: Double?
+    /// Optional caption rendered under the control explaining what the
+    /// setting actually does.
+    public let help: String?
 
     public init(
         key: String,
@@ -276,7 +279,8 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         options: [String]? = nil,
         minValue: Double? = nil,
         maxValue: Double? = nil,
-        step: Double? = nil
+        step: Double? = nil,
+        help: String? = nil
     ) {
         self.key = key
         self.label = label
@@ -286,6 +290,7 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         self.minValue = minValue
         self.maxValue = maxValue
         self.step = step
+        self.help = help
     }
 }
 
@@ -296,6 +301,8 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case text
     case picker
     case colorPicker
+    /// A time of day, stored as an "HH:mm" string.
+    case time
 }
 
 // MARK: - Service Key
@@ -314,6 +321,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case diskIO         // DiskIOService
     case process        // ProcessMonitorService
     case cicd           // CICDService — GitHub, Forgejo, any future host
+    case reminders      // RemindersService (EventKit)
 }
 
 // MARK: - Dashboard Widget Protocol
@@ -359,5 +367,72 @@ extension DashboardWidget {
             config[entry.key] = entry.defaultValue
         }
         return config
+    }
+}
+
+// MARK: - Tap-to-Launch
+
+/// Widgets that aren't otherwise interactive can launch an app when tapped
+/// (config key "launchApp"; clearing the field disables it). These are the
+/// out-of-the-box pairings; every other widget starts with none.
+public enum WidgetLaunch {
+    public static let configKey = "launchApp"
+    /// Extra setting shown only when the launch target is Activity Monitor.
+    public static let tabConfigKey = "launchAppTab"
+    /// Activity Monitor's fixed tab set, in SelectedTab index order.
+    public static let activityMonitorTabs = ["CPU", "Memory", "Energy", "Disk", "Network"]
+
+    public static func isActivityMonitor(_ name: String) -> Bool {
+        name.contains("Activity Monitor")
+    }
+    /// Widgets whose taps already do something keep their behavior.
+    public static let excluded: Set<String> = ["cicd-runs"]
+
+    public static func defaultApp(for widgetId: String) -> String {
+        switch widgetId {
+        case "process-list": "Activity Monitor"
+        case "storage-bars": "DaisyDisk"
+        case "clock": "Calendar"
+        case "reminders": "Reminders"
+        default: ""
+        }
+    }
+
+    /// Launches by app name from the standard app folders; a configured app
+    /// that isn't installed (DaisyDisk, say) falls back to Finder.
+    @MainActor
+    public static func launch(_ name: String, tab: String = "") {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        // Activity Monitor reads its tab from its own defaults at launch, so
+        // setting SelectedTab first opens the chosen tab — no scripting or
+        // extra permissions. (Already-running instances keep their tab.)
+        if isActivityMonitor(trimmed), let index = activityMonitorTabs.firstIndex(of: tab) {
+            CFPreferencesSetAppValue("SelectedTab" as CFString, index as CFNumber, "com.apple.ActivityMonitor" as CFString)
+            CFPreferencesAppSynchronize("com.apple.ActivityMonitor" as CFString)
+        }
+        let fm = FileManager.default
+        // A full path (from Browse… or typed, tilde ok) is used directly.
+        // No quoting concerns: this never touches a shell — NSWorkspace takes
+        // a file URL, and URLs carry spaces natively.
+        let expanded = NSString(string: trimmed).expandingTildeInPath
+        if expanded.hasPrefix("/") {
+            if fm.fileExists(atPath: expanded) {
+                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: expanded), configuration: NSWorkspace.OpenConfiguration())
+            } else {
+                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+            }
+            return
+        }
+        let candidates = [
+            "/Applications/\(trimmed).app",
+            "/System/Applications/\(trimmed).app",
+            "/System/Applications/Utilities/\(trimmed).app",
+        ]
+        if let path = candidates.first(where: { fm.fileExists(atPath: $0) }) {
+            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
+        } else if trimmed != "Finder" {
+            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+        }
     }
 }

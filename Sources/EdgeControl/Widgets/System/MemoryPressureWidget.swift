@@ -60,7 +60,7 @@ private struct MemoryPressureWidgetView: View {
             displayValue: String(format: "%.0f%%", pressure),
             unit: swapText,
             accentColor: primary,
-            showLabel: showLabel && !isCompact
+            showLabel: showLabel
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(Theme.compactPadding)

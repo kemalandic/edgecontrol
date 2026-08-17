@@ -13,36 +13,33 @@ final class DashboardWindowController {
         history: MetricsHistory,
         pluginManager: PluginManager
     ) {
+        let rootView = AnyView(
+            DashboardShell()
+                .environmentObject(model)
+                .environmentObject(layoutEngine)
+                .environmentObject(registry)
+                .environmentObject(history)
+        )
+
         let dashboardWindow: NSWindow
         if let existing = window {
             dashboardWindow = existing
         } else {
-            let hosting = NSHostingController(
-                rootView: AnyView(
-                    DashboardShell()
-                        .environmentObject(model)
-                        .environmentObject(layoutEngine)
-                        .environmentObject(registry)
-                        .environmentObject(history)
-                )
+            let created = KioskWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 1440, height: 405),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered,
+                defer: false
             )
-            let created = KioskWindow(contentViewController: hosting)
             created.title = "EdgeControl"
-            created.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             created.isReleasedWhenClosed = false
-            created.setContentSize(NSSize(width: 1440, height: 405))
+            created.contentView = KioskHostingView(rootView: rootView)
             window = created
             dashboardWindow = created
         }
 
-        if let hosting = dashboardWindow.contentViewController as? NSHostingController<AnyView> {
-            hosting.rootView = AnyView(
-                DashboardShell()
-                    .environmentObject(model)
-                    .environmentObject(layoutEngine)
-                    .environmentObject(registry)
-                    .environmentObject(history)
-            )
+        if let hosting = dashboardWindow.contentView as? KioskHostingView<AnyView> {
+            hosting.rootView = rootView
         }
 
         let placed = WindowPlacement.configure(
@@ -270,6 +267,63 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         appMenu.addItem(quitItem)
         appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
+
+        let fileMenuItem = NSMenuItem()
+        let fileMenu = NSMenu(title: "File")
+        let closeItem = NSMenuItem(title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        closeItem.keyEquivalentModifierMask = [.command]
+        fileMenu.addItem(closeItem)
+        fileMenuItem.submenu = fileMenu
+        mainMenu.addItem(fileMenuItem)
+
+        // Editing shortcuts are MENU key equivalents on macOS — without an
+        // Edit menu, Cmd+A/C/V/X/Z reach no text field in the whole app.
+        let editMenuItem = NSMenuItem()
+        let editMenu = NSMenu(title: "Edit")
+        let undoItem = NSMenuItem(title: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        editMenu.addItem(undoItem)
+        let redoItem = NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(redoItem)
+        editMenu.addItem(.separator())
+        editMenu.addItem(NSMenuItem(title: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+        editMenu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+        editMenu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+        editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+        editMenuItem.submenu = editMenu
+        mainMenu.addItem(editMenuItem)
+
+        // Bold/Italic ride NSFontManager like the standard Format menu;
+        // Underline goes down the responder chain; Strikethrough is our own
+        // selector on the sticky note's text view.
+        let formatMenuItem = NSMenuItem()
+        let formatMenu = NSMenu(title: "Format")
+        let boldItem = NSMenuItem(title: "Bold", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "b")
+        boldItem.target = NSFontManager.shared
+        boldItem.tag = Int(NSFontTraitMask.boldFontMask.rawValue)
+        formatMenu.addItem(boldItem)
+        let italicItem = NSMenuItem(title: "Italic", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "i")
+        italicItem.target = NSFontManager.shared
+        italicItem.tag = Int(NSFontTraitMask.italicFontMask.rawValue)
+        formatMenu.addItem(italicItem)
+        formatMenu.addItem(NSMenuItem(title: "Underline", action: Selector(("underline:")), keyEquivalent: "u"))
+        let strikeItem = NSMenuItem(title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
+        strikeItem.keyEquivalentModifierMask = [.command, .shift]
+        formatMenu.addItem(strikeItem)
+        formatMenu.addItem(.separator())
+        // Cmd+Return: the "complete the item" convention (Obsidian, Todoist).
+        formatMenu.addItem(NSMenuItem(title: "Toggle Checked", action: Selector(("toggleChecked:")), keyEquivalent: "\r"))
+        formatMenu.addItem(.separator())
+        let bodyTextItem = NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0")
+        bodyTextItem.keyEquivalentModifierMask = [.command, .shift]
+        formatMenu.addItem(bodyTextItem)
+        formatMenu.addItem(.separator())
+        // Cmd+= is the key under the + glyph; both read as Cmd+Plus.
+        formatMenu.addItem(NSMenuItem(title: "Bigger", action: Selector(("increaseFontSize:")), keyEquivalent: "="))
+        formatMenu.addItem(NSMenuItem(title: "Smaller", action: Selector(("decreaseFontSize:")), keyEquivalent: "-"))
+        formatMenu.addItem(NSMenuItem(title: "Default Size", action: Selector(("resetFontSize:")), keyEquivalent: "0"))
+        formatMenuItem.submenu = formatMenu
+        mainMenu.addItem(formatMenuItem)
         return mainMenu
     }
 

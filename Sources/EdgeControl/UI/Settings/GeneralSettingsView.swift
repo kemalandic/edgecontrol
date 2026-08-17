@@ -84,6 +84,21 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // System panel coexistence
+            settingsToggle(
+                "Allow System Panels Over Dashboard",
+                subtitle: "Clipboard managers (Paste) and similar hotkey panels can appear above the dashboard; the menu bar can too",
+                icon: "rectangle.stack",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.allowSystemPanels },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.allowSystemPanels = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                    }
+                )
+            )
+
             // Units
             HStack(spacing: 10) {
                 Image(systemName: "ruler")
@@ -207,11 +222,13 @@ struct GeneralSettingsView: View {
 
     private func exportLayout() {
         let store = LayoutStore()
-        guard let data = store.exportData() else { return }
+        guard let data = store.exportData(layoutEngine.document) else { return }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "EdgeControl-Layout.json"
         panel.allowedContentTypes = [.json]
-        if panel.runModal() == .OK, let url = panel.url {
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
             try? data.write(to: url, options: .atomic)
         }
     }
@@ -220,7 +237,9 @@ struct GeneralSettingsView: View {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
-        if panel.runModal() == .OK, let url = panel.url {
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
             guard let data = try? Data(contentsOf: url) else { return }
             let store = LayoutStore()
             if let doc = store.importData(data) {

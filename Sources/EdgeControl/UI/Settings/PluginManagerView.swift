@@ -147,7 +147,8 @@ struct PluginManagerView: View {
             panel.allowsMultipleSelection = false
             panel.canChooseDirectories = true
             panel.canChooseFiles = true
-            panel.begin { response in
+            guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+            panel.beginSheetModal(for: win) { response in
                 guard response == .OK, let url = panel.url else { return }
                 Task { @MainActor [pluginManager, registry] in
                     pluginManager.installPlugin(from: url) { success in

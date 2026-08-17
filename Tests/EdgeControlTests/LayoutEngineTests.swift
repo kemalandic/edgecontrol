@@ -10,8 +10,10 @@ final class LayoutEngineTests: XCTestCase {
     private var engine: LayoutEngine!
     private var pageId: String!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    // XCTest's throwing set-up hooks are nonisolated, so on a @MainActor
+    // test case they cannot touch the main-actor state they exist to build.
+    // The async hooks inherit the class's isolation, so use those instead.
+    override func setUp() async throws {
         directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("LayoutEngineTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -22,11 +24,10 @@ final class LayoutEngineTests: XCTestCase {
         pageId = engine.document.pages[0].id
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         engine = nil
         try? FileManager.default.removeItem(at: directory)
         directory = nil
-        try super.tearDownWithError()
     }
 
     private var widgets: [WidgetPlacement] { engine.document.pages[0].widgets }
@@ -128,5 +129,55 @@ final class LayoutEngineTests: XCTestCase {
             engine.sortedPages.map(\.order), [0, 1, 2],
             "orders have to stay contiguous or sortedPages stops matching the array"
         )
+    }
+
+    // MARK: - Edit session (staged overlaps)
+
+    func testEditingAllowsOverlapAsAStagingState() throws {
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        engine.isEditing = true
+
+        // Place, move and resize onto occupied cells all succeed mid-edit.
+        let staged = engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 2, row: 1, width: 4, height: 3)
+        XCTAssertNotNil(staged)
+        XCTAssertTrue(engine.moveWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), toCol: 0, toRow: 0))
+        XCTAssertTrue(engine.resizeWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), newWidth: 5, newHeight: 3))
+
+        XCTAssertTrue(engine.hasOverlaps)
+        XCTAssertEqual(engine.overlappingInstanceIds(pageId: pageId).count, 2)
+
+        // Off-grid stays refused even while editing.
+        XCTAssertFalse(engine.moveWidget(pageId: pageId, instanceId: try XCTUnwrap(staged), toCol: 50, toRow: 0))
+    }
+
+    func testEndingEditRestoresStrictPlacement() {
+        engine.isEditing = true
+        engine.isEditing = false
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        XCTAssertNil(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 2, row: 1, width: 4, height: 3)
+        )
+        XCTAssertFalse(engine.hasOverlaps)
+    }
+
+    // MARK: - Page reordering
+
+    func testMovingPagesKeepsTheVisiblePageVisible() {
+        engine.document.pages = [
+            PageConfig(name: "A", order: 0),
+            PageConfig(name: "B", order: 1),
+            PageConfig(name: "C", order: 2),
+        ]
+        engine.currentPageIndex = 1  // viewing B
+
+        // Move A to the end; B shifts to index 0 and must stay on screen.
+        engine.movePage(id: engine.document.pages[0].id, toOrder: 2)
+
+        XCTAssertEqual(engine.sortedPages.map(\.name), ["B", "C", "A"])
+        XCTAssertEqual(engine.sortedPages[engine.currentPageIndex].name, "B")
     }
 }
