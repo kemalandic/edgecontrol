@@ -11,11 +11,11 @@ struct GridPageView: View {
     @ObservedObject var layoutEngine: LayoutEngine
     @EnvironmentObject private var model: AppModel
 
-    // Drag state
+    // Drag state. Which widget is being dragged/resized is page state (it
+    // changes once per gesture); where it would land lives in `targets`,
+    // which only the highlight views observe — see EditTargets.
     @State private var draggingInstanceId: String?
-    @State private var dragTargetCol: Int?
-    @State private var dragTargetRow: Int?
-    @State private var dragIsValid: Bool = false
+    @State private var targets = EditTargets()
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -33,9 +33,6 @@ struct GridPageView: View {
 
     // Resize state
     @State private var resizingInstanceId: String?
-    @State private var resizeTargetW: Int?
-    @State private var resizeTargetH: Int?
-    @State private var resizeIsValid: Bool = false
 
     var body: some View {
         GeometryReader { geo in
@@ -59,59 +56,20 @@ struct GridPageView: View {
                     }
                     .background(EditKeyCatcher(layoutEngine: layoutEngine))
 
-                // Drop target highlight during drag
-                if let targetCol = dragTargetCol, let targetRow = dragTargetRow,
-                   let dragging = page.widgets.first(where: { $0.instanceId == draggingInstanceId }) {
-                    // Green = free, orange = staged overlap, red = off-grid.
-                    let targetRect = GridRect(col: targetCol, row: targetRow, width: dragging.width, height: dragging.height)
-                    let tint: Color = !dragIsValid ? Theme.accentRed
-                        : layoutEngine.wouldOverlap(pageId: page.id, rect: targetRect, excludeInstanceId: dragging.instanceId)
-                            ? Theme.accentOrange : Theme.accentGreen
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(tint.opacity(0.15))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(
-                                    tint.opacity(0.5),
-                                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])
-                                )
-                        )
-                        .frame(
-                            width: CGFloat(dragging.width) * cellW,
-                            height: CGFloat(dragging.height) * cellH
-                        )
-                        .position(
-                            x: CGFloat(targetCol) * cellW + CGFloat(dragging.width) * cellW / 2,
-                            y: CGFloat(targetRow) * cellH + CGFloat(dragging.height) * cellH / 2
-                        )
-                        .allowsHitTesting(false)
+                // Drop / resize target highlights. These are the only views
+                // that observe the live gesture targets, so a drag tick
+                // re-renders a dashed rectangle and nothing else on the page.
+                if let dragging = page.widgets.first(where: { $0.instanceId == draggingInstanceId }) {
+                    TargetHighlight(
+                        targets: targets, kind: .drag, placement: dragging,
+                        pageId: page.id, layoutEngine: layoutEngine, cellW: cellW, cellH: cellH
+                    )
                 }
-
-                // Resize target highlight
-                if let resId = resizingInstanceId,
-                   let resPlacement = page.widgets.first(where: { $0.instanceId == resId }),
-                   let tw = resizeTargetW, let th = resizeTargetH {
-                    // Purple = free, orange = staged overlap, red = size the
-                    // widget doesn't support (or off-grid).
-                    let resRect = GridRect(col: resPlacement.col, row: resPlacement.row, width: tw, height: th)
-                    let resTint: Color = !resizeIsValid ? Theme.accentRed
-                        : layoutEngine.wouldOverlap(pageId: page.id, rect: resRect, excludeInstanceId: resId)
-                            ? Theme.accentOrange : Theme.accentPurple
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(resTint.opacity(0.12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(
-                                    resTint.opacity(0.5),
-                                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])
-                                )
-                        )
-                        .frame(width: CGFloat(tw) * cellW, height: CGFloat(th) * cellH)
-                        .position(
-                            x: CGFloat(resPlacement.col) * cellW + CGFloat(tw) * cellW / 2,
-                            y: CGFloat(resPlacement.row) * cellH + CGFloat(th) * cellH / 2
-                        )
-                        .allowsHitTesting(false)
+                if let resizing = page.widgets.first(where: { $0.instanceId == resizingInstanceId }) {
+                    TargetHighlight(
+                        targets: targets, kind: .resize, placement: resizing,
+                        pageId: page.id, layoutEngine: layoutEngine, cellW: cellW, cellH: cellH
+                    )
                 }
 
                 // Placed widgets
@@ -261,7 +219,10 @@ struct GridPageView: View {
                             }
                         }
                         .onHover { inside in
-                            if inside {
+                            // Hover only feeds the gear, which edit mode
+                            // hides; tracking it there would re-render the
+                            // page every time a drag crosses a card.
+                            if inside, !editMode {
                                 hoveredInstanceId = placement.instanceId
                             } else if hoveredInstanceId == placement.instanceId {
                                 hoveredInstanceId = nil
@@ -344,8 +305,10 @@ struct GridPageView: View {
     private func dragGesture(placement: WidgetPlacement, cellW: CGFloat, cellH: CGFloat) -> some Gesture {
         DragGesture()
             .onChanged { value in
-                draggingInstanceId = placement.instanceId
-                selectedInstanceId = placement.instanceId
+                // Page state changes once, on the first tick; the equality
+                // guards keep later ticks from re-rendering the page.
+                if draggingInstanceId != placement.instanceId { draggingInstanceId = placement.instanceId }
+                if selectedInstanceId != placement.instanceId { selectedInstanceId = placement.instanceId }
 
                 // Calculate target grid cell from drag position
                 let newCol = placement.col + Int(round(value.translation.width / cellW))
@@ -353,25 +316,27 @@ struct GridPageView: View {
                 let clampedCol = max(0, min(newCol, gridColumns - placement.width))
                 let clampedRow = max(0, min(newRow, gridRows - placement.height))
 
-                dragTargetCol = clampedCol
-                dragTargetRow = clampedRow
-                dragIsValid = layoutEngine.isValidPlacement(
-                    pageId: page.id,
-                    col: clampedCol,
-                    row: clampedRow,
-                    width: placement.width,
-                    height: placement.height,
-                    excludeInstanceId: placement.instanceId
-                )
+                targets.setDrag(EditTargets.Target(
+                    col: clampedCol, row: clampedRow,
+                    width: placement.width, height: placement.height,
+                    isValid: layoutEngine.isValidPlacement(
+                        pageId: page.id,
+                        col: clampedCol,
+                        row: clampedRow,
+                        width: placement.width,
+                        height: placement.height,
+                        excludeInstanceId: placement.instanceId
+                    )
+                ))
             }
             .onEnded { value in
                 // Apply move if valid
-                if dragIsValid, let col = dragTargetCol, let row = dragTargetRow {
+                if let target = targets.drag, target.isValid {
                     layoutEngine.moveWidget(
                         pageId: page.id,
                         instanceId: placement.instanceId,
-                        toCol: col,
-                        toRow: row
+                        toCol: target.col,
+                        toRow: target.row
                     )
                     // Anything the drop landed on steps aside to its
                     // nearest free spot; no room means it stays staged.
@@ -387,9 +352,7 @@ struct GridPageView: View {
                 // place and jumps to its new cell on drop)
                 withAnimation(.easeOut(duration: 0.2)) {
                     draggingInstanceId = nil
-                    dragTargetCol = nil
-                    dragTargetRow = nil
-                    dragIsValid = false
+                    targets.setDrag(nil)
                 }
             }
     }
@@ -414,7 +377,7 @@ struct GridPageView: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                resizingInstanceId = placement.instanceId
+                                if resizingInstanceId != placement.instanceId { resizingInstanceId = placement.instanceId }
                                 let deltaW = Int(round(value.translation.width / cellW))
                                 let deltaH = Int(round(value.translation.height / cellH))
                                 let newW = max(1, placement.width + deltaW)
@@ -422,10 +385,9 @@ struct GridPageView: View {
                                 let clampedW = min(newW, gridColumns - placement.col)
                                 let clampedH = min(newH, gridRows - placement.row)
 
-                                resizeTargetW = clampedW
-                                resizeTargetH = clampedH
-
-                                // Check if widget supports this size
+                                // Valid = a size the widget supports that
+                                // also stays on the grid.
+                                var isValid = false
                                 if let meta = registry.metadata(for: placement.widgetId) {
                                     let sizeOk = meta.supportedSizes.contains(WidgetSize(width: clampedW, height: clampedH))
                                     let noCollision = layoutEngine.isValidPlacement(
@@ -436,18 +398,20 @@ struct GridPageView: View {
                                         height: clampedH,
                                         excludeInstanceId: placement.instanceId
                                     )
-                                    resizeIsValid = sizeOk && noCollision
-                                } else {
-                                    resizeIsValid = false
+                                    isValid = sizeOk && noCollision
                                 }
+                                targets.setResize(EditTargets.Target(
+                                    col: placement.col, row: placement.row,
+                                    width: clampedW, height: clampedH, isValid: isValid
+                                ))
                             }
                             .onEnded { _ in
-                                if resizeIsValid, let tw = resizeTargetW, let th = resizeTargetH {
+                                if let target = targets.resize, target.isValid {
                                     layoutEngine.resizeWidget(
                                         pageId: page.id,
                                         instanceId: placement.instanceId,
-                                        newWidth: tw,
-                                        newHeight: th
+                                        newWidth: target.width,
+                                        newHeight: target.height
                                     )
                                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                                         layoutEngine.resolveOverlaps(
@@ -458,9 +422,7 @@ struct GridPageView: View {
                                 }
                                 withAnimation(.easeOut(duration: 0.2)) {
                                     resizingInstanceId = nil
-                                    resizeTargetW = nil
-                                    resizeTargetH = nil
-                                    resizeIsValid = false
+                                    targets.setResize(nil)
                                 }
                             }
                     )
@@ -491,6 +453,81 @@ struct GridPageView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+}
+
+
+/// Where an in-flight drag or resize would land. Deliberately not @State on
+/// the page: a gesture publishes ~60 ticks a second, and each one written to
+/// page state re-evaluated the whole page body — every card's gestures,
+/// context menu and buttons included. That is merely wasteful on its own,
+/// but once any accessibility client has queried the process (window
+/// managers, screenshot tools, text-grabbers all do; the flag is sticky for
+/// the process lifetime) SwiftUI also recomputes accessibility attachments
+/// for every invalidated gesture, and a drag went from smooth to seconds
+/// behind the finger. Only `TargetHighlight` observes this object, so a
+/// tick now re-renders one dashed rectangle. Setters skip unchanged values
+/// so a finger resting inside one cell publishes nothing.
+@MainActor
+final class EditTargets: ObservableObject {
+    struct Target: Equatable {
+        var col: Int
+        var row: Int
+        var width: Int
+        var height: Int
+        var isValid: Bool
+
+        var rect: GridRect { GridRect(col: col, row: row, width: width, height: height) }
+    }
+
+    @Published private(set) var drag: Target?
+    @Published private(set) var resize: Target?
+
+    func setDrag(_ target: Target?) {
+        if drag != target { drag = target }
+    }
+
+    func setResize(_ target: Target?) {
+        if resize != target { resize = target }
+    }
+}
+
+
+/// The dashed cell outline that follows a drag or resize. Green/purple =
+/// free, orange = staged overlap, red = off-grid or an unsupported size.
+private struct TargetHighlight: View {
+    enum Kind { case drag, resize }
+
+    @ObservedObject var targets: EditTargets
+    let kind: Kind
+    let placement: WidgetPlacement
+    let pageId: String
+    let layoutEngine: LayoutEngine
+    let cellW: CGFloat
+    let cellH: CGFloat
+
+    var body: some View {
+        if let target = kind == .drag ? targets.drag : targets.resize {
+            let free: Color = kind == .drag ? Theme.accentGreen : Theme.accentPurple
+            let tint: Color = !target.isValid ? Theme.accentRed
+                : layoutEngine.wouldOverlap(pageId: pageId, rect: target.rect, excludeInstanceId: placement.instanceId)
+                    ? Theme.accentOrange : free
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(tint.opacity(kind == .drag ? 0.15 : 0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(
+                            tint.opacity(0.5),
+                            style: StrokeStyle(lineWidth: 2, dash: [6, 4])
+                        )
+                )
+                .frame(width: CGFloat(target.width) * cellW, height: CGFloat(target.height) * cellH)
+                .position(
+                    x: CGFloat(target.col) * cellW + CGFloat(target.width) * cellW / 2,
+                    y: CGFloat(target.row) * cellH + CGFloat(target.height) * cellH / 2
+                )
+                .allowsHitTesting(false)
+        }
     }
 }
 
