@@ -13,36 +13,33 @@ final class DashboardWindowController {
         history: MetricsHistory,
         pluginManager: PluginManager
     ) {
+        let rootView = AnyView(
+            DashboardShell()
+                .environmentObject(model)
+                .environmentObject(layoutEngine)
+                .environmentObject(registry)
+                .environmentObject(history)
+        )
+
         let dashboardWindow: NSWindow
         if let existing = window {
             dashboardWindow = existing
         } else {
-            let hosting = NSHostingController(
-                rootView: AnyView(
-                    DashboardShell()
-                        .environmentObject(model)
-                        .environmentObject(layoutEngine)
-                        .environmentObject(registry)
-                        .environmentObject(history)
-                )
+            let created = KioskWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 1440, height: 405),
+                styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                backing: .buffered,
+                defer: false
             )
-            let created = KioskWindow(contentViewController: hosting)
             created.title = "EdgeControl"
-            created.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             created.isReleasedWhenClosed = false
-            created.setContentSize(NSSize(width: 1440, height: 405))
+            created.contentView = KioskHostingView(rootView: rootView)
             window = created
             dashboardWindow = created
         }
 
-        if let hosting = dashboardWindow.contentViewController as? NSHostingController<AnyView> {
-            hosting.rootView = AnyView(
-                DashboardShell()
-                    .environmentObject(model)
-                    .environmentObject(layoutEngine)
-                    .environmentObject(registry)
-                    .environmentObject(history)
-            )
+        if let hosting = dashboardWindow.contentView as? KioskHostingView<AnyView> {
+            hosting.rootView = rootView
         }
 
         let placed = WindowPlacement.configure(
@@ -270,6 +267,14 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         appMenu.addItem(quitItem)
         appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
+
+        let fileMenuItem = NSMenuItem()
+        let fileMenu = NSMenu(title: "File")
+        let closeItem = NSMenuItem(title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        closeItem.keyEquivalentModifierMask = [.command]
+        fileMenu.addItem(closeItem)
+        fileMenuItem.submenu = fileMenu
+        mainMenu.addItem(fileMenuItem)
         return mainMenu
     }
 

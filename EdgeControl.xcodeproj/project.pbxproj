@@ -13,6 +13,7 @@
 		02C16759451A6E571B9F6829 /* forgejo-user.json in Resources */ = {isa = PBXBuildFile; fileRef = 66ACE587D08F9C6516970671 /* forgejo-user.json */; };
 		067C54301124CFF84023C648 /* MemoryGaugeWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8970EF907C0D991C1455F7FA /* MemoryGaugeWidget.swift */; };
 		06867F8686B539AF89A5EEC9 /* BluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322BB0E114232C4FC2E95B0A /* BluetoothService.swift */; };
+		07508AB43A1B55F9C284333E /* GuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4A193EE27CE99A8FEB5790 /* GuideView.swift */; };
 		07F22FD2B6C31A550078652C /* CIRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD8E3A956E53382040795B3 /* CIRun.swift */; };
 		09FEB2BFDC20840124FA3084 /* GitHubProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22D3935E121EFF55DA69626 /* GitHubProviderTests.swift */; };
 		0A7DDFD4973B48992791445A /* CICDWidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 460BB08A24CC6C1DC523BEBB /* CICDWidgetView.swift */; };
@@ -196,6 +197,7 @@
 		083EBD8A86C58AA57C85CA25 /* CIRunState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIRunState.swift; sourceTree = "<group>"; };
 		0B4C1DBB775FC952E2494BB6 /* UnitSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitSystem.swift; sourceTree = "<group>"; };
 		0CD84835E9C4E1128E590E97 /* CIErrorMappingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CIErrorMappingTests.swift; sourceTree = "<group>"; };
+		0E4A193EE27CE99A8FEB5790 /* GuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideView.swift; sourceTree = "<group>"; };
 		0E4EE1FD46B45C00D615B4EB /* NetworkProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkProvider.swift; sourceTree = "<group>"; };
 		0ECA20ADC942310310D2C811 /* PluginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManager.swift; sourceTree = "<group>"; };
 		1007E7E0D246F5FAE5B23FF2 /* WidgetRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetRegistry.swift; sourceTree = "<group>"; };
@@ -485,6 +487,7 @@
 				A0C0585D4ECBD3C294076FCD /* CICDSettingsView.swift */,
 				5250AA176801A15BCFDC4D67 /* DisplaySettingsView.swift */,
 				926EA238AB64D30E0407B43E /* GeneralSettingsView.swift */,
+				0E4A193EE27CE99A8FEB5790 /* GuideView.swift */,
 				12281DDDF4B06A76D53203CF /* PageManagerView.swift */,
 				67C08C5CA9435270274DCC6A /* PluginManagerView.swift */,
 				FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */,
@@ -888,6 +891,7 @@
 				7FE584F4A350EF3DAEF2DE5D /* GeneralSettingsView.swift in Sources */,
 				1DFA6EA4E2C0BD5D4AC953B2 /* GitHubProvider.swift in Sources */,
 				69B8C3CBF6982B6FE821A527 /* GridPageView.swift in Sources */,
+				07508AB43A1B55F9C284333E /* GuideView.swift in Sources */,
 				AC62F2C94736CB1DE42C2D1D /* HardwareTouchService.swift in Sources */,
 				EE048F1FD1E1DA49AC106EFE /* HistoryGraphView.swift in Sources */,
 				8D5E5222B55F195D788A6C1F /* LayoutConfig.swift in Sources */,

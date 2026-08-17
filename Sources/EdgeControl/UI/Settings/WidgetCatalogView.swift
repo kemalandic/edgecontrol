@@ -4,6 +4,11 @@ struct WidgetCatalogView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var registry: WidgetRegistry
     @State private var selectedCategory: WidgetCategory?
+    @State private var previewedWidget: PreviewItem?
+
+    private struct PreviewItem: Identifiable {
+        let id: String
+    }
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -55,6 +60,11 @@ struct WidgetCatalogView: View {
             Spacer(minLength: 0)
         }
         .padding(16)
+        .sheet(item: $previewedWidget) { item in
+            if let widget = registry.widget(for: item.id) {
+                WidgetSizePreviewSheet(widget: widget) { previewedWidget = nil }
+            }
+        }
     }
 
     private func categoryChip(_ category: WidgetCategory?, label: String) -> some View {
@@ -95,7 +105,9 @@ struct WidgetCatalogView: View {
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Spacer()
-                if placedCount > 0 {
+                // The checkmark already says "placed"; the count badge
+                // only earns its pixels once there's more than one.
+                if placedCount > 1 {
                     Text("x\(placedCount)")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(Theme.accentGreen)
@@ -117,20 +129,39 @@ struct WidgetCatalogView: View {
 
                 Spacer()
 
-                if isPlaced {
-                    Image(systemName: "checkmark.circle.fill")
+                // Renders the widget at every supported size — an audit
+                // surface for layout regressions.
+                Button {
+                    previewedWidget = PreviewItem(id: widget.widgetId)
+                } label: {
+                    Image(systemName: "eye.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundStyle(Theme.accentGreen.opacity(0.5))
-                } else {
+                        .foregroundStyle(accent.opacity(0.8))
+                }
+                .buttonStyle(.plain)
+                .help("Preview at all supported sizes")
+
+                if isPlaced {
                     Button {
-                        addWidgetToCurrentPage(widget)
+                        removeOneFromCurrentPage(widgetId: widget.widgetId)
                     } label: {
-                        Image(systemName: "plus.circle.fill")
+                        Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 18))
                             .foregroundStyle(Theme.accentGreen)
                     }
                     .buttonStyle(.plain)
+                    .help("Remove one from this page")
                 }
+
+                Button {
+                    addWidgetToCurrentPage(widget)
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Theme.accentGreen)
+                }
+                .buttonStyle(.plain)
+                .help("Add to this page")
             }
         }
         .padding(10)
@@ -154,6 +185,13 @@ struct WidgetCatalogView: View {
         return page.widgets.filter { $0.widgetId == widgetId }.count
     }
 
+    /// The checkmark removes one instance per click, most recent first.
+    private func removeOneFromCurrentPage(widgetId: String) {
+        guard let page = currentPage,
+              let victim = page.widgets.last(where: { $0.widgetId == widgetId }) else { return }
+        layoutEngine.removeWidget(pageId: page.id, instanceId: victim.instanceId)
+    }
+
     private func addWidgetToCurrentPage(_ widget: any DashboardWidget) {
         guard let page = currentPage else { return }
         let positions = layoutEngine.availablePositions(
@@ -161,7 +199,16 @@ struct WidgetCatalogView: View {
             width: widget.defaultSize.width,
             height: widget.defaultSize.height
         )
-        guard let pos = positions.first else { return }
+        // A full page no longer blocks adding: park the widget at the origin
+        // as a staged overlap. Entering edit mode makes the overlap legal and
+        // visible, and the edit session cannot end until it's resolved.
+        let pos: GridCell
+        if let free = positions.first {
+            pos = free
+        } else {
+            layoutEngine.isEditing = true
+            pos = GridCell(col: 0, row: 0)
+        }
         layoutEngine.placeWidget(
             pageId: page.id,
             widgetId: widget.widgetId,
@@ -171,5 +218,73 @@ struct WidgetCatalogView: View {
             height: widget.defaultSize.height,
             config: widget.defaultConfig()
         )
+    }
+}
+
+// MARK: - Size Preview
+
+/// Renders a widget at every size its range allows, at true cell geometry
+/// scaled down — the audit surface for per-size layout regressions.
+private struct WidgetSizePreviewSheet: View {
+    let widget: any DashboardWidget
+    let dismiss: () -> Void
+
+    private let cell: CGFloat = 120
+    private let scale: CGFloat = 0.45
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: widget.iconName)
+                Text("\(widget.displayName) — min, default and max sizes")
+                    .font(.system(size: 15, weight: .heavy, design: .rounded))
+                Spacer()
+                Text("Widgets without their service running show placeholder data")
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                Button("Close", action: dismiss)
+                    .keyboardShortcut(.defaultAction)
+            }
+            .foregroundStyle(.white)
+
+            ScrollView(.vertical, showsIndicators: true) {
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    // Extents only: the full width x height cross product
+                    // ran to dozens of near-identical tiles for wide-ranged
+                    // widgets and scrolled forever.
+                    let range = widget.supportedSizes
+                    let widths = Array(Set([range.min.width, widget.defaultSize.width, range.max.width])).sorted()
+                    let heights = Array(Set([range.min.height, widget.defaultSize.height, range.max.height])).sorted()
+                    ForEach(heights, id: \.self) { h in
+                        ForEach(widths, id: \.self) { w in
+                            // Narrow sizes get a larger scale — a 1-column
+                            // preview at audit scale was an illegible sliver.
+                            let s: CGFloat = w <= 3 ? 0.75 : scale
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("\(w)x\(h)")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                    .foregroundStyle(Theme.textTertiary)
+                                AnyView(widget.body(
+                                    size: WidgetSize(width: w, height: h),
+                                    config: widget.defaultConfig()
+                                ))
+                                .frame(width: CGFloat(w) * cell, height: CGFloat(h) * cell)
+                                .clipped()
+                                .scaleEffect(s, anchor: .topLeading)
+                                .frame(
+                                    width: CGFloat(w) * cell * s,
+                                    height: CGFloat(h) * cell * s,
+                                    alignment: .topLeading
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 12)
+            }
+        }
+        .padding(16)
+        .frame(minWidth: 560, minHeight: 460)
+        .background(Theme.backgroundPrimary)
     }
 }

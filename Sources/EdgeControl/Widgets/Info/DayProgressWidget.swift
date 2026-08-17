@@ -6,7 +6,7 @@ public final class DayProgressWidget: DashboardWidget {
     public let description = "Visual progress of the current day with time remaining"
     public let iconName = "sun.max"
     public let category: WidgetCategory = .info
-    public let supportedSizes = WidgetSizeRange(min: .size(2, 2), max: .size(6, 3))
+    public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(6, 3))
     public let defaultSize = WidgetSize.size(4, 2)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -16,12 +16,15 @@ public final class DayProgressWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DayProgressWidgetView(isCompact: size.width <= 3)
+        // The ring needs two rows of height; a 1-row placement always gets the
+        // linear title+bar layout, which fits a single 120px grid row.
+        DayProgressWidgetView(isCompact: size.width <= 3 && size.height >= 2, isTall: size.height >= 2)
     }
 }
 
 private struct DayProgressWidgetView: View {
     let isCompact: Bool
+    let isTall: Bool
 
     @Environment(\.themeSettings) private var ts
     @State private var now = Date()
@@ -44,7 +47,7 @@ private struct DayProgressWidgetView: View {
     }
 
     var body: some View {
-        VStack(spacing: isCompact ? 6 : 10) {
+        VStack(spacing: isCompact ? 6 : (isTall ? 20 : 10)) {
             if isCompact {
                 // Compact: circular progress
                 ZStack {
@@ -63,6 +66,8 @@ private struct DayProgressWidgetView: View {
                 .aspectRatio(1, contentMode: .fit)
                 .padding(4)
             } else {
+                // Center the linear stack in 2+ row cells; 1-row keeps its top-aligned fit.
+                if isTall { Spacer(minLength: 0) }
                 HStack(spacing: 8) {
                     Image(systemName: "sun.max.fill")
                         .font(.system(size: 18 * ts.fontScale))
@@ -90,7 +95,7 @@ private struct DayProgressWidgetView: View {
                             .frame(width: geo.size.width * dayProgress)
                     }
                 }
-                .frame(height: 10)
+                .frame(height: isTall ? 14 : 10)
 
                 HStack {
                     Text("REMAINING")

@@ -7,7 +7,7 @@ public final class DiskIOWidget: DashboardWidget {
     public let iconName = "internaldrive"
     public let category: WidgetCategory = .system
     public let requiredServices: Set<ServiceKey> = [.diskIO]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(1, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -21,7 +21,7 @@ public final class DiskIOWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DiskIOWidgetView(service: service, isCompact: size.height <= 2)
+        DiskIOWidgetView(service: service, isCompact: size.height <= 2, showTitle: true, isBar: size.height <= 1, isNarrow: size.width <= 1)
     }
 }
 
@@ -29,50 +29,43 @@ private struct DiskIOWidgetView: View {
     @ObservedObject var service: DiskIOService
     @Environment(\.themeSettings) private var ts
     let isCompact: Bool
+    // Keep the widget's name visible wherever it fits: the full header down
+    // to 2 rows, a bare caption in the 1-row layout.
+    let showTitle: Bool
+    let isBar: Bool
+    // One grid column: stacked groups under a slim caption.
+    let isNarrow: Bool
 
     var body: some View {
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact {
+            if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "DISK I/O", color: Theme.widgetPrimary("disk-io", ts: ts, default: .blue))
+            } else if showTitle {
+                // One column can't fit "DISK I/O" legibly; a short name beats
+                // a microscopic one.
+                Text(isNarrow ? "DISK" : "DISK I/O")
+                    .font(Theme.caption(ts))
+                    .foregroundStyle(Theme.text3(ts))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
-                            .foregroundStyle(Theme.widgetSecondary("disk-io", ts: ts, default: .green) ?? Theme.accentGreen)
-                        Text("READ")
-                            .font(Theme.label(ts))
-                            .foregroundStyle(Theme.text3(ts))
-                    }
-                    Text(formatSpeed(service.readBytesPerSec))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer(minLength: 0)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
-                            .foregroundStyle(Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange)
-                        Text("WRITE")
-                            .font(Theme.label(ts))
-                            .foregroundStyle(Theme.text3(ts))
-                    }
-                    Text(formatSpeed(service.writeBytesPerSec))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            RatePairView(
+                first: .init(
+                    icon: "arrow.down.circle.fill", label: "READ",
+                    value: formatSpeed(service.readBytesPerSec),
+                    color: Theme.widgetSecondary("disk-io", ts: ts, default: .green) ?? Theme.accentGreen
+                ),
+                second: .init(
+                    icon: "arrow.up.circle.fill", label: "WRITE",
+                    value: formatSpeed(service.writeBytesPerSec),
+                    color: Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange
+                ),
+                compact: isCompact,
+                vertical: isNarrow
+            )
 
             Spacer(minLength: 0)
         }
