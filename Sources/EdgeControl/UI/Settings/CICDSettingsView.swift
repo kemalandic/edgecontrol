@@ -16,6 +16,23 @@ struct CICDSettingsView: View {
     @State private var importError: String?
 
     private var service: CICDService { model.cicdService }
+
+    /// Repositories currently contributing runs to the widget, ready to hide.
+    /// run.id is "<accountID>/<owner>/<name>/<run number>".
+    private var shownRepositories: [CIRepositoryRef] {
+        let hidden = service.settings.hiddenRepositories
+        var seen = Set<CIRepositoryRef>()
+        var result: [CIRepositoryRef] = []
+        for run in service.runs {
+            let parts = run.id.split(separator: "/")
+            guard parts.count >= 4,
+                  let accountID = UUID(uuidString: String(parts[0])),
+                  let host = store.accounts.first(where: { $0.id == accountID })?.host else { continue }
+            let ref = CIRepositoryRef(host: host, fullName: parts.dropFirst().dropLast().joined(separator: "/"))
+            if !hidden.contains(ref), seen.insert(ref).inserted { result.append(ref) }
+        }
+        return result.sorted()
+    }
     private var store: CIAccountStore { model.accountStore }
 
     private var cliAvailable: Bool {
@@ -246,6 +263,22 @@ struct CICDSettingsView: View {
                 host: $hiddenHost,
                 text: $hiddenDraft
             )
+
+            // The typed entry above requires knowing the exact owner/name;
+            // this menu offers exactly what the widget is showing right now.
+            if !shownRepositories.isEmpty {
+                Menu {
+                    ForEach(shownRepositories, id: \.self) { ref in
+                        Button(ref.displayName) {
+                            service.settings.hiddenRepositories.insert(ref)
+                        }
+                    }
+                } label: {
+                    Label("Hide a repository currently shown…", systemImage: "eye.slash")
+                        .font(Theme.label(ts))
+                }
+                .frame(maxWidth: 320)
+            }
         }
     }
 
