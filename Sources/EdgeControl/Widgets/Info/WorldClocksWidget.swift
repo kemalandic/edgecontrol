@@ -18,10 +18,17 @@ public final class WorldClocksWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        WorldClocksWidgetView(
+        let maxByWidth = size.width >= 8 ? 3 : 2
+        // Card rows the placement can hold: grid rows are ~120px, a clock card
+        // plus grid spacing is ~88px, and header/padding overhead is ~60px.
+        let rowsThatFit = max(1, (size.height * 120 - 60) / 88)
+        // Fewer columns on tall placements so the 6 clocks span the height
+        // instead of top-stacking; integer ceiling of 6 / rowsThatFit.
+        let columns = min(maxByWidth, max(1, (6 + rowsThatFit - 1) / rowsThatFit))
+        return WorldClocksWidgetView(
             use24h: config.bool("use24h", default: true),
             isCompact: size.height <= 2,
-            columns: size.width >= 8 ? 3 : 2
+            columns: columns
         )
     }
 }
@@ -50,18 +57,35 @@ private struct WorldClocksWidgetView: View {
                 WidgetHeader(title: "WORLD CLOCKS", color: Theme.widgetPrimary("world-clocks", ts: ts, default: .cyan))
             }
 
-            let cols = Array(repeating: GridItem(.flexible(), spacing: 8), count: columns)
-            LazyVGrid(columns: cols, spacing: 8) {
-                ForEach(worldClocks, id: \.tz) { clock in
-                    clockCard(clock)
+            // Explicit rows instead of LazyVGrid: grid rows hug their content,
+            // which top-stacks the cards and leaves dead space on tall
+            // placements. Stretching each row distributes the leftover height.
+            VStack(spacing: 8) {
+                ForEach(Array(clockRows.enumerated()), id: \.offset) { _, row in
+                    HStack(spacing: 8) {
+                        ForEach(row, id: \.tz) { clock in
+                            clockCard(clock)
+                        }
+                        if row.count < columns {
+                            ForEach(0..<(columns - row.count), id: \.self) { _ in
+                                Color.clear.frame(maxWidth: .infinity)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: .infinity)
                 }
             }
-
-            Spacer(minLength: 0)
+            .frame(maxHeight: .infinity)
         }
         .padding(isCompact ? Theme.compactPadding : Theme.widgetPadding)
         .widgetCard()
         .onReceive(timer) { now = $0 }
+    }
+
+    private var clockRows: [[(city: String, tz: String, flag: String)]] {
+        stride(from: 0, to: worldClocks.count, by: columns).map {
+            Array(worldClocks[$0..<min($0 + columns, worldClocks.count)])
+        }
     }
 
     private func clockCard(_ clock: (city: String, tz: String, flag: String)) -> some View {
@@ -85,7 +109,7 @@ private struct WorldClocksWidgetView: View {
                 .foregroundStyle(.white)
                 .monospacedDigit()
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, isCompact ? 4 : 8)
         .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }

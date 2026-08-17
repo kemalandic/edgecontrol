@@ -8,6 +8,9 @@ struct DashboardShell: View {
     @EnvironmentObject private var registry: WidgetRegistry
     @EnvironmentObject private var history: MetricsHistory
     @State private var editMode = false
+    // Live paging: finger travel applied on top of the index offset.
+    @State private var pageDragOffset: CGFloat = 0
+    @State private var lastLiveDX: CGFloat = 0
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -50,44 +53,61 @@ struct DashboardShell: View {
                     // Current page content
                     let pages = layoutEngine.sortedPages
 
-                    ZStack {
+                    // iPhone-style paging: every page sits in one wide
+                    // HStack offset by the current index plus the live finger
+                    // travel, so the content is attached to the finger and the
+                    // settle direction is pure geometry. Only the current page
+                    // and its neighbors render real content.
+                    let pageWidth = geo.size.width
+                    HStack(spacing: 0) {
                         ForEach(Array(pages.enumerated()), id: \.element.id) { index, page in
-                            if index == layoutEngine.currentPageIndex {
-                                GridPageView(
-                                    page: page,
-                                    registry: registry,
-                                    gridColumns: grid.columns,
-                                    gridRows: grid.rows,
-                                    editMode: $editMode,
-                                    layoutEngine: layoutEngine
-                                )
-                                .padding(8)
-                                .transition(.asymmetric(
-                                    insertion: .move(edge: .trailing),
-                                    removal: .move(edge: .leading)
-                                ))
+                            Group {
+                                if abs(index - layoutEngine.currentPageIndex) <= 1 {
+                                    GridPageView(
+                                        page: page,
+                                        registry: registry,
+                                        gridColumns: grid.columns,
+                                        gridRows: grid.rows,
+                                        editMode: $editMode,
+                                        layoutEngine: layoutEngine
+                                    )
+                                    .padding(8)
+                                } else {
+                                    Color.clear
+                                }
                             }
+                            .frame(width: pageWidth, height: geo.size.height)
                         }
                     }
+                    .frame(width: pageWidth, height: geo.size.height, alignment: .leading)
+                    .offset(x: -CGFloat(layoutEngine.currentPageIndex) * pageWidth + pageDragOffset)
                     // Without this the swipe only starts on a widget card: the
                     // gaps between cards draw nothing, and SwiftUI delivers
                     // gestures only where content exists. Same reason
                     // TouchTappable, TouchButton and TouchScrollView all set it.
                     .contentShape(Rectangle())
                     .gesture(
-                        editMode ? nil : DragGesture(minimumDistance: 60)
-                            .onEnded { value in
+                        editMode ? nil : DragGesture(minimumDistance: 10)
+                            .onChanged { value in
                                 guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                                withAnimation {
-                                    if value.translation.width < 0 && layoutEngine.currentPageIndex < pages.count - 1 {
-                                        layoutEngine.currentPageIndex += 1
-                                    } else if value.translation.width > 0 && layoutEngine.currentPageIndex > 0 {
-                                        layoutEngine.currentPageIndex -= 1
-                                    }
-                                }
+                                pageDragOffset = rubberBand(value.translation.width, pageCount: pages.count)
+                            }
+                            .onEnded { value in
+                                settlePages(dx: value.translation.width, pageCount: pages.count)
                             }
                     )
-                    .animation(.easeInOut(duration: 0.3), value: layoutEngine.currentPageIndex)
+                    // Hardware finger: track while down, settle on release.
+                    .onReceive(model.touchService.$liveSwipeDX) { dx in
+                        guard !editMode else { return }
+                        if let dx {
+                            lastLiveDX = dx
+                            pageDragOffset = rubberBand(dx, pageCount: pages.count)
+                        } else if pageDragOffset != 0 {
+                            let released = lastLiveDX
+                            lastLiveDX = 0
+                            settlePages(dx: released, pageCount: pages.count)
+                        }
+                    }
 
                     // Page indicator dots
                     pageIndicator(pageCount: pages.count)
@@ -133,8 +153,8 @@ struct DashboardShell: View {
             let clamped = min(max(newPage, 0), layoutEngine.pageCount - 1)
             if model.currentPage != clamped { model.currentPage = clamped }
             if layoutEngine.currentPageIndex != clamped {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    layoutEngine.currentPageIndex = clamped
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                    layoutEngine.navigate(to: clamped)
                 }
             }
         }
@@ -148,6 +168,36 @@ struct DashboardShell: View {
         .onChange(of: layoutEngine.layoutVersion) { _, _ in
             let needed = registry.requiredServices(for: layoutEngine.document)
             model.updateActiveServices(neededServices: needed)
+        }
+        // The engine owns the edit session (the widget catalog can start one
+        // by parking a widget on a full page); the local flag just mirrors it
+        // for gesture gating and overlays.
+        .onChange(of: layoutEngine.isEditing) { _, editing in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                editMode = editing
+            }
+        }
+    }
+
+    // MARK: - Paging
+
+    /// Dragging past the first/last page moves at one-third rate, iPhone-style.
+    private func rubberBand(_ dx: CGFloat, pageCount: Int) -> CGFloat {
+        let index = layoutEngine.currentPageIndex
+        let overshooting = (index == 0 && dx > 0) || (index >= pageCount - 1 && dx < 0)
+        return overshooting ? dx / 3 : dx
+    }
+
+    /// One decision point for both input paths: past the threshold pages,
+    /// short of it springs back — a single animated transaction either way.
+    private func settlePages(dx: CGFloat, pageCount: Int) {
+        let index = layoutEngine.currentPageIndex
+        var target = index
+        if dx < -100, index < pageCount - 1 { target = index + 1 }
+        if dx > 100, index > 0 { target = index - 1 }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+            layoutEngine.navigate(to: target)
+            pageDragOffset = 0
         }
     }
 
@@ -164,7 +214,9 @@ struct DashboardShell: View {
                     )
                     .animation(.easeInOut(duration: 0.2), value: layoutEngine.currentPageIndex)
                     .onTapGesture {
-                        withAnimation { layoutEngine.currentPageIndex = index }
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
+                            layoutEngine.navigate(to: index)
+                        }
                     }
             }
         }
@@ -185,8 +237,25 @@ struct DashboardShell: View {
                 activeColor: accent,
                 registry: model.touchService.zoneRegistry
             ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    editMode.toggle()
+                // The zone registry runs actions on the main actor, but the
+                // closure itself is @Sendable, so hop explicitly for Swift 6.
+                Task { @MainActor in
+                    if layoutEngine.isEditing {
+                        // Staged overlaps cannot be saved: keep the session
+                        // open and bring the first offending page into view.
+                        if layoutEngine.hasOverlaps {
+                            if let idx = layoutEngine.sortedPages.firstIndex(where: {
+                                !layoutEngine.overlappingInstanceIds(pageId: $0.id).isEmpty
+                            }) {
+                                layoutEngine.navigate(to: idx)
+                            }
+                            return
+                        }
+                        layoutEngine.isEditing = false
+                        layoutEngine.save()
+                    } else {
+                        layoutEngine.isEditing = true
+                    }
                 }
             }
             .overlay {

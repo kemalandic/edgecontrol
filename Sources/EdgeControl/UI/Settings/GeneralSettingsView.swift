@@ -207,7 +207,7 @@ struct GeneralSettingsView: View {
 
     private func exportLayout() {
         let store = LayoutStore()
-        guard let data = store.exportData() else { return }
+        guard let data = store.exportData(layoutEngine.document) else { return }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "EdgeControl-Layout.json"
         panel.allowedContentTypes = [.json]
