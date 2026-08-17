@@ -10,8 +10,10 @@ final class LayoutEngineTests: XCTestCase {
     private var engine: LayoutEngine!
     private var pageId: String!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    // XCTest's throwing set-up hooks are nonisolated, so on a @MainActor
+    // test case they cannot touch the main-actor state they exist to build.
+    // The async hooks inherit the class's isolation, so use those instead.
+    override func setUp() async throws {
         directory = URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("LayoutEngineTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -22,11 +24,10 @@ final class LayoutEngineTests: XCTestCase {
         pageId = engine.document.pages[0].id
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         engine = nil
         try? FileManager.default.removeItem(at: directory)
         directory = nil
-        try super.tearDownWithError()
     }
 
     private var widgets: [WidgetPlacement] { engine.document.pages[0].widgets }
