@@ -136,6 +136,12 @@ public struct GlobalSettings: Codable, Sendable {
     /// without anyone going looking for the setting.
     public var units: UnitSystem
     public var theme: ThemeSettings
+    /// Drops the kiosk window one notch below the menu-bar level, so system
+    /// panels that present there — clipboard managers like Paste, most
+    /// hotkey-summoned pickers — appear above the dashboard instead of being
+    /// invisibly buried behind it. The trade: the kiosk display's menu bar
+    /// can also draw over the dashboard's top edge.
+    public var allowSystemPanels: Bool
 
     public init(
         selectedDisplayName: String? = nil,
@@ -145,7 +151,8 @@ public struct GlobalSettings: Codable, Sendable {
         strictMonitorAffinity: Bool = false,
         hideFromDock: Bool = false,
         units: UnitSystem = .localeDefault,
-        theme: ThemeSettings = ThemeSettings()
+        theme: ThemeSettings = ThemeSettings(),
+        allowSystemPanels: Bool = false
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
@@ -155,11 +162,13 @@ public struct GlobalSettings: Codable, Sendable {
         self.hideFromDock = hideFromDock
         self.units = units
         self.theme = theme
+        self.allowSystemPanels = allowSystemPanels
     }
 
     enum CodingKeys: String, CodingKey {
         case selectedDisplayName, kioskMode, launchAtLogin, debugMode
         case strictMonitorAffinity, hideFromDock, units, theme
+        case allowSystemPanels
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -176,6 +185,7 @@ public struct GlobalSettings: Codable, Sendable {
         hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
         units = try c.decodeIfPresent(UnitSystem.self, forKey: .units) ?? .localeDefault
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
+        allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -188,5 +198,6 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(hideFromDock, forKey: .hideFromDock)
         try c.encode(units, forKey: .units)
         try c.encode(theme, forKey: .theme)
+        try c.encode(allowSystemPanels, forKey: .allowSystemPanels)
     }
 }

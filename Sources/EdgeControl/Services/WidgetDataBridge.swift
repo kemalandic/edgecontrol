@@ -66,6 +66,14 @@ public final class WidgetDataBridge {
         cancellables.removeAll()
     }
 
+    /// Serial so snapshots land in order; off-main because a wedged
+    /// filesystem operation on the group container once froze the entire UI
+    /// from a main-thread write here.
+    private static let snapshotWriteQueue = DispatchQueue(
+        label: "ai.pakslab.edgecontrol.widget-snapshot",
+        qos: .utility
+    )
+
     /// Debounced write — max once every 30 seconds.
     private func scheduleWrite() {
         guard !writeScheduled else { return }
@@ -121,7 +129,11 @@ public final class WidgetDataBridge {
             unitSystem: layoutEngine.document.globalSettings.units
         )
 
-        data.write()
+        // State is gathered on the main actor above; the file write goes to
+        // a background queue so a slow or stuck disk can never block the UI.
+        Self.snapshotWriteQueue.async {
+            data.write()
+        }
         WidgetCenter.shared.reloadAllTimelines()
     }
 

@@ -7,7 +7,7 @@ public final class WiFiInfoWidget: DashboardWidget {
     public let iconName = "wifi"
     public let category: WidgetCategory = .network
     public let requiredServices: Set<ServiceKey> = [.wifi]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(6, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(3, 1), max: .size(6, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -21,7 +21,11 @@ public final class WiFiInfoWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        WiFiInfoWidgetView(service: service, isCompact: size.height <= 2)
+        WiFiInfoWidgetView(
+            service: service,
+            isCompact: size.height <= 2,
+            showInlineChips: size.width >= 5
+        )
     }
 }
 
@@ -29,6 +33,8 @@ private struct WiFiInfoWidgetView: View {
     @ObservedObject var service: WiFiService
     @Environment(\.themeSettings) private var ts
     let isCompact: Bool
+    // Wide compact cells (width >= 5) keep SPEED/CH inline next to the SSID.
+    let showInlineChips: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: isCompact ? 6 : 10) {
@@ -50,11 +56,21 @@ private struct WiFiInfoWidgetView: View {
             }
 
             if service.isConnected {
-                Text(service.ssid ?? "Unknown")
-                    .font(Theme.value(ts))
-                    .foregroundStyle(Theme.text1(ts))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(service.ssid ?? "Unknown")
+                        .font(Theme.value(ts))
+                        .foregroundStyle(Theme.text1(ts))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+
+                    // Inline single-line chips share the SSID row, so they
+                    // add no height a 1-2 row cell can't afford.
+                    if isCompact && showInlineChips {
+                        Spacer(minLength: 8)
+                        inlineChip("SPEED", value: String(format: "%.0f Mbps", service.txRate))
+                        inlineChip("CH", value: "\(service.channel)")
+                    }
+                }
 
                 if !isCompact {
                     HStack(spacing: 12) {
@@ -96,6 +112,19 @@ private struct WiFiInfoWidgetView: View {
         else if rssi > -70 { strength = 2 }
         else { strength = 1 }
         return index < strength ? Theme.widgetPrimary("wifi-info", ts: ts, default: .green) : Color.white.opacity(0.1)
+    }
+
+    private func inlineChip(_ label: String, value: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(Theme.caption(ts))
+                .foregroundStyle(Theme.text3(ts))
+            Text(value)
+                .font(Theme.body(ts))
+                .foregroundStyle(Theme.text1(ts))
+                .monospacedDigit()
+                .lineLimit(1)
+        }
     }
 
     private func detailChip(_ label: String, value: String) -> some View {

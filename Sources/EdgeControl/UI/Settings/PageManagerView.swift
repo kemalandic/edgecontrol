@@ -3,10 +3,12 @@ import SwiftUI
 struct PageManagerView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var registry: WidgetRegistry
+    @EnvironmentObject private var model: AppModel
     @State private var editingPageId: String?
     @State private var editingName: String = ""
     @State private var selectedPageId: String?
     @State private var showAddPage = false
+    @State private var flashedInstanceId: String?
     @State private var newPageName = ""
 
     private var accent: Color {
@@ -72,6 +74,9 @@ struct PageManagerView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .onReceive(layoutEngine.$settingsFocus) { focus in
+            if let focus { selectedPageId = focus.pageId }
+        }
         .onAppear {
             // Auto-select active page
             if selectedPageId == nil, let page = layoutEngine.currentPage {
@@ -134,6 +139,15 @@ struct PageManagerView: View {
                 editingPageId = page.id
                 editingName = page.name
             }
+            let idx = layoutEngine.sortedPages.firstIndex { $0.id == page.id } ?? 0
+            Button("Move Up") {
+                layoutEngine.movePage(id: page.id, toOrder: idx - 1)
+            }
+            .disabled(idx == 0)
+            Button("Move Down") {
+                layoutEngine.movePage(id: page.id, toOrder: idx + 1)
+            }
+            .disabled(idx >= layoutEngine.pageCount - 1)
             if layoutEngine.pageCount > 1 {
                 Button("Delete", role: .destructive) {
                     layoutEngine.removePage(id: page.id)
@@ -163,7 +177,7 @@ struct PageManagerView: View {
                 // Navigate to this page
                 Button {
                     if let idx = layoutEngine.sortedPages.firstIndex(where: { $0.id == page.id }) {
-                        layoutEngine.currentPageIndex = idx
+                        layoutEngine.navigate(to: idx)
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -187,10 +201,65 @@ struct PageManagerView: View {
                     .frame(maxWidth: .infinity)
                 Spacer()
             } else {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 4) {
-                        ForEach(page.widgets) { placement in
-                            widgetRow(pageId: page.id, placement: placement)
+                // During an edit session the steppers and size menu can stage
+                // collisions (deliberately); this pane has no grid to show
+                // them on, so say it in words.
+                let overlapped = layoutEngine.overlappingInstanceIds(pageId: page.id)
+                if !overlapped.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 11))
+                        Text("Overlapping widgets — separate them on the dashboard to finish editing")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    }
+                    .foregroundStyle(Theme.accentOrange)
+                }
+                ScrollViewReader { proxy in
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 4) {
+                            ForEach(page.widgets) { placement in
+                                widgetRow(pageId: page.id, placement: placement)
+                                    .overlay(alignment: .leading) {
+                                        if overlapped.contains(placement.instanceId) {
+                                            RoundedRectangle(cornerRadius: 1.5)
+                                                .fill(Theme.accentOrange)
+                                                .frame(width: 3)
+                                        }
+                                    }
+                                    .overlay {
+                                        // Deep-link arrival flash: marks the
+                                        // row the widget gear jumped to.
+                                        if flashedInstanceId == placement.instanceId {
+                                            ZStack {
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .fill(accent.opacity(0.12))
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .strokeBorder(accent, lineWidth: 2)
+                                            }
+                                            .allowsHitTesting(false)
+                                            .transition(.opacity)
+                                        }
+                                    }
+                                    .id(placement.instanceId)
+                            }
+                        }
+                    }
+                    // @Published replays the pending focus to new
+                    // subscribers, so this fires even when the pane is
+                    // created by the focus itself (page just selected).
+                    .onReceive(layoutEngine.$settingsFocus) { focus in
+                        guard let focus, focus.pageId == page.id else { return }
+                        layoutEngine.settingsFocus = nil
+                        DispatchQueue.main.async {
+                            withAnimation { proxy.scrollTo(focus.instanceId, anchor: .top) }
+                            flashedInstanceId = focus.instanceId
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                                withAnimation(.easeOut(duration: 0.6)) {
+                                    if flashedInstanceId == focus.instanceId {
+                                        flashedInstanceId = nil
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -304,10 +373,41 @@ struct PageManagerView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
 
-        // Widget config editor (if widget has configurable options)
-        if let widget = registry.widget(for: placement.widgetId), !widget.configSchema.isEmpty {
+        // Widget config editor. Every widget without its own tap behavior
+        // also gets the universal "Opens on Tap" launcher field.
+        if let widget = registry.widget(for: placement.widgetId) {
+            let schema: [ConfigSchemaEntry] = {
+                var base = widget.configSchema
+                // Reminders: once the service has discovered the real lists,
+                // the free-text list field becomes a picker of them.
+                if widget.widgetId == "reminders", !model.remindersService.listNames.isEmpty,
+                   let idx = base.firstIndex(where: { $0.key == "list" }) {
+                    base[idx] = ConfigSchemaEntry(
+                        key: "list", label: "List", type: .picker,
+                        defaultValue: .string("default"),
+                        options: ["default"] + model.remindersService.listNames)
+                }
+                guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return base }
+                var extra = [ConfigSchemaEntry(
+                    key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
+                    type: .text,
+                    defaultValue: .string(WidgetLaunch.defaultApp(for: widget.widgetId)))]
+                // Tab choice appears only when the launch target is Activity
+                // Monitor (its tab set is fixed, indexed by SelectedTab).
+                let target = placement.config.string(
+                    WidgetLaunch.configKey,
+                    default: WidgetLaunch.defaultApp(for: widget.widgetId))
+                if WidgetLaunch.isActivityMonitor(target) {
+                    extra.append(ConfigSchemaEntry(
+                        key: WidgetLaunch.tabConfigKey, label: "Activity Monitor Tab",
+                        type: .picker,
+                        defaultValue: .string("CPU"),
+                        options: WidgetLaunch.activityMonitorTabs))
+                }
+                return base + extra
+            }()
             WidgetConfigEditor(
-                schema: widget.configSchema,
+                schema: schema,
                 config: Binding(
                     get: { placement.config },
                     set: { newConfig in
