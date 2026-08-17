@@ -816,9 +816,14 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
             Task {
                 let center = UNUserNotificationCenter.current()
-                let settings = await center.notificationSettings()
+                // UNNotificationSettings is not Sendable, so extract the one
+                // needed value via the completion-handler API instead of
+                // sending the settings object across isolation.
+                let status = await withCheckedContinuation { (continuation: CheckedContinuation<UNAuthorizationStatus, Never>) in
+                    center.getNotificationSettings { continuation.resume(returning: $0.authorizationStatus) }
+                }
 
-                switch settings.authorizationStatus {
+                switch status {
                 case .authorized, .provisional:
                     break
                 case .notDetermined:
