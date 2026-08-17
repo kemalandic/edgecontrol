@@ -70,6 +70,29 @@ class KioskWindow: NSWindow {
     override var canBecomeMain: Bool { true }
 }
 
+/// Hosts the dashboard and keeps its SwiftUI tree out of the accessibility
+/// hierarchy — the whole dashboard is one opaque group to assistive clients.
+///
+/// SwiftUI builds accessibility elements for a hosting view lazily, the first
+/// time any client walks or hit-tests it, and from then on it re-derives the
+/// attachments for every gesture-bearing element on every render. A full page
+/// is ~400 elements, which is 4–5 ms per frame; a drag renders per pointer
+/// event and turned from smooth into seconds behind the finger. Clients that
+/// do this are everywhere and invisible to the user: text grabbers query the
+/// element under the pointer on every mouse-up, hotkey navigators scan the
+/// front app, window managers enumerate windows. Never handing out children
+/// keeps the tree from ever being materialised, and the widgets remain
+/// operable through the Settings window.
+final class KioskHostingView<Content: View>: NSHostingView<Content> {
+    override func isAccessibilityElement() -> Bool { true }
+    override func accessibilityRole() -> NSAccessibility.Role? { .group }
+    override func accessibilityLabel() -> String? { "EdgeControl dashboard" }
+    override func accessibilityChildren() -> [Any]? { nil }
+    override func accessibilityChildrenInNavigationOrder() -> [any NSAccessibilityElementProtocol]? { nil }
+    override func accessibilityHitTest(_ point: NSPoint) -> Any? { self }
+    override var accessibilityFocusedUIElement: Any? { nil }
+}
+
 struct WindowAccessor: NSViewRepresentable {
     let callback: (NSWindow?) -> Void
 
