@@ -7,6 +7,44 @@ public struct CoreUsage: Identifiable, Equatable {
     public let usage: Double // 0-100
 }
 
+/// The memory arithmetic, kept apart from the `host_statistics64` call so it can
+/// be exercised with known page counts.
+struct MemoryReading {
+    let usedGB: Double
+    let usedPercent: Double
+    let pressurePercent: Double
+
+    init(stats: vm_statistics64, pageSize: Double, physicalBytes: Double) {
+        guard physicalBytes > 0 else {
+            usedGB = 0
+            usedPercent = 0
+            pressurePercent = 0
+            return
+        }
+
+        // Activity Monitor's "Memory Used" is app memory + wired + compressed. File-backed
+        // and purgeable pages are cache the kernel hands back the moment anything needs
+        // the space, so counting them as used overstates the figure by the size of the
+        // cache — tens of gigabytes on a machine with room to spare.
+        let appPages = max(0, Double(stats.internal_page_count) - Double(stats.purgeable_count))
+        let wiredPages = Double(stats.wire_count)
+        let compressedPages = Double(stats.compressor_page_count)
+        let usedBytes = (appPages + wiredPages + compressedPages) * pageSize
+        usedGB = max(0, usedBytes / (1024 * 1024 * 1024))
+        usedPercent = Self.percent(of: usedBytes, in: physicalBytes)
+
+        // Pressure is what the kernel cannot reclaim, which is the figure
+        // `memory_pressure` reports as unavailable. Deriving it from free pages instead
+        // leaves it a second copy of the used percentage, pinned high and blind to a
+        // real spike.
+        pressurePercent = Self.percent(of: (wiredPages + compressedPages) * pageSize, in: physicalBytes)
+    }
+
+    private static func percent(of bytes: Double, in total: Double) -> Double {
+        min(max(bytes / total * 100, 0), 100)
+    }
+}
+
 @MainActor
 public final class SystemMetricsService: ObservableObject {
     @Published public private(set) var latest: SystemMetrics?
@@ -117,11 +155,14 @@ public final class SystemMetricsService: ObservableObject {
         let pressurePercent: Double
         let usedGB: Double
         if result == KERN_SUCCESS {
-            let freePages = Double(stats.free_count + stats.speculative_count)
-            let usedBytes = Double(ProcessInfo.processInfo.physicalMemory) - (freePages * pageSize)
-            usedGB = max(0, usedBytes / (1024 * 1024 * 1024))
-            usedPercent = min(max((usedGB / totalMemoryGB) * 100, 0), 100)
-            pressurePercent = min(max(100 - ((freePages * pageSize) / Double(ProcessInfo.processInfo.physicalMemory) * 100), 0), 100)
+            let reading = MemoryReading(
+                stats: stats,
+                pageSize: pageSize,
+                physicalBytes: Double(ProcessInfo.processInfo.physicalMemory)
+            )
+            usedGB = reading.usedGB
+            usedPercent = reading.usedPercent
+            pressurePercent = reading.pressurePercent
         } else {
             usedGB = latest?.memoryUsedGB ?? 0
             usedPercent = latest?.memoryUsedPercent ?? 0

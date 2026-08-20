@@ -123,6 +123,7 @@
 		BC9C21332908CE217BAD6109 /* github-orgs.json in Resources */ = {isa = PBXBuildFile; fileRef = D453C8CB6E8919896376088D /* github-orgs.json */; };
 		C00DE5F6C2A285BDD9A2EB66 /* AppLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10418B6B91599F07758AB415 /* AppLog.swift */; };
 		C2418CFE9BB9A03196699319 /* MemoryHistoryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54719D274F7ACDD949ECE6B1 /* MemoryHistoryWidget.swift */; };
+		C6F2154BFCF7FCA1B6174699 /* MemoryReadingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71703594497679F81897571A /* MemoryReadingTests.swift */; };
 		C95EFF669BFD61A25DBEBC55 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB321E4A1BF145B8BAAE20D5 /* SettingsView.swift */; };
 		CA451229F99B09583CFC76E2 /* PluginManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67C08C5CA9435270274DCC6A /* PluginManagerView.swift */; };
 		CD37941FA72921E96249BA8B /* WindowPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */; };
@@ -255,6 +256,7 @@
 		6EA67D6152E0568A1CDD0A5F /* WiFiProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WiFiProvider.swift; sourceTree = "<group>"; };
 		70ECE563C838DF68844481D7 /* SystemGaugeWidgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemGaugeWidgetView.swift; sourceTree = "<group>"; };
 		70FEAAA8B09E3342724D9B5C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		71703594497679F81897571A /* MemoryReadingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryReadingTests.swift; sourceTree = "<group>"; };
 		7175879BD7EAFC1CB360F629 /* BluetoothWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothWidget.swift; sourceTree = "<group>"; };
 		71FA253FD7E072776DDBB0FD /* WindowPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPlacement.swift; sourceTree = "<group>"; };
 		722485033F676CCBCFB190DF /* TouchButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchButton.swift; sourceTree = "<group>"; };
@@ -578,6 +580,7 @@
 				88D41E20A1F2AF5648229E3B /* LayoutConfigTests.swift */,
 				97E43C87A7DE46C0837CA55B /* LayoutEngineTests.swift */,
 				60A1AA058F19A28213132880 /* LayoutStoreTests.swift */,
+				71703594497679F81897571A /* MemoryReadingTests.swift */,
 				7BDFD72C902F1B895FC4E4AC /* UnitSystemTests.swift */,
 			);
 			path = EdgeControlTests;
@@ -996,6 +999,7 @@
 				303445182C922B7EC2923508 /* LayoutConfigTests.swift in Sources */,
 				537CD61475EB89D7FB19E902 /* LayoutEngineTests.swift in Sources */,
 				F0B931A1C432E07FDE4E3660 /* LayoutStoreTests.swift in Sources */,
+				C6F2154BFCF7FCA1B6174699 /* MemoryReadingTests.swift in Sources */,
 				93E3BDABAA934EF0D339DB0C /* RateLimitTrackingTransportTests.swift in Sources */,
 				367DC444F94891E30BA706C5 /* StubTransport.swift in Sources */,
 				50D123F4E3361D68BA400ED4 /* UnitSystemTests.swift in Sources */,
