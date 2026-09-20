@@ -551,12 +551,7 @@ private final class LinkPasteTextView: NSTextView {
     /// Leading marker of a line — "•", a drawn checkbox, or "N." — with its
     /// trailing tab. 0 when the line is not a list item.
     private func markerLength(of line: String) -> Int {
-        if line.hasPrefix("•\t") || line.hasPrefix("\u{FFFC}\t") { return 2 }
-        guard let tab = line.firstIndex(of: "\t") else { return 0 }
-        let head = line[..<tab]
-        guard head.hasSuffix("."), head.count <= 6, !head.dropLast().isEmpty,
-              Int(head.dropLast()) != nil else { return 0 }
-        return (String(line[...tab]) as NSString).length
+        StickyNoteMarkup.markerLength(of: line)
     }
 
     private var listAttributes: [NSAttributedString.Key: Any] {
@@ -1109,11 +1104,7 @@ private final class LinkPasteTextView: NSTextView {
         }
     }
 
-    private func isLink(_ s: String) -> Bool {
-        guard !s.contains(" "), let url = URL(string: s),
-              let scheme = url.scheme?.lowercased() else { return false }
-        return (scheme == "http" || scheme == "https") && url.host != nil
-    }
+    private func isLink(_ s: String) -> Bool { StickyNoteMarkup.isWebLink(s) }
 
     private static func promptForTitle(defaultTitle: String) -> String? {
         let alert = NSAlert()
