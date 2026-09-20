@@ -60,12 +60,15 @@ public final class BluetoothService: ObservableObject {
     }
 
     private func sample() {
-        Self.bluetoothQueue.async {
+        // The weak capture belongs on the outer closure: leaving it on the inner
+        // Task only made the outer one hold a strong reference so it had
+        // something to weakly capture.
+        Self.bluetoothQueue.async { [weak self] in
             // collectPairedDevices is nonisolated + returns Sendable values;
             // safe to call from a background dispatch queue, and the result
             // hops back to the main actor for the @Published assignment.
             let snapshot = Self.collectPairedDevices()
-            Task { @MainActor [weak self] in
+            Task { @MainActor in
                 guard let self else { return }
                 self.isAvailable = snapshot.available
                 self.devices = snapshot.devices
