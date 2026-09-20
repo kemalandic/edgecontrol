@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 public final class WorldClocksWidget: DashboardWidget {
