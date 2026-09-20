@@ -43,8 +43,15 @@ public enum NoteMarkdown {
     /// - Parameter baseFont: the note's body font. Headings are recognised by
     ///   being bigger than it, so without it there is no way to tell a heading
     ///   from a line someone enlarged by hand — which is the same thing.
-    public static func markdown(from attributed: NSAttributedString, baseFont: NSFont) -> String {
-        emit(paragraphs(of: attributed, baseFont: baseFont))
+    /// - Parameter mediaPath: where an image file sits relative to the
+    ///   markdown being written. The default is the bare filename, which is
+    ///   what a note copied to the pasteboard should say; an export that
+    ///   copies the images alongside supplies the folder it put them in.
+    public static func markdown(
+        from attributed: NSAttributedString, baseFont: NSFont,
+        mediaPath: @escaping (String) -> String = { $0 }
+    ) -> String {
+        emit(paragraphs(of: attributed, baseFont: baseFont, mediaPath: mediaPath))
     }
 
     /// One line of the note, read but not yet written.
@@ -63,7 +70,10 @@ public enum NoteMarkdown {
         var isEntirelyCode: Bool
     }
 
-    static func paragraphs(of attributed: NSAttributedString, baseFont: NSFont) -> [Paragraph] {
+    static func paragraphs(
+        of attributed: NSAttributedString, baseFont: NSFont,
+        mediaPath: @escaping (String) -> String = { $0 }
+    ) -> [Paragraph] {
         let layout = StickyNoteLayout(font: baseFont)
         let text = attributed.string as NSString
         var result: [Paragraph] = []
@@ -103,7 +113,7 @@ public enum NoteMarkdown {
             // note's. A heading is already bold, and comparing it to the body
             // font would wrap every heading in asterisks: "# **Heading**".
             let lineFont = isHeadingKind(kind) ? layout.headingFont(headingNumber(kind)) : baseFont
-            var body = inline(of: slice, lineFont: lineFont)
+            var body = inline(of: slice, lineFont: lineFont, mediaPath: mediaPath)
             if kind == .plain { body = escapingLeadingMarkup(body) }
 
             result.append(
@@ -312,7 +322,10 @@ public enum NoteMarkdown {
     /// Emphasis markers must touch the text they emphasise: `** bold **` is
     /// not bold in any renderer. So a run's outer whitespace is lifted out of
     /// the markers rather than wrapped by them.
-    static func inline(of attributed: NSAttributedString, lineFont: NSFont) -> String {
+    static func inline(
+        of attributed: NSAttributedString, lineFont: NSFont,
+        mediaPath: (String) -> String = { $0 }
+    ) -> String {
         var out = ""
         let lineTraits = lineFont.fontDescriptor.symbolicTraits
         let full = NSRange(location: 0, length: attributed.length)
@@ -350,6 +363,13 @@ public enum NoteMarkdown {
             }
 
             if let link = linkString(attrs[.link]) {
+                if let name = NoteMedia.file(fromLink: link) {
+                    // The run's characters are the attachment placeholder, so
+                    // the file's name is the only thing worth writing — as the
+                    // alt text and as the path.
+                    out += leading + "![" + escapingInline(name) + "](" + mediaPath(name) + ")" + trailing
+                    return
+                }
                 wrapped = "[" + wrapped + "](" + link + ")"
             }
 

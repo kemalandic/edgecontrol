@@ -41,6 +41,12 @@ public final class NoteStore: Sendable {
         directoryURL.appendingPathComponent("History/\(id)", isDirectory: true)
     }
 
+    /// Where a note's images live. Beside the note rather than inside it,
+    /// because RTF carries no images — see NoteMedia.
+    public func mediaDirectory(for id: String) -> URL {
+        directoryURL.appendingPathComponent(NoteMedia.relativeFolder(for: id), isDirectory: true)
+    }
+
     /// Compact, sortable, and legal in a filename on every filesystem the app
     /// might sit on — which rules out the colons in an ISO-8601 time.
     private static let stampFormat = "yyyyMMdd'T'HHmmss'Z'"
@@ -151,10 +157,42 @@ public final class NoteStore: Sendable {
         index.remove(id: id)
         write(index)
         let fm = FileManager.default
-        for url in [bodyURL(id), plainURL(id), historyURL(id)] {
+        for url in [bodyURL(id), plainURL(id), historyURL(id), mediaDirectory(for: id)] {
             guard fm.fileExists(atPath: url.path) else { continue }
             AppLog.attempt("removing \(url.lastPathComponent)") { try fm.removeItem(at: url) }
         }
+    }
+
+    // MARK: - Media
+
+    /// Stores an image beside a note and answers with the name to reference
+    /// it by, or nil when the bytes are not an image this app recognises.
+    ///
+    /// The name is derived from the bytes, never from the pasteboard's
+    /// claim about them: an extension that does not match the contents is a
+    /// file nothing can open.
+    public func writeMedia(_ data: Data, for id: String, now: Date = Date()) -> String? {
+        guard !id.isEmpty, !data.isEmpty else { return nil }
+        let folder = mediaDirectory(for: id)
+        let ordinal = mediaNames(for: id).count + 1
+        let suffix = String(Int(now.timeIntervalSince1970), radix: 36)
+        guard let name = NoteMedia.filename(for: data, ordinal: ordinal, suffix: suffix) else { return nil }
+
+        createDirectory(folder)
+        let wrote = AppLog.attempt("writing image \(name)") {
+            try data.write(to: folder.appendingPathComponent(name), options: .atomic)
+        }
+        return wrote ? name : nil
+    }
+
+    public func mediaData(named name: String, for id: String) -> Data? {
+        guard NoteMedia.isSafeFilename(name) else { return nil }
+        return try? Data(contentsOf: mediaDirectory(for: id).appendingPathComponent(name))
+    }
+
+    public func mediaNames(for id: String) -> [String] {
+        let names = try? FileManager.default.contentsOfDirectory(atPath: mediaDirectory(for: id).path)
+        return (names ?? []).filter { NoteMedia.isSafeFilename($0) }.sorted()
     }
 
     // MARK: - History

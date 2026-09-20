@@ -12,6 +12,12 @@ struct RichStickyTextView: NSViewRepresentable {
     let linkColor: NSColor
     let onFontSizeDelta: (Double) -> Void
     let onFontSizeReset: () -> Void
+    /// Stores pasted image data beside the note and answers with the name to
+    /// reference it by, or nil when it will not take it. The store and the
+    /// note's identity live a layer up; the editor only needs the answer.
+    let writeMedia: (Data) -> String?
+    /// Reads an image back for drawing.
+    let readMedia: (String) -> Data?
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = LinkPasteTextView()
@@ -48,6 +54,8 @@ struct RichStickyTextView: NSViewRepresentable {
         textView.accentColor = linkColor
         textView.onFontSizeDelta = onFontSizeDelta
         textView.onFontSizeReset = onFontSizeReset
+        textView.writeMedia = writeMedia
+        textView.readMedia = readMedia
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
         textView.normalizeCheckboxes()
 
@@ -65,6 +73,8 @@ struct RichStickyTextView: NSViewRepresentable {
         textView.accentColor = linkColor
         textView.onFontSizeDelta = onFontSizeDelta
         textView.onFontSizeReset = onFontSizeReset
+        textView.writeMedia = writeMedia
+        textView.readMedia = readMedia
         let fontChanged = context.coordinator.appliedFontKey != fontKey
         let colorChanged = context.coordinator.appliedColorKey != colorKey
         // Reload only on a genuine external change — and never on the pass
@@ -201,6 +211,16 @@ struct RichStickyTextView: NSViewRepresentable {
                 plain.removeValue(forKey: .attachment)
                 plain.removeValue(forKey: .cursor)
                 mapped.append(NSAttributedString(string: box.checked ? "☑" : "☐", attributes: plain))
+            } else if let media = attrs[.attachment] as? MediaAttachment {
+                // RTF has nowhere to put an image, so what goes in the file is
+                // the link that names the one sitting beside it.
+                var plain = attrs
+                plain.removeValue(forKey: .attachment)
+                plain.removeValue(forKey: .cursor)
+                plain[.link] = NoteMedia.link(forFile: media.filename)
+                mapped.append(
+                    NSAttributedString(
+                        string: NoteMedia.placeholderText(for: media.filename), attributes: plain))
             } else {
                 mapped.append(attributed.attributedSubstring(from: range))
             }

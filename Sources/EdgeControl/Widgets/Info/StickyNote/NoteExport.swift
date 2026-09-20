@@ -56,11 +56,19 @@ enum NoteExport {
     }
 
     /// A note's markdown, given the RTF the store holds.
-    static func markdown(forRTF data: Data) -> String? {
+    static func markdown(forRTF data: Data, mediaPath: @escaping (String) -> String = { $0 }) -> String? {
         guard !data.isEmpty, let attributed = NSAttributedString(rtf: data, documentAttributes: nil) else {
             return nil
         }
-        return NoteMarkdown.markdown(from: attributed, baseFont: inferredBaseFont(of: attributed))
+        return NoteMarkdown.markdown(
+            from: attributed, baseFont: inferredBaseFont(of: attributed), mediaPath: mediaPath)
+    }
+
+    /// Where an exported note's images go, relative to the markdown beside
+    /// them. A folder per note, named after it, so the export is one thing
+    /// that can be moved or zipped without anything coming loose.
+    static func mediaFolder(forStem stem: String) -> String {
+        "media/\(stem)"
     }
 
     // MARK: - Names
@@ -131,15 +139,22 @@ enum NoteExport {
         }
 
         for record in store.records().sorted(by: { $0.created < $1.created }) {
+            // The name is settled first: the images go in a folder named
+            // after the note, and the note's own text has to point at it.
+            let name = filename(for: record.title, taken: &taken)
+            let stem = String(name.dropLast(3))
+            let folder = mediaFolder(forStem: stem)
+
             guard let data = Data(base64Encoded: store.body(id: record.id)),
-                let markdown = markdown(forRTF: data),
+                let markdown = markdown(forRTF: data, mediaPath: { "\(folder)/\($0)" }),
                 !markdown.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             else {
                 result.skipped += 1
                 continue
             }
 
-            let url = directory.appendingPathComponent(filename(for: record.title, taken: &taken))
+            copyMedia(of: record, from: store, into: directory.appendingPathComponent(folder))
+            let url = directory.appendingPathComponent(name)
             let wrote = AppLog.attempt("writing \(url.lastPathComponent)") {
                 try Data(markdown.utf8).write(to: url, options: .atomic)
             }
@@ -147,5 +162,23 @@ enum NoteExport {
         }
 
         return result
+    }
+
+    /// Copies a note's images next to its markdown, so the exported folder
+    /// stands on its own. Nothing is copied for a note that has none, which
+    /// is most of them — an empty folder per note would be noise.
+    private static func copyMedia(of record: NoteRecord, from store: NoteStore, into directory: URL) {
+        let names = store.mediaNames(for: record.id)
+        guard !names.isEmpty else { return }
+
+        AppLog.attempt("creating \(directory.lastPathComponent)") {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        for name in names {
+            guard let data = store.mediaData(named: name, for: record.id) else { continue }
+            AppLog.attempt("copying \(name)") {
+                try data.write(to: directory.appendingPathComponent(name), options: .atomic)
+            }
+        }
     }
 }

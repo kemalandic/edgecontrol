@@ -38,7 +38,15 @@ struct StickyNoteWidgetView: View {
             textColor: textNSColor,
             linkColor: NSColor(primary),
             onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
-            onFontSizeReset: { persistFontSize(18) }
+            onFontSizeReset: { persistFontSize(18) },
+            writeMedia: { data in
+                guard !activeId.isEmpty else { return nil }
+                return store.writeMedia(data, for: activeId)
+            },
+            readMedia: { name in
+                guard !activeId.isEmpty else { return nil }
+                return store.mediaData(named: name, for: activeId)
+            }
         )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))

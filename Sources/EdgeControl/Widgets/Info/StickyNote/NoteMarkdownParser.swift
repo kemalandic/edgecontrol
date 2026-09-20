@@ -285,6 +285,22 @@ extension NoteMarkdown {
                 continue
             }
 
+            // An image is a link with a bang in front of it, and it is read
+            // before the link branch so the bang is not left behind as text.
+            if character == "!", index + 1 < characters.count, characters[index + 1] == "[",
+                let parsed = parseLink(characters, from: index + 1)
+            {
+                flush()
+                let name = mediaFilename(in: parsed.url)
+                runs.append(
+                    InlineRun(
+                        text: parsed.title.isEmpty ? (name ?? parsed.url) : parsed.title,
+                        style: style,
+                        link: name.map { NoteMedia.link(forFile: $0) } ?? parsed.url))
+                index = parsed.end
+                continue
+            }
+
             if character == "[", let parsed = parseLink(characters, from: index) {
                 flush()
                 runs.append(
@@ -329,6 +345,19 @@ extension NoteMarkdown {
 
         flush()
         return runs
+    }
+
+    /// The note's own image a markdown path points at, if it points at one.
+    ///
+    /// A path with a scheme is somewhere else entirely — an image on the web
+    /// is read as a link, because there is no file beside the note to draw
+    /// and inventing one would be worse than saying what it is.
+    static func mediaFilename(in path: String) -> String? {
+        guard !path.contains("://"), !path.hasPrefix("data:") else { return nil }
+        if let direct = NoteMedia.file(fromLink: path) { return direct }
+        guard !path.contains(":") else { return nil }
+        let name = (path as NSString).lastPathComponent
+        return NoteMedia.isSafeFilename(name) && !(name as NSString).pathExtension.isEmpty ? name : nil
     }
 
     private static func closingBacktick(_ characters: [Character], from start: Int) -> Int? {

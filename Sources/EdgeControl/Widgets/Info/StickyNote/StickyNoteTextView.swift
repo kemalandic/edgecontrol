@@ -10,6 +10,8 @@ final class LinkPasteTextView: NSTextView {
     var accentColor: NSColor = .systemYellow
     var onFontSizeDelta: ((Double) -> Void)?
     var onFontSizeReset: (() -> Void)?
+    var writeMedia: ((Data) -> String?)?
+    var readMedia: ((String) -> Data?)?
     private var isNormalizing = false
     private lazy var formatBar = StickyNoteFormatBar(owner: self)
 
@@ -178,9 +180,43 @@ final class LinkPasteTextView: NSTextView {
             }
             idx -= 1
         }
+        normalizeMedia()
         applyParagraphSpacing()
         renumberOrderedLists()
         applyTracking()
+    }
+
+    /// Turns the media links a loaded note carries into drawn images.
+    ///
+    /// Runs backwards for the same reason the checkbox pass does: each
+    /// replacement changes the length of everything after it.
+    func normalizeMedia() {
+        guard let storage = textStorage, let readMedia else { return }
+        var location = storage.length
+        while location > 0 {
+            var effective = NSRange()
+            let probe = max(0, location - 1)
+            let link = storage.attribute(.link, at: probe, effectiveRange: &effective)
+            location = effective.location
+
+            guard storage.attribute(.attachment, at: probe, effectiveRange: nil) == nil,
+                let name = NoteMedia.file(fromLink: linkString(link)),
+                let data = readMedia(name),
+                let attachment = MediaAttachment.make(filename: name, data: data)
+            else { continue }
+
+            let drawn = NSMutableAttributedString(attachment: attachment)
+            drawn.addAttributes(
+                [.font: defaultFont, .link: NoteMedia.link(forFile: name)],
+                range: NSRange(location: 0, length: drawn.length))
+            storage.replaceCharacters(in: effective, with: drawn)
+        }
+    }
+
+    private func linkString(_ value: Any?) -> String {
+        if let url = value as? URL { return url.absoluteString }
+        if let string = value as? String { return string }
+        return ""
     }
 
     /// Stamps the family's tracking over everything so loaded and pasted
@@ -924,6 +960,7 @@ final class LinkPasteTextView: NSTextView {
     // MARK: Link paste
 
     override func paste(_ sender: Any?) {
+        if pasteImage() { return }
         guard
             let pasted = NSPasteboard.general.string(forType: .string)?
                 .trimmingCharacters(in: .whitespacesAndNewlines),
@@ -947,6 +984,50 @@ final class LinkPasteTextView: NSTextView {
             // Continued typing must not extend the link.
             typingAttributes[.link] = nil
         }
+    }
+
+    /// An image on the pasteboard is written beside the note and referenced
+    /// from it.
+    ///
+    /// Refusing is a real outcome: data of a kind this app cannot identify is
+    /// not written under a guessed name, and the paste falls through to
+    /// whatever else the pasteboard holds — usually the text a copied image
+    /// came with.
+    private func pasteImage() -> Bool {
+        let board = NSPasteboard.general
+        guard let writeMedia, let data = imageData(on: board), let name = writeMedia(data) else { return false }
+        guard let attachment = MediaAttachment.make(filename: name, data: data) else { return false }
+
+        let drawn = NSMutableAttributedString(attachment: attachment)
+        drawn.addAttributes(
+            [.font: defaultFont, .link: NoteMedia.link(forFile: name)],
+            range: NSRange(location: 0, length: drawn.length))
+        insertText(drawn, replacementRange: selectedRange())
+        // Continued typing is text, not part of the image's reference.
+        typingAttributes = bodyAttributes
+        return true
+    }
+
+    /// Image bytes from the pasteboard, preferring what was actually copied
+    /// over a rendering of it: a file dragged in keeps its own encoding, and
+    /// re-encoding a PNG as TIFF makes it several times larger for nothing.
+    private func imageData(on board: NSPasteboard) -> Data? {
+        if let urls = board.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true])
+            as? [URL]
+        {
+            for url in urls {
+                guard let data = try? Data(contentsOf: url), NoteMedia.fileExtension(for: data) != nil else {
+                    continue
+                }
+                return data
+            }
+        }
+        for type in [NSPasteboard.PasteboardType.png, .tiff] {
+            if let data = board.data(forType: type), NoteMedia.fileExtension(for: data) != nil {
+                return data
+            }
+        }
+        return nil
     }
 
     private func isLink(_ s: String) -> Bool { StickyNoteMarkup.isWebLink(s) }
