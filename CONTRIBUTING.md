@@ -56,6 +56,26 @@ was green came from actually running it.
 - No third-party dependencies — keep it native
 - Follow existing patterns in the codebase
 
+## Formatting
+
+`swift-format` decides it, with `.swift-format` at the repository root. It ships
+inside Xcode, so there is nothing to install:
+
+```bash
+xcrun swift-format format --in-place --configuration .swift-format --recursive Sources Tests
+```
+
+`./Scripts/ci-local.sh` checks it, and so does CI, which means nobody spends
+review on indentation. That is the whole point of it — not that this particular
+indentation is better than another.
+
+The reformat that introduced it touched almost every file, so it is listed in
+`.git-blame-ignore-revs`. GitHub skips it automatically; for the same locally:
+
+```bash
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+```
+
 ## How the code is laid out
 
 One type per file, named after it. Files that belong together live in a folder

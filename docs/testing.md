@@ -8,8 +8,9 @@ that cannot.
 ## Running the suite
 
 ```bash
-./Scripts/ci-local.sh          # generate, build, test, coverage — what CI runs
+./Scripts/ci-local.sh          # format, build, test, coverage — what CI runs
 ./Scripts/ci-local.sh test     # tests only
+./Scripts/ci-local.sh format   # formatting only
 SKIP_CLEAN=1 ./Scripts/ci-local.sh   # incremental, while iterating
 ```
 

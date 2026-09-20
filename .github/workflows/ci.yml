@@ -44,7 +44,7 @@ jobs:
       - name: Install xcodegen
         run: brew install xcodegen
 
-      # Everything below is Scripts/ci-local.sh, which generates the project,
+      # Everything below is Scripts/ci-local.sh, which checks formatting, generates the project,
       # builds clean and unsigned, reports the compiler-warning count against a
       # budget, tests with coverage, and prints the coverage table. Keeping the
       # commands in the script rather than here is what makes a local run and a

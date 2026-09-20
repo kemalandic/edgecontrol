@@ -2,7 +2,7 @@
 # The commands CI runs. The workflow calls this file, so what you run locally and
 # what runs on a pull request cannot drift apart.
 #
-#   Scripts/ci-local.sh [build|test|all]
+#   Scripts/ci-local.sh [build|test|format|all]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -22,6 +22,20 @@ UNSIGNED=(
 )
 
 step() { printf '\n\033[1m▸ %s\033[0m\n' "$1"; }
+
+check_format() {
+    step "format"
+    # swift-format ships inside Xcode, so this needs nothing installed. It only
+    # reads; the message says what to run to fix.
+    if xcrun swift-format lint --strict --configuration .swift-format --recursive Sources Tests; then
+        echo "Formatting is clean."
+        return 0
+    fi
+    echo >&2
+    echo "Formatting differs. Run:" >&2
+    echo "    xcrun swift-format format --in-place --configuration .swift-format --recursive Sources Tests" >&2
+    return 1
+}
 
 generate() {
     step "xcodegen generate"
@@ -112,8 +126,9 @@ coverage() {
 }
 
 case "${1:-all}" in
-    build) generate; build ;;
-    test)  generate; build; run_tests; coverage ;;
-    all)   generate; build; run_tests; coverage ;;
-    *)     echo "usage: $0 [build|test|all]" >&2; exit 2 ;;
+    build)  generate; build ;;
+    test)   generate; build; run_tests; coverage ;;
+    format) check_format ;;
+    all)    check_format; generate; build; run_tests; coverage ;;
+    *)      echo "usage: $0 [build|test|format|all]" >&2; exit 2 ;;
 esac
