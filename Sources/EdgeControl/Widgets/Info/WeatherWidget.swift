@@ -23,12 +23,11 @@ public final class WeatherWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
+        // No layout decision here: a row count says nothing about how many
+        // points a cell has. The body measures itself — see WeatherLayout.
         WeatherWidgetBody(
             service: service,
-            showForecast: config.bool("showForecast", default: true),
-            // Minimum size is 4x4, so the compact layout must trigger at 4 or
-            // it never renders; the full 64pt/72pt layout needs 5+ rows.
-            isCompact: size.height <= 4
+            showForecast: config.bool("showForecast", default: true)
         )
     }
 }
@@ -40,18 +39,38 @@ private struct WeatherWidgetBody: View {
     @Environment(\.themeSettings) private var ts
     @Environment(\.unitSystem) private var units
     let showForecast: Bool
-    let isCompact: Bool
 
     var body: some View {
-        if let w = service.current {
-            VStack(spacing: 0) {
-                todayRow(w)
+        GeometryReader { geo in
+            content(availableHeight: geo.size.height)
+                .frame(width: geo.size.width, height: geo.size.height)
+        }
+    }
 
-                if showForecast && !service.dailyForecast.isEmpty {
+    /// The setting being on is not enough — an empty forecast draws nothing,
+    /// and the space it would have taken belongs to the today row instead.
+    private var showsForecast: Bool {
+        showForecast && !service.dailyForecast.isEmpty
+    }
+
+    @ViewBuilder
+    private func content(availableHeight: CGFloat) -> some View {
+        if let w = service.current {
+            let layout = WeatherLayout(
+                mode: WeatherLayout.mode(availableHeight: availableHeight, showsForecast: showsForecast, theme: ts)
+            )
+            VStack(spacing: 0) {
+                // Spare height goes to the today row, where the reading people
+                // actually look at lives, rather than to the forecast strip.
+                todayRow(w, layout)
+                    .frame(maxHeight: .infinity)
+
+                if showsForecast {
                     Divider().background(Theme.border(ts))
-                    forecastRow()
+                    forecastRow(layout)
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .widgetCard()
         } else if service.error != nil {
             VStack(spacing: 8) {
@@ -76,96 +95,112 @@ private struct WeatherWidgetBody: View {
         }
     }
 
-    private func todayRow(_ w: CurrentWeatherData) -> some View {
-        HStack(spacing: isCompact ? 12 : 20) {
-            VStack(spacing: 4) {
+    private func todayRow(_ w: CurrentWeatherData, _ layout: WeatherLayout) -> some View {
+        HStack(spacing: layout.columnSpacing) {
+            VStack(spacing: layout.heroSpacing) {
                 Image(systemName: w.symbolName)
-                    .font(.system(size: (isCompact ? 36 : 64) * ts.fontScale))
+                    .font(.system(size: layout.conditionIconSize * ts.fontScale))
                     .symbolRenderingMode(.multicolor)
 
                 Text(units.degrees(fromCelsius: w.temperature))
-                    .font(Theme.font(size: isCompact ? 36 : 72, weight: .light, settings: ts))
+                    .font(Theme.font(size: layout.temperatureSize, weight: .light, settings: ts))
                     .foregroundStyle(Theme.text1(ts))
                     .monospacedDigit()
                     .minimumScaleFactor(0.5)
 
                 Text(w.conditionText.uppercased())
-                    .font(isCompact ? Theme.caption(ts) : Theme.title(ts))
+                    .font(layout.isCompact ? Theme.caption(ts) : Theme.title(ts))
                     .foregroundStyle(Theme.text2(ts))
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
             }
             .frame(maxWidth: .infinity)
 
-            VStack(alignment: .leading, spacing: isCompact ? 6 : 10) {
-                statRow(icon: "humidity.fill", label: "Humidity", value: "\(w.humidity)%")
-                statRow(icon: "wind", label: "Wind", value: units.windSpeedText(fromKilometresPerHour: w.windSpeed))
+            VStack(alignment: .leading, spacing: layout.statSpacing) {
+                statRow(icon: "humidity.fill", label: "Humidity", value: "\(w.humidity)%", layout)
+                statRow(
+                    icon: "wind", label: "Wind",
+                    value: units.windSpeedText(fromKilometresPerHour: w.windSpeed), layout
+                )
 
                 if let today = service.dailyForecast.first {
-                    statRow(icon: "thermometer.high", label: "High", value: units.degrees(fromCelsius: today.highTemp))
-                    statRow(icon: "thermometer.low", label: "Low", value: units.degrees(fromCelsius: today.lowTemp))
+                    statRow(
+                        icon: "thermometer.high", label: "High",
+                        value: units.degrees(fromCelsius: today.highTemp), layout
+                    )
+                    statRow(
+                        icon: "thermometer.low", label: "Low",
+                        value: units.degrees(fromCelsius: today.lowTemp), layout
+                    )
                 }
 
                 if let alert = findUpcomingChange() {
                     HStack(spacing: 6) {
                         Image(systemName: alert.icon)
-                            .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
+                            .font(.system(size: layout.statIconSize * ts.fontScale))
                             .foregroundStyle(alert.color)
                         Text(alert.message)
-                            .font(isCompact ? Theme.caption(ts) : Theme.title(ts))
+                            .font(layout.isCompact ? Theme.caption(ts) : Theme.title(ts))
                             .foregroundStyle(alert.color)
                             .lineLimit(1)
                             .minimumScaleFactor(0.6)
                     }
-                    .padding(isCompact ? 6 : 10)
+                    .padding(layout.alertPadding)
                     .background(alert.color.opacity(0.10), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(isCompact ? 10 : 16)
+        .padding(layout.padding)
     }
 
-    private func forecastRow() -> some View {
+    private func forecastRow(_ layout: WeatherLayout) -> some View {
         HStack(spacing: 0) {
             ForEach(Array(service.dailyForecast.enumerated()), id: \.element.id) { index, day in
-                dayCard(day, index: index)
+                dayCard(day, index: index, layout)
                     .frame(maxWidth: .infinity)
-                if index < service.dailyForecast.count - 1 {
-                    Rectangle()
-                        .fill(Theme.border(ts))
-                        .frame(width: 1)
-                        .padding(.vertical, 8)
-                }
+                    // The separator rides as an overlay instead of standing in
+                    // the stack as a sibling. A Rectangle is greedy in both
+                    // axes, and as a sibling it stretched the strip to swallow
+                    // every spare point in the cell, leaving the day cards
+                    // marooned in the middle of an empty band.
+                    .overlay(alignment: .trailing) {
+                        if index < service.dailyForecast.count - 1 {
+                            Rectangle()
+                                .fill(Theme.border(ts))
+                                .frame(width: 1)
+                                .padding(.vertical, layout.forecastPadding)
+                        }
+                    }
             }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 8)
+        .padding(.vertical, layout.forecastPadding)
     }
 
-    private func dayCard(_ day: DayForecast, index: Int) -> some View {
-        VStack(spacing: isCompact ? 3 : 6) {
+    private func dayCard(_ day: DayForecast, index: Int, _ layout: WeatherLayout) -> some View {
+        VStack(spacing: layout.daySpacing) {
             Text(dayLabel(day.date, index: index))
-                .font(isCompact ? Theme.caption(ts) : Theme.title(ts))
+                .font(layout.isCompact ? Theme.caption(ts) : Theme.title(ts))
                 .foregroundStyle(Theme.text2(ts))
 
             Image(systemName: day.symbolName)
-                .font(.system(size: (isCompact ? 18 : 32) * ts.fontScale))
+                .font(.system(size: layout.dayIconSize * ts.fontScale))
                 .symbolRenderingMode(.multicolor)
-                .frame(height: isCompact ? 22 : 36)
+                .frame(height: layout.dayIconBox)
 
             HStack(spacing: 3) {
                 Text(units.degrees(fromCelsius: day.highTemp))
-                    .font(isCompact ? Theme.body(ts) : Theme.value(ts))
+                    .font(layout.isCompact ? Theme.body(ts) : Theme.value(ts))
                     .foregroundStyle(Theme.text1(ts))
                     .monospacedDigit()
                 Text(units.degrees(fromCelsius: day.lowTemp))
-                    .font(isCompact ? Theme.caption(ts) : Theme.value(ts))
+                    .font(layout.isCompact ? Theme.caption(ts) : Theme.value(ts))
                     .foregroundStyle(Theme.text3(ts))
                     .monospacedDigit()
             }
 
-            if !isCompact {
+            if layout.showsDayCondition {
                 Text(day.conditionText)
                     .font(Theme.body(ts))
                     .foregroundStyle(Theme.text3(ts))
@@ -173,7 +208,7 @@ private struct WeatherWidgetBody: View {
                     .minimumScaleFactor(0.5)
             }
         }
-        .padding(.vertical, isCompact ? 4 : 8)
+        .padding(.vertical, layout.dayPadding)
         .padding(.horizontal, 4)
     }
 
@@ -222,18 +257,18 @@ private struct WeatherWidgetBody: View {
         return nil
     }
 
-    private func statRow(icon: String, label: String, value: String) -> some View {
+    private func statRow(icon: String, label: String, value: String, _ layout: WeatherLayout) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
+                .font(.system(size: layout.statIconSize * ts.fontScale))
                 .foregroundStyle(Theme.widgetPrimary("weather", ts: ts, default: .cyan).opacity(0.7))
                 .frame(width: 22)
             Text(label)
-                .font(isCompact ? Theme.caption(ts) : Theme.body(ts))
+                .font(layout.isCompact ? Theme.caption(ts) : Theme.body(ts))
                 .foregroundStyle(Theme.text3(ts))
             Spacer()
             Text(value)
-                .font(isCompact ? Theme.label(ts) : Theme.value(ts))
+                .font(layout.isCompact ? Theme.label(ts) : Theme.value(ts))
                 .foregroundStyle(Theme.text1(ts))
                 .monospacedDigit()
         }
