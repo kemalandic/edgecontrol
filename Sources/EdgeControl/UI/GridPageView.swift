@@ -101,19 +101,27 @@ struct GridPageView: View {
                             // dragging janky. The wrapper skips a widget's
                             // body unless its own inputs changed, so a drag
                             // only updates cheap transforms.
-                            WidgetContentView(
-                                registry: registry,
-                                widgetId: placement.widgetId,
-                                width: placement.width,
-                                height: placement.height,
-                                config: cfg,
-                                gap: CGFloat(layoutEngine.document.globalSettings.theme.widgetGap)
-                            )
-                            .equatable()
-                            // In edit mode the widget's own controls go
-                            // inert: any point on the card drags it, and a
-                            // tap selects it instead of poking the widget.
-                            .allowsHitTesting(!editMode)
+                            // A focused widget is drawn by the shell at panel
+                            // size. Drawing it here as well would put two live
+                            // editors on one note, each with its own draft and
+                            // its own idea of what has been saved.
+                            if layoutEngine.isFocused(pageId: page.id, instanceId: placement.instanceId) {
+                                Color.clear
+                            } else {
+                                WidgetContentView(
+                                    registry: registry,
+                                    widgetId: placement.widgetId,
+                                    width: placement.width,
+                                    height: placement.height,
+                                    config: cfg,
+                                    gap: CGFloat(layoutEngine.document.globalSettings.theme.widgetGap)
+                                )
+                                .equatable()
+                                // In edit mode the widget's own controls go
+                                // inert: any point on the card drags it, and a
+                                // tap selects it instead of poking the widget.
+                                .allowsHitTesting(!editMode)
+                            }
                         }
                         .frame(width: w, height: h)
                         // Compact layouts at large font scales can overflow a
@@ -209,16 +217,31 @@ struct GridPageView: View {
                         // can't swallow touches.
                         .overlay(alignment: .bottomTrailing) {
                             if !editMode, commandHeld, hoveredInstanceId == placement.instanceId {
-                                Button {
-                                    openWidgetSettings(placement)
-                                } label: {
-                                    Image(systemName: "gearshape.fill")
-                                        .font(.system(size: 13))
-                                        .foregroundStyle(.white.opacity(0.85))
-                                        .padding(5)
-                                        .background(Circle().fill(Color.black.opacity(0.55)))
+                                HStack(spacing: 6) {
+                                    Button {
+                                        layoutEngine.focus(
+                                            pageId: page.id, instanceId: placement.instanceId)
+                                    } label: {
+                                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.white.opacity(0.85))
+                                            .padding(5)
+                                            .background(Circle().fill(Color.black.opacity(0.55)))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("Fill the panel")
+
+                                    Button {
+                                        openWidgetSettings(placement)
+                                    } label: {
+                                        Image(systemName: "gearshape.fill")
+                                            .font(.system(size: 13))
+                                            .foregroundStyle(.white.opacity(0.85))
+                                            .padding(5)
+                                            .background(Circle().fill(Color.black.opacity(0.55)))
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
                                 .padding(6)
                                 .transition(.opacity)
                             }
@@ -610,9 +633,19 @@ private struct EditKeyCatcher: NSViewRepresentable {
                 monitor = nil
             } else if monitor == nil {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                    guard let self, let engine = self.engine, engine.isEditing,
-                        event.window === self.window
+                    guard let self, let engine = self.engine, event.window === self.window
                     else { return event }
+
+                    // Focus mode answers Esc before anything else, and answers
+                    // it even while a note holds the keyboard: the panel is
+                    // that one widget, so the only thing Esc can usefully mean
+                    // there is "give the dashboard back".
+                    if engine.focusedWidget != nil, event.keyCode == 53 {
+                        engine.clearFocus()
+                        return nil
+                    }
+
+                    guard engine.isEditing else { return event }
 
                     // A focused text view owns these keys. Inside a sticky note
                     // Cmd+Z is text undo and Esc cancels the field, not the edit

@@ -28,6 +28,46 @@ public final class LayoutEngine: ObservableObject {
     /// settings views consume it (Pages tab, page selected, widget row
     /// scrolled into view) and clear it.
     @Published public var settingsFocus: SettingsFocus?
+
+    /// One widget filling the panel on its own.
+    ///
+    /// The 14.5" strip is six rows tall, so a note big enough to write in is
+    /// a note that has taken the dashboard over. Focus is the way to have
+    /// both: a glance most of the time, the whole panel when there is
+    /// something to write.
+    public struct WidgetFocus: Equatable, Sendable {
+        public let pageId: String
+        public let instanceId: String
+
+        public init(pageId: String, instanceId: String) {
+            self.pageId = pageId
+            self.instanceId = instanceId
+        }
+    }
+
+    @Published public var focusedWidget: WidgetFocus?
+
+    /// Not while the layout is being edited: the two want the same screen,
+    /// and the same Esc.
+    public func focus(pageId: String, instanceId: String) {
+        guard !isEditing else { return }
+        focusedWidget = WidgetFocus(pageId: pageId, instanceId: instanceId)
+    }
+
+    public func clearFocus() {
+        focusedWidget = nil
+    }
+
+    public func isFocused(pageId: String, instanceId: String) -> Bool {
+        focusedWidget == WidgetFocus(pageId: pageId, instanceId: instanceId)
+    }
+
+    public func placement(pageId: String, instanceId: String) -> WidgetPlacement? {
+        guard let pageIdx = pageIndex(for: pageId),
+            let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId)
+        else { return nil }
+        return document.pages[pageIdx].widgets[widgetIdx]
+    }
     /// True while the dashboard is in edit mode. Placement rules relax so
     /// widgets can overlap as a staging state while rearranging; store writes
     /// pause until the session ends, and a session cannot end (or flush at
@@ -38,6 +78,8 @@ public final class LayoutEngine: ObservableObject {
             // Entering a session: persist the clean pre-session state first,
             // so a write debounced moments earlier can't be swallowed by the
             // session's write suppression.
+            // Editing takes the screen back from a focused widget.
+            if isEditing { focusedWidget = nil }
             if isEditing && !oldValue {
                 flushSave()
                 editBaseline = document
@@ -244,6 +286,9 @@ public final class LayoutEngine: ObservableObject {
         guard let pageIdx = pageIndex(for: pageId) else { return }
         recordLayoutUndo()
         document.pages[pageIdx].widgets.removeAll { $0.instanceId == instanceId }
+        // Focus on a widget that no longer exists leaves the panel showing an
+        // overlay with nothing in it, and no way back.
+        if isFocused(pageId: pageId, instanceId: instanceId) { clearFocus() }
         save()
     }
 

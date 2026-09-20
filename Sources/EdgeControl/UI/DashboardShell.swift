@@ -119,6 +119,15 @@ struct DashboardShell: View {
                     // Gear icon (top-right)
                     gearButton()
 
+                    // One widget, the whole panel. Drawn last so it sits over
+                    // the pages, the indicator and the gear alike.
+                    if let focus = layoutEngine.focusedWidget,
+                        let placement = layoutEngine.placement(
+                            pageId: focus.pageId, instanceId: focus.instanceId)
+                    {
+                        focusLayer(placement: placement, pageId: focus.pageId, grid: grid, size: geo.size)
+                    }
+
                 } else {
                     // Loading state
                     VStack(spacing: 12) {
@@ -190,6 +199,67 @@ struct DashboardShell: View {
     // MARK: - Paging
 
     /// Dragging past the first/last page moves at one-third rate, iPhone-style.
+    // MARK: - Focus
+
+    /// The focused widget over a dimmed dashboard.
+    ///
+    /// The widget is asked to draw itself at the size of the grid rather than
+    /// of its cell, so anything that lays itself out by the space it has —
+    /// the weather widget, the note editor — uses the room it has been given.
+    /// The size is clamped to what the widget says it supports, because a
+    /// widget built for six rows has nothing to do with twenty columns.
+    @ViewBuilder
+    private func focusLayer(
+        placement: WidgetPlacement, pageId: String, grid: DynamicGrid, size: CGSize
+    ) -> some View {
+        if let widget = registry.widget(for: placement.widgetId) {
+            let maximum = widget.supportedSizes.max
+            let width = min(grid.columns, maximum.width)
+            let height = min(grid.rows, maximum.height)
+
+            ZStack {
+                // The backdrop dismisses. It is the one gesture nobody has to
+                // be told about, and on a panel with no keyboard it is the
+                // only way out that does not need one.
+                Color.black.opacity(0.65)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { layoutEngine.clearFocus() }
+
+                AnyView(
+                    widget.body(
+                        size: WidgetSize(width: width, height: height),
+                        config: focusConfig(for: placement, pageId: pageId)
+                    )
+                )
+                .frame(width: max(0, size.width - 32), height: max(0, size.height - 32))
+                .overlay(alignment: .topTrailing) {
+                    Button {
+                        layoutEngine.clearFocus()
+                    } label: {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.85))
+                            .padding(6)
+                            .background(Circle().fill(Color.black.opacity(0.55)))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(8)
+                }
+            }
+            .transition(.opacity)
+        }
+    }
+
+    /// The placement's own configuration plus the identity keys a widget
+    /// needs to write itself back — the same pair GridPageView injects.
+    private func focusConfig(for placement: WidgetPlacement, pageId: String) -> WidgetConfig {
+        var config = placement.config
+        config["_pageId"] = .string(pageId)
+        config["_instanceId"] = .string(placement.instanceId)
+        return config
+    }
+
     private func rubberBand(_ dx: CGFloat, pageCount: Int) -> CGFloat {
         let index = layoutEngine.currentPageIndex
         let overshooting = (index == 0 && dx > 0) || (index >= pageCount - 1 && dx < 0)
