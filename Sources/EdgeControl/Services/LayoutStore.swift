@@ -6,10 +6,7 @@ public final class LayoutStore: Sendable {
 
     private static let fileName = "layout.json"
 
-    private static var defaultDirectoryURL: URL {
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent("EdgeControl", isDirectory: true)
-    }
+    private static var defaultDirectoryURL: URL { AppSupport.directory }
 
     private let directoryURL: URL
 
