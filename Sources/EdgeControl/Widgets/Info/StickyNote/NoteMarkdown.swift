@@ -44,9 +44,29 @@ public enum NoteMarkdown {
     ///   being bigger than it, so without it there is no way to tell a heading
     ///   from a line someone enlarged by hand — which is the same thing.
     public static func markdown(from attributed: NSAttributedString, baseFont: NSFont) -> String {
+        emit(paragraphs(of: attributed, baseFont: baseFont))
+    }
+
+    /// One line of the note, read but not yet written.
+    ///
+    /// Collected before anything is emitted because a code block is not a
+    /// property of a line — it is a property of a run of them, and a line
+    /// cannot know it is in one until its neighbours have been read.
+    struct Paragraph {
+        var kind: LineKind
+        var level: Int
+        /// The line as markdown: markers applied, inline styling written out.
+        var body: String
+        /// The line as characters, which is what a fenced block carries.
+        var literal: String
+        /// Whether every character on the line is in a code chip.
+        var isEntirelyCode: Bool
+    }
+
+    static func paragraphs(of attributed: NSAttributedString, baseFont: NSFont) -> [Paragraph] {
         let layout = StickyNoteLayout(font: baseFont)
         let text = attributed.string as NSString
-        var lines: [String] = []
+        var result: [Paragraph] = []
         var location = 0
 
         while location < text.length {
@@ -62,7 +82,8 @@ public enum NoteMarkdown {
 
             let kind = self.kind(of: line, in: attributed, at: paragraph.location, baseFont: baseFont)
             if kind == .rule {
-                lines.append("---")
+                result.append(
+                    Paragraph(kind: .rule, level: 0, body: "---", literal: line, isEntirelyCode: false))
                 continue
             }
 
@@ -77,17 +98,81 @@ public enum NoteMarkdown {
             let bodyRange = NSRange(
                 location: paragraph.location + markerLength,
                 length: max(0, contentLength - markerLength))
+            let slice = attributed.attributedSubstring(from: bodyRange)
             // Emphasis is measured against the line's own font, not the
             // note's. A heading is already bold, and comparing it to the body
             // font would wrap every heading in asterisks: "# **Heading**".
             let lineFont = isHeadingKind(kind) ? layout.headingFont(headingNumber(kind)) : baseFont
-            var body = inline(of: attributed.attributedSubstring(from: bodyRange), lineFont: lineFont)
+            var body = inline(of: slice, lineFont: lineFont)
             if kind == .plain { body = escapingLeadingMarkup(body) }
 
-            lines.append(String(repeating: indentUnit, count: level) + prefix(for: kind) + body)
+            result.append(
+                Paragraph(
+                    kind: kind, level: level, body: body, literal: slice.string,
+                    isEntirelyCode: isEntirelyCode(slice)))
+        }
+
+        return result
+    }
+
+    /// Whether every character carries the code chip, and there is at least
+    /// one. A line of code and a line with code in it are different things.
+    static func isEntirelyCode(_ attributed: NSAttributedString) -> Bool {
+        guard attributed.length > 0 else { return false }
+        var allCode = true
+        attributed.enumerateAttribute(
+            .backgroundColor, in: NSRange(location: 0, length: attributed.length)
+        ) { value, _, stop in
+            if value == nil {
+                allCode = false
+                stop.pointee = true
+            }
+        }
+        return allCode
+    }
+
+    /// The fence needs at least this many lines before it is worth one.
+    ///
+    /// A single line that happens to be entirely code is a code span, and
+    /// writing it as a fence would turn `git status` into three lines of
+    /// markdown to say one short thing.
+    static let fenceThreshold = 2
+
+    static func emit(_ paragraphs: [Paragraph]) -> String {
+        var lines: [String] = []
+        var index = 0
+
+        while index < paragraphs.count {
+            let run = codeRun(in: paragraphs, from: index)
+            if run >= fenceThreshold {
+                lines.append("```")
+                for offset in index..<(index + run) { lines.append(paragraphs[offset].literal) }
+                lines.append("```")
+                index += run
+                continue
+            }
+
+            let paragraph = paragraphs[index]
+            lines.append(
+                String(repeating: indentUnit, count: paragraph.level) + prefix(for: paragraph.kind)
+                    + paragraph.body)
+            index += 1
         }
 
         return lines.joined(separator: "\n")
+    }
+
+    /// How many plain, unindented, entirely-code lines start at `index`.
+    static func codeRun(in paragraphs: [Paragraph], from index: Int) -> Int {
+        var count = 0
+        var scan = index
+        while scan < paragraphs.count {
+            let paragraph = paragraphs[scan]
+            guard paragraph.kind == .plain, paragraph.level == 0, paragraph.isEntirelyCode else { break }
+            count += 1
+            scan += 1
+        }
+        return count
     }
 
     static func prefix(for kind: LineKind) -> String {

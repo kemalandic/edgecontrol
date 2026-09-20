@@ -158,6 +158,63 @@ struct NoteMarkdownTests {
         #expect(runs.allSatisfy { $0.link == "https://example.com" })
     }
 
+    // MARK: - Code blocks
+
+    @Test("A run of code lines is fenced")
+    func codeBlockRoundTrips() {
+        let markdown = """
+            ```
+            git add -p
+            git commit
+            ```
+            """
+        #expect(roundTrip(markdown) == markdown)
+    }
+
+    /// One line of code is a span. Writing it as a fence would spend three
+    /// lines of markdown saying one short thing.
+    @Test("A single code line stays a span")
+    func singleCodeLineIsNotFenced() {
+        #expect(roundTrip("`git status`") == "`git status`")
+    }
+
+    @Test("Nothing inside a fence is markup")
+    func fenceContentIsLiteral() {
+        let markdown = """
+            ```
+            - not a bullet
+            # not a heading
+            **not bold**
+            ```
+            """
+        let attributed = NoteMarkdown.attributed(fromMarkdown: markdown, baseFont: base, textColor: .white)
+        #expect(attributed.string == "- not a bullet\n# not a heading\n**not bold**")
+        #expect(roundTrip(markdown) == markdown)
+    }
+
+    @Test("A fence sits between ordinary lines without swallowing them")
+    func fenceAmongProse() {
+        let markdown = """
+            before
+
+            ```
+            one
+            two
+            ```
+
+            after
+            """
+        #expect(roundTrip(markdown) == markdown)
+    }
+
+    @Test("Code lines are recognised by every character carrying the chip")
+    func entirelyCodeIsWhatCounts() {
+        let mixed = NoteMarkdown.attributed(fromMarkdown: "text with `code` in it", baseFont: base, textColor: .white)
+        let paragraphs = NoteMarkdown.paragraphs(of: mixed, baseFont: base)
+        #expect(paragraphs.count == 1)
+        #expect(paragraphs[0].isEntirelyCode == false)
+    }
+
     // MARK: - Escaping
 
     /// A line the editor decided is prose must not come back as a list. This

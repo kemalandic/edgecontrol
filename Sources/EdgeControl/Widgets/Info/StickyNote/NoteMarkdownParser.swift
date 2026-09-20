@@ -18,7 +18,33 @@ extension NoteMarkdown {
         let out = NSMutableAttributedString()
         let lines = markdown.components(separatedBy: .newlines)
 
-        for (offset, rawLine) in lines.enumerated() {
+        var insideFence = false
+        // Separators go before each line rather than after it. Fence lines
+        // are dropped, so counting from the end of the input would leave a
+        // newline behind for every fence — and a separator written after a
+        // heading carries the heading's font, which then votes on what the
+        // body font is when the note is exported.
+        var wroteALine = false
+
+        func separate() {
+            guard wroteALine else { return }
+            out.append(NSAttributedString(string: "\n", attributes: [.font: baseFont, .foregroundColor: textColor]))
+        }
+
+        for rawLine in lines {
+            // A fence line is the marker, not content: it opens or closes the
+            // block and is never written into the note.
+            if isFence(rawLine) {
+                insideFence.toggle()
+                continue
+            }
+            if insideFence {
+                separate()
+                out.append(fencedLine(rawLine, baseFont: baseFont, textColor: textColor, layout: layout))
+                wroteALine = true
+                continue
+            }
+
             let (level, undented) = indentation(of: rawLine)
             let (kind, body) = parseLine(undented)
 
@@ -49,13 +75,30 @@ extension NoteMarkdown {
 
             line.addAttribute(
                 .paragraphStyle, value: paragraph, range: NSRange(location: 0, length: line.length))
+            separate()
             out.append(line)
-            if offset < lines.count - 1 {
-                out.append(NSAttributedString(string: "\n", attributes: [.font: font, .foregroundColor: textColor]))
-            }
+            wroteALine = true
         }
 
         return out
+    }
+
+    /// Three or more backticks alone on a line.
+    static func isFence(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return trimmed.count >= 3 && trimmed.allSatisfy { $0 == "`" }
+    }
+
+    /// A line inside a fence is characters, not markup. Nothing in it is
+    /// parsed — that is the whole point of a fence.
+    private static func fencedLine(
+        _ line: String, baseFont: NSFont, textColor: NSColor, layout: StickyNoteLayout
+    ) -> NSAttributedString {
+        var attributes = codeAttributes(font: baseFont, textColor: textColor)
+        attributes[.foregroundColor] = textColor
+        attributes[.paragraphStyle] = layout.paragraphStyle(
+            isHeading: false, isList: false, markerInset: 0, level: 0)
+        return NSAttributedString(string: line, attributes: attributes)
     }
 
     // MARK: - Lines
@@ -151,6 +194,19 @@ extension NoteMarkdown {
     private static func fontFor(_ kind: LineKind, layout: StickyNoteLayout, baseFont: NSFont) -> NSFont {
         if case .heading(let level) = kind { return layout.headingFont(level) }
         return baseFont
+    }
+
+    /// How a code span is drawn, in one place: the editor stamps this when a
+    /// span is typed, the reader stamps it when one is pasted, and the writer
+    /// reads it back to put the backticks in again.
+    ///
+    /// The chip is the part that matters. The note's own font is monospaced
+    /// by default, so a monospaced run is not on its own a code span.
+    static func codeAttributes(font: NSFont, textColor: NSColor) -> [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular),
+            .backgroundColor: textColor.withAlphaComponent(0.15),
+        ]
     }
 
     // MARK: - Inline
@@ -318,11 +374,7 @@ extension NoteMarkdown {
         var attributes: [NSAttributedString.Key: Any] = [.foregroundColor: textColor]
 
         if run.style.contains(.code) {
-            attributes[.font] = NSFont.monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
-            // The chip is what tells a code span from the note's own font,
-            // which is monospaced by default — and it is what the writer
-            // reads back to put the backticks in again.
-            attributes[.backgroundColor] = textColor.withAlphaComponent(0.15)
+            attributes.merge(codeAttributes(font: font, textColor: textColor)) { _, new in new }
         } else {
             var traits = font.fontDescriptor.symbolicTraits
             if run.style.contains(.bold) { traits.insert(.bold) }
