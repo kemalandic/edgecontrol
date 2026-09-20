@@ -129,14 +129,16 @@ public final class SystemMetricsService: ObservableObject {
             return latest?.cpuLoadPercent ?? 0
         }
 
-        let user = Double(info.cpu_ticks.0 - previousCPUInfo.cpu_ticks.0)
-        let system = Double(info.cpu_ticks.1 - previousCPUInfo.cpu_ticks.1)
-        let idle = Double(info.cpu_ticks.2 - previousCPUInfo.cpu_ticks.2)
-        let nice = Double(info.cpu_ticks.3 - previousCPUInfo.cpu_ticks.3)
+        let ticks = HostLoad.CPUTicks(
+            user: info.cpu_ticks.0, system: info.cpu_ticks.1,
+            idle: info.cpu_ticks.2, nice: info.cpu_ticks.3
+        )
+        let before = HostLoad.CPUTicks(
+            user: previousCPUInfo.cpu_ticks.0, system: previousCPUInfo.cpu_ticks.1,
+            idle: previousCPUInfo.cpu_ticks.2, nice: previousCPUInfo.cpu_ticks.3
+        )
         previousCPUInfo = info
-        let total = user + system + idle + nice
-        guard total > 0 else { return latest?.cpuLoadPercent ?? 0 }
-        return ((user + system + nice) / total) * 100
+        return HostLoad.cpuPercent(previous: before, current: ticks) ?? latest?.cpuLoadPercent ?? 0
     }
 
     private func currentMemorySnapshot() -> (usedPercent: Double, usedGB: Double, pressurePercent: Double, swapUsedMB: Double) {
@@ -181,9 +183,10 @@ public final class SystemMetricsService: ObservableObject {
               let available = values.volumeAvailableCapacityForImportantUsage else {
             return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
         }
-        let totalGB = Double(Int64(total)) / (1024 * 1024 * 1024)
-        let usedGB = Double(Int64(total) - Int64(available)) / (1024 * 1024 * 1024)
-        return (min(max((usedGB / max(totalGB, 0.001)) * 100, 0), 100), usedGB, totalGB)
+        guard let snapshot = HostLoad.storage(totalBytes: Int64(total), availableBytes: Int64(available)) else {
+            return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
+        }
+        return snapshot
     }
 
     private func currentSwapUsedMB() -> Double? {
