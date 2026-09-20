@@ -11,6 +11,7 @@ final class LinkPasteTextView: NSTextView {
     var onFontSizeDelta: ((Double) -> Void)?
     var onFontSizeReset: (() -> Void)?
     private var isNormalizing = false
+    private lazy var formatBar = StickyNoteFormatBar(owner: self)
 
     @objc func increaseFontSize(_ sender: Any?) { onFontSizeDelta?(1) }
     @objc func decreaseFontSize(_ sender: Any?) { onFontSizeDelta?(-1) }
@@ -295,6 +296,11 @@ final class LinkPasteTextView: NSTextView {
             // marker disappears instead of a new one being created.
             if removeBareListMarker() { return }
             if convertHorizontalRule() { return }
+            if let staysInBlock = codeBlockContinuation() {
+                super.insertText(insertString, replacementRange: replacementRange)
+                typingAttributes = staysInBlock ? codeTypingAttributes : bodyAttributes
+                return
+            }
             let continuation = listContinuation()
             super.insertText(insertString, replacementRange: replacementRange)
             // A heading ends at the line break; typing resumes as body text.
@@ -304,6 +310,12 @@ final class LinkPasteTextView: NSTextView {
             }
             return
         }
+
+        // The fence is checked first: on "``" the third backtick would
+        // otherwise close a span around the second one.
+        if str == "`", convertCodeFence() { return }
+        if str == "`", convertCodeSpan() { return }
+        if str == "/", showCommandMenu() { return }
 
         // The bullet waits for the first character after "- ": converting on
         // the space itself created a confusing interstitial state and stole
@@ -486,6 +498,309 @@ final class LinkPasteTextView: NSTextView {
     }
 
     /// A line reading exactly "---" becomes a dim horizontal rule on return.
+    /// Typing attributes for text inside a code chip.
+    private var codeTypingAttributes: [NSAttributedString.Key: Any] {
+        var attrs = bodyAttributes
+        attrs.merge(NoteMarkdown.codeAttributes(font: defaultFont, textColor: defaultColor)) { _, new in new }
+        return attrs
+    }
+
+    /// Three backticks at the head of a line open a block: the markers go,
+    /// and what is typed from there is code until the block is left.
+    private func convertCodeFence() -> Bool {
+        guard selectedRange().length == 0, let storage = textStorage else { return false }
+        let ns = storage.string as NSString
+        let caret = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
+        var line = ns.substring(with: lineRange)
+        if line.hasSuffix("\n") { line.removeLast() }
+        guard line == "``", caret == lineRange.location + 2 else { return false }
+
+        replace(NSRange(location: lineRange.location, length: 2), with: NSAttributedString(string: ""))
+        typingAttributes = codeTypingAttributes
+        return true
+    }
+
+    /// Whether Return should stay in a code block, leave it, or has nothing
+    /// to do with one.
+    ///
+    /// Leaving on an empty line is the same convention the lists use: an
+    /// empty bullet ends the list, an empty code line ends the block. One
+    /// rule to learn instead of two.
+    private func codeBlockContinuation() -> Bool? {
+        guard let storage = textStorage else { return nil }
+        let ns = storage.string as NSString
+        let lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
+        var line = ns.substring(with: lineRange)
+        if line.hasSuffix("\n") { line.removeLast() }
+        let contentLength = (line as NSString).length
+
+        if contentLength == 0 {
+            return typingAttributes[.backgroundColor] != nil ? false : nil
+        }
+        guard storage.attribute(.backgroundColor, at: lineRange.location, effectiveRange: nil) != nil,
+            NoteMarkdown.isEntirelyCode(
+                storage.attributedSubstring(from: NSRange(location: lineRange.location, length: contentLength)))
+        else { return nil }
+        return true
+    }
+
+    /// Typing the closing backtick of a code span converts it, the way the
+    /// closing bracket converts a checkbox: both backticks disappear and what
+    /// was between them becomes a chip.
+    ///
+    /// Converting on the opening backtick is impossible — at that point there
+    /// is nothing to say a span was meant rather than a lone backtick — and
+    /// waiting for anything later would leave the markers visible in a note
+    /// that is not markdown.
+    private func convertCodeSpan() -> Bool {
+        guard let storage = textStorage else { return false }
+        let ns = storage.string as NSString
+        let caret = selectedRange().location
+        guard selectedRange().length == 0 else { return false }
+
+        let lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
+        let line = ns.substring(with: lineRange)
+        let offsetInLine = caret - lineRange.location
+        guard let opening = StickyNoteMarkup.codeSpanOpening(closingAt: offsetInLine, in: line) else {
+            return false
+        }
+
+        let contentStart = lineRange.location + opening + 1
+        let content = ns.substring(with: NSRange(location: contentStart, length: caret - contentStart))
+        let replaced = NSRange(location: lineRange.location + opening, length: caret - lineRange.location - opening)
+
+        var attrs = codeTypingAttributes
+        // The paragraph the span sits in keeps its own geometry; only the
+        // characters change.
+        attrs[.paragraphStyle] =
+            storage.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+            ?? bodyParagraph
+
+        replace(replaced, with: NSAttributedString(string: content, attributes: attrs))
+        // Typing carries on outside the chip.
+        typingAttributes = bodyAttributes
+        return true
+    }
+
+    // MARK: Formatting bar
+
+    /// The bar follows the selection. `stillSelecting` is the drag itself —
+    /// showing a bar under the finger while it is still moving would put the
+    /// thing being aimed at on top of the thing doing the aiming.
+    override func setSelectedRanges(
+        _ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool
+    ) {
+        super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
+        guard !stillSelecting else { return }
+        updateFormatBar()
+    }
+
+    private func updateFormatBar() {
+        let range = selectedRange()
+        guard range.length > 0, window != nil else {
+            formatBar.hide()
+            return
+        }
+        let rect = firstRect(forCharacterRange: range, actualRange: nil)
+        guard let window, rect.width > 0 || rect.height > 0 else {
+            formatBar.hide()
+            return
+        }
+        let inWindow = window.convertFromScreen(rect)
+        formatBar.update(selectionRect: convert(inWindow, from: nil), visible: true)
+    }
+
+    override func resignFirstResponder() -> Bool {
+        formatBar.hide()
+        return super.resignFirstResponder()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil { formatBar.hide() }
+    }
+
+    /// Bold and Italic exist in the Format menu through NSFontManager, which
+    /// the bar cannot reach — its buttons must not take first responder, and
+    /// addFontTrait works off the responder chain. So the trait is applied to
+    /// the selection directly.
+    @objc func formatBold(_ sender: Any?) { toggleTrait(.bold) }
+    @objc func formatItalic(_ sender: Any?) { toggleTrait(.italic) }
+
+    private func toggleTrait(_ trait: NSFontDescriptor.SymbolicTraits) {
+        guard let storage = textStorage else { return }
+        let range = selectedRange()
+        guard range.length > 0, shouldChangeText(in: range, replacementString: nil) else { return }
+
+        // Off only when every character already has it: a mixed selection
+        // becomes uniformly styled, which is what every editor does.
+        var allHaveIt = true
+        storage.enumerateAttribute(.font, in: range) { value, _, stop in
+            guard let font = value as? NSFont else { return }
+            if !font.fontDescriptor.symbolicTraits.contains(trait) {
+                allHaveIt = false
+                stop.pointee = true
+            }
+        }
+
+        storage.enumerateAttribute(.font, in: range) { value, subrange, _ in
+            guard let font = value as? NSFont else { return }
+            var traits = font.fontDescriptor.symbolicTraits
+            if allHaveIt { traits.remove(trait) } else { traits.insert(trait) }
+            let descriptor = font.fontDescriptor.withSymbolicTraits(traits)
+            storage.addAttribute(
+                .font, value: NSFont(descriptor: descriptor, size: font.pointSize) ?? font, range: subrange)
+        }
+        didChangeText()
+        updateFormatBar()
+    }
+
+    /// Makes the selection a code chip, or takes it back out of one.
+    @objc func toggleCodeSpan(_ sender: Any?) {
+        guard let storage = textStorage else { return }
+        let range = selectedRange()
+        guard range.length > 0, shouldChangeText(in: range, replacementString: nil) else { return }
+
+        let isCode = storage.attribute(.backgroundColor, at: range.location, effectiveRange: nil) != nil
+        if isCode {
+            storage.removeAttribute(.backgroundColor, range: range)
+            storage.addAttribute(.font, value: defaultFont, range: range)
+        } else {
+            for (key, value) in NoteMarkdown.codeAttributes(font: defaultFont, textColor: defaultColor) {
+                storage.addAttribute(key, value: value, range: range)
+            }
+        }
+        didChangeText()
+        updateFormatBar()
+    }
+
+    // MARK: Slash commands
+
+    /// A slash at the head of a line offers the line kinds as a menu.
+    ///
+    /// Only at the head: "and/or" is a word, and a menu that appeared inside
+    /// one would be worse than no menu. After a list marker counts as the
+    /// head — changing a bullet into a to-do is exactly what this is for.
+    private func showCommandMenu() -> Bool {
+        guard selectedRange().length == 0, let window else { return false }
+        let ns = string as NSString
+        let caret = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
+        var line = ns.substring(with: lineRange)
+        if line.hasSuffix("\n") { line.removeLast() }
+        guard caret - lineRange.location == markerLength(of: line) else { return false }
+
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        for command in StickyNoteCommand.allCases {
+            let item = NSMenuItem(
+                title: command.title, action: #selector(runCommand(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = command.rawValue
+            item.image = NSImage(systemSymbolName: command.symbolName, accessibilityDescription: nil)
+            menu.addItem(item)
+        }
+
+        // Anchored under the caret so the menu reads as belonging to the line
+        // being typed rather than to the widget.
+        let caretRect = firstRect(forCharacterRange: NSRange(location: caret, length: 0), actualRange: nil)
+        let inWindow = window.convertFromScreen(caretRect)
+        let point = convert(NSPoint(x: inWindow.minX, y: inWindow.minY), from: nil)
+        menu.popUp(positioning: nil, at: point, in: self)
+        return true
+    }
+
+    @objc private func runCommand(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+            let command = StickyNoteCommand(rawValue: raw)
+        else { return }
+        apply(command)
+    }
+
+    private func apply(_ command: StickyNoteCommand) {
+        let ns = string as NSString
+        let caret = selectedRange().location
+        let lineRange = ns.lineRange(for: NSRange(location: caret, length: 0))
+        var line = ns.substring(with: lineRange)
+        if line.hasSuffix("\n") { line.removeLast() }
+        let markerLen = markerLength(of: line)
+        let existing =
+            textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let level = indentLevel(of: existing, isList: markerLen > 0)
+        // Whatever marker the line already carries is replaced, not added to.
+        let markerRange = NSRange(location: lineRange.location, length: markerLen)
+
+        switch command {
+        case .todo:
+            replace(markerRange, with: checkboxMarker(checked: false, level: level))
+        case .bullet, .numbered:
+            guard let marker = command.marker else { return }
+            replace(markerRange, with: NSAttributedString(string: marker, attributes: listAttributes(level: level)))
+        case .heading1, .heading2, .heading3:
+            guard let heading = command.headingLevel else { return }
+            applyHeading(heading, to: lineRange, markerRange: markerRange)
+        case .body:
+            resetToBodyText(nil)
+        case .divider:
+            setSelectedRange(NSRange(location: lineRange.location, length: markerLen))
+            _ = convertHorizontalRuleText()
+        case .code:
+            insertCodePlaceholder()
+        case .date:
+            insertText(
+                NSAttributedString(string: StickyNoteCommand.todaysDate(), attributes: bodyAttributes),
+                replacementRange: selectedRange())
+        }
+    }
+
+    /// Restyles the line as a heading and leaves typing set to continue it.
+    private func applyHeading(_ level: Int, to lineRange: NSRange, markerRange: NSRange) {
+        guard let storage = textStorage else { return }
+        // A heading is not a list item, so any marker goes with the change.
+        if markerRange.length > 0 { replace(markerRange, with: NSAttributedString(string: "")) }
+
+        let ns = storage.string as NSString
+        let paragraph = ns.lineRange(for: NSRange(location: markerRange.location, length: 0))
+        var contentLength = paragraph.length
+        if ns.substring(with: paragraph).hasSuffix("\n") { contentLength -= 1 }
+
+        var attrs = bodyAttributes
+        attrs[.font] = headingFont(level)
+        attrs[.paragraphStyle] = headingParagraph
+        if contentLength > 0 {
+            guard shouldChangeText(in: paragraph, replacementString: nil) else { return }
+            storage.setAttributes(attrs, range: NSRange(location: paragraph.location, length: contentLength))
+            didChangeText()
+        }
+        typingAttributes = attrs
+    }
+
+    /// The whole line becomes a rule, whatever was on it.
+    private func convertHorizontalRuleText() -> Bool {
+        let ns = string as NSString
+        let lineRange = ns.lineRange(for: NSRange(location: selectedRange().location, length: 0))
+        var attrs = bodyAttributes
+        attrs[.foregroundColor] = defaultColor.withAlphaComponent(0.35)
+        var contentLength = lineRange.length
+        if ns.substring(with: lineRange).hasSuffix("\n") { contentLength -= 1 }
+        replace(
+            NSRange(location: lineRange.location, length: contentLength),
+            with: NSAttributedString(string: String(repeating: "\u{2500}", count: 24), attributes: attrs))
+        typingAttributes = bodyAttributes
+        return true
+    }
+
+    /// A chip with a word in it, selected, so typing replaces it. An empty
+    /// chip would be invisible and impossible to aim at.
+    private func insertCodePlaceholder() {
+        let attrs = codeTypingAttributes
+        let start = selectedRange().location
+        insertText(NSAttributedString(string: "code", attributes: attrs), replacementRange: selectedRange())
+        setSelectedRange(NSRange(location: start, length: 4))
+        typingAttributes = attrs
+    }
+
     private func convertHorizontalRule() -> Bool {
         let ns = string as NSString
         let loc = selectedRange().location

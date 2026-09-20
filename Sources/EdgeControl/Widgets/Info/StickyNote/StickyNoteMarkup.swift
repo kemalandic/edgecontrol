@@ -145,6 +145,31 @@ public enum StickyNoteMarkup {
         return continuingExistingItem || number == 1
     }
 
+    /// Where the code span that a backtick typed at `caret` would close.
+    ///
+    /// Returns the offset of the opening backtick, in UTF-16 units from the
+    /// start of the line — which is what the text system measures in.
+    ///
+    /// A span needs something in it, and that something cannot be only
+    /// spaces: "`" then "`" is someone typing a backtick twice, and a span
+    /// around a space is not what anybody meant. Nor may it span a backtick
+    /// of its own, so the nearest opener wins.
+    public static func codeSpanOpening(closingAt caret: Int, in line: String) -> Int? {
+        let ns = line as NSString
+        guard caret > 1, caret <= ns.length else { return nil }
+
+        var index = caret - 1
+        while index >= 0 {
+            if ns.substring(with: NSRange(location: index, length: 1)) == "`" {
+                let content = ns.substring(with: NSRange(location: index + 1, length: caret - index - 1))
+                guard !content.trimmingCharacters(in: .whitespaces).isEmpty else { return nil }
+                return index
+            }
+            index -= 1
+        }
+        return nil
+    }
+
     /// Whether pasted text is a web link worth turning into one.
     ///
     /// Deliberately narrow: a scheme this app will open, a host, and no spaces.

@@ -278,3 +278,45 @@ struct StickyNoteMarkupTests {
         #expect(StickyNoteMarkup.isWebLink(text) == false)
     }
 }
+
+/// Typing the closing backtick converts a code span, the way the closing
+/// bracket converts a checkbox. What decides it is which opener the closer
+/// belongs to.
+@Suite("Code spans")
+struct StickyNoteCodeSpanTests {
+
+    /// The caret sits where the closing backtick is about to go, which is the
+    /// end of the line as it stands — the closer has not been typed yet.
+    @Test("A span closes on the nearest opener")
+    func nearestOpener() {
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 5, in: "`code") == 0)
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 10, in: "say `hello") == 4)
+    }
+
+    @Test("A span needs something in it")
+    func emptySpansAreNotSpans() {
+        // Someone typing a backtick twice means two backticks.
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 1, in: "`") == nil)
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 2, in: "` ") == nil)
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 4, in: "`   ") == nil)
+        // One character is enough.
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 2, in: "`x") == 0)
+    }
+
+    @Test("Without an opener there is nothing to close")
+    func noOpener() {
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 5, in: "plain") == nil)
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 0, in: "") == nil)
+    }
+
+    @Test("A caret past the end of the line is refused rather than trapping")
+    func outOfRange() {
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: 99, in: "`code") == nil)
+    }
+
+    @Test("A second span on the same line closes on its own opener")
+    func secondSpan() {
+        let line = "run `git status` then `git add"
+        #expect(StickyNoteMarkup.codeSpanOpening(closingAt: (line as NSString).length, in: line) == 22)
+    }
+}
