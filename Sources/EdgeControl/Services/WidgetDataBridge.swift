@@ -85,6 +85,18 @@ public final class WidgetDataBridge {
         }
     }
 
+    /// The note the desktop widget shows, flattened to lines.
+    ///
+    /// Read from disk each time rather than held: the note is written by the
+    /// editor, by quick capture and by anything else that touches the store,
+    /// and a cached copy would show yesterday's list.
+    private func desktopNote() -> (title: String, items: [WidgetNoteItem])? {
+        let chosen = layoutEngine.document.globalSettings.desktopNoteId
+        let id = chosen.isEmpty ? QuickCapture.inboxNoteId : chosen
+        guard let record = model.noteStore.record(id: id) else { return nil }
+        return (record.title, NoteDigest.items(fromPlainText: model.noteStore.plainText(id: id)))
+    }
+
     private func writeSnapshot() {
         let metrics = model.systemMetrics
         let smc = model.smcService
@@ -92,6 +104,7 @@ public final class WidgetDataBridge {
         let disk = model.diskIOService
         let wifi = model.wifiService
         let cicd = model.cicdService
+        let note = desktopNote()
 
         let data = WidgetData(
             timestamp: Date(),
@@ -126,7 +139,9 @@ public final class WidgetDataBridge {
                 accounts: model.accountStore.accounts,
                 states: cicd.accountStates
             ),
-            unitSystem: layoutEngine.document.globalSettings.units
+            unitSystem: layoutEngine.document.globalSettings.units,
+            noteTitle: note?.title,
+            noteItems: note?.items
         )
 
         // State is gathered on the main actor above; the file write goes to

@@ -1,5 +1,34 @@
 import Foundation
 
+/// One line of a note, as the desktop widget shows it.
+///
+/// Flattened on the way out: the widget has no text system worth the name and
+/// no business reading RTF. What crosses is the words and whether the box is
+/// ticked.
+public struct WidgetNoteItem: Codable, Sendable, Identifiable {
+    public let id: String
+    public let text: String
+    public let done: Bool
+
+    public init(id: String, text: String, done: Bool) {
+        self.id = id
+        self.text = text
+        self.done = done
+    }
+
+    /// How a list of these summarises in one line.
+    ///
+    /// Here rather than beside the digest because both sides of the sandbox
+    /// need it — the app writes the note, the widget draws it, and a tile
+    /// that disagreed with the panel about how many things were left would be
+    /// worse than one that showed no count at all. This file is the one place
+    /// both targets compile.
+    public static func progress(_ items: [WidgetNoteItem]) -> String? {
+        guard !items.isEmpty else { return nil }
+        return "\(items.filter(\.done).count)/\(items.count)"
+    }
+}
+
 /// Shared data model between main app and widget extension.
 /// Main app encodes to JSON, widget extension decodes.
 public struct WidgetData: Codable, Sendable {
@@ -46,6 +75,13 @@ public struct WidgetData: Codable, Sendable {
     /// optional cannot make an older payload render wrongly — it reads as nil
     /// and falls back to Celsius, which is what those payloads meant.
     public let unitSystem: UnitSystem?
+    /// The note shown on the desktop, and its unfinished items. Optional for
+    /// the same reason as `unitSystem`, and deliberately not a schema bump:
+    /// the gate is strict equality, so bumping would throw away every
+    /// snapshot written before the upgrade. Absent reads as "no note chosen",
+    /// which is what those payloads meant.
+    public let noteTitle: String?
+    public let noteItems: [WidgetNoteItem]?
 
     public init(
         timestamp: Date = Date(),
@@ -66,7 +102,9 @@ public struct WidgetData: Codable, Sendable {
         wifiBand: String? = nil,
         cicdRuns: [WidgetCICDRun] = [],
         cicdStatusNote: String? = nil,
-        unitSystem: UnitSystem? = nil
+        unitSystem: UnitSystem? = nil,
+        noteTitle: String? = nil,
+        noteItems: [WidgetNoteItem]? = nil
     ) {
         self.timestamp = timestamp
         self.cpuUsage = cpuUsage
@@ -87,6 +125,8 @@ public struct WidgetData: Codable, Sendable {
         self.cicdRuns = cicdRuns
         self.cicdStatusNote = cicdStatusNote
         self.unitSystem = unitSystem
+        self.noteTitle = noteTitle
+        self.noteItems = noteItems
         // Derived, never passed in.
         self.schemaVersion = Self.currentSchemaVersion
     }

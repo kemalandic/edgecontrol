@@ -10,6 +10,7 @@ struct EdgeControlWidgetBundle: WidgetBundle {
         NetworkWidget()
         WiFiWidget()
         CICDWidget()
+        NotesWidget()
         PluginDesktopWidget()
     }
 }

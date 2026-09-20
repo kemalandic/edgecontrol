@@ -120,6 +120,47 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // Which note the desktop widget shows
+            HStack(spacing: 10) {
+                Image(systemName: "note.text")
+                    .font(.system(size: 16))
+                    .foregroundStyle(accent)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Desktop Widget Note")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("The to-dos shown by the Note widget on the desktop")
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Spacer()
+
+                Picker(
+                    "",
+                    selection: Binding(
+                        get: { layoutEngine.document.globalSettings.desktopNoteId },
+                        set: { newValue in
+                            var gs = layoutEngine.document.globalSettings
+                            gs.desktopNoteId = newValue
+                            layoutEngine.updateGlobalSettings(gs)
+                        }
+                    )
+                ) {
+                    Text("Inbox").tag("")
+                    ForEach(NoteStore().records()) { record in
+                        Text(record.title).tag(record.id)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(accent)
+                .frame(maxWidth: 200)
+            }
+            .padding(10)
+            .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
             // Units
             HStack(spacing: 10) {
                 Image(systemName: "ruler")

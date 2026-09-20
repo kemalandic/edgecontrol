@@ -160,6 +160,10 @@ public struct GlobalSettings: Codable, Sendable {
     /// Off is there because a global key belongs to the whole machine and
     /// somebody may already have that one.
     public var quickCaptureEnabled: Bool
+    /// The note the desktop widget shows. Empty means the inbox, which is
+    /// where quick capture puts things and therefore the one note that is
+    /// certain to exist once anybody has used the feature.
+    public var desktopNoteId: String
 
     public init(
         selectedDisplayName: String? = nil,
@@ -171,7 +175,8 @@ public struct GlobalSettings: Codable, Sendable {
         units: UnitSystem = .localeDefault,
         theme: ThemeSettings = ThemeSettings(),
         allowSystemPanels: Bool = false,
-        quickCaptureEnabled: Bool = true
+        quickCaptureEnabled: Bool = true,
+        desktopNoteId: String = ""
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
@@ -183,6 +188,7 @@ public struct GlobalSettings: Codable, Sendable {
         self.theme = theme
         self.allowSystemPanels = allowSystemPanels
         self.quickCaptureEnabled = quickCaptureEnabled
+        self.desktopNoteId = desktopNoteId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -190,6 +196,7 @@ public struct GlobalSettings: Codable, Sendable {
         case strictMonitorAffinity, hideFromDock, units, theme
         case allowSystemPanels
         case quickCaptureEnabled
+        case desktopNoteId
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -206,6 +213,7 @@ public struct GlobalSettings: Codable, Sendable {
         hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
         units = try c.decodeIfPresent(UnitSystem.self, forKey: .units) ?? .localeDefault
         quickCaptureEnabled = try c.decodeIfPresent(Bool.self, forKey: .quickCaptureEnabled) ?? true
+        desktopNoteId = try c.decodeIfPresent(String.self, forKey: .desktopNoteId) ?? ""
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
         allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
     }
@@ -222,5 +230,6 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(theme, forKey: .theme)
         try c.encode(allowSystemPanels, forKey: .allowSystemPanels)
         try c.encode(quickCaptureEnabled, forKey: .quickCaptureEnabled)
+        try c.encode(desktopNoteId, forKey: .desktopNoteId)
     }
 }
