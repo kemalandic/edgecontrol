@@ -201,7 +201,10 @@ public final class SMCService: ObservableObject {
         stop()
         smc = SMCConnection()
         guard smc != nil else {
-            print("SMCService: Failed to connect to AppleSMC")
+            // Everything else in the app reports through AppLog, which is
+            // filterable and survives a release build; a bare print is
+            // neither, and this is the one place left that used one.
+            AppLog.hardware.error("could not connect to AppleSMC; temperatures will be unavailable")
             return
         }
         sample()

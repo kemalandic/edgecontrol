@@ -19,6 +19,8 @@ public enum AppLog {
     public static let cicd = Logger(subsystem: subsystem, category: "CICD")
     /// Now Playing queries and media commands.
     public static let media = Logger(subsystem: subsystem, category: "Media")
+    /// Talking to the hardware: SMC sensors, touch devices.
+    public static let hardware = Logger(subsystem: subsystem, category: "Hardware")
 }
 
 extension AppLog {
