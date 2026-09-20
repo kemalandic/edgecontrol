@@ -104,6 +104,7 @@ public final class WidgetRegistry: ObservableObject {
         register(WorldClocksWidget())
         register(DayProgressWidget())
         register(RemindersWidget(service: model.remindersService))
+        register(StickyNoteWidget())
         register(MoonPhaseWidget())
 
         // DevTools
