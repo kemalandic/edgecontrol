@@ -33,22 +33,26 @@ generate() {
 # raise it only when a toolchain moves under us, never to make a new warning go
 # away.
 #
-# The two that remain are deliberate:
-#   AudioService.swift    CoreAudio writes a CFStringRef into a CFString slot.
-#                         The fix is Unmanaged<CFString>?, which changes how
-#                         device names are read and wants testing on real
-#                         hardware rather than a drive-by edit.
-#   DashboardShell.swift  main-actor isolation on the edit-mode toggle, fixed by
-#                         an open pull request.
-WARN_BUDGET="${WARN_BUDGET:-2}"
+# The 21 that remain break down as:
+#   19  the test target's main-actor isolation warnings in LayoutEngineTests and
+#       RateLimitTrackingTransportTests — fixed by PR #9, which is what takes
+#       this budget to 2.
+#    1  AudioService.swift: CoreAudio writes a CFStringRef into a CFString slot.
+#       The fix is Unmanaged<CFString>?, which changes how device names are read
+#       and wants testing on real hardware rather than a drive-by edit.
+#    1  DashboardShell.swift: main-actor isolation on the edit-mode toggle, also
+#       fixed by PR #9.
+WARN_BUDGET="${WARN_BUDGET:-21}"
 
 build() {
     # A runner always starts from an empty derived-data directory, so its build is
     # always clean. An incremental local build re-emits no warnings for files it
     # did not recompile, which silently reports zero — set SKIP_CLEAN=1 only when
     # iterating and you do not care about the warning count.
-    local action="clean build"
-    [ "${SKIP_CLEAN:-0}" = "1" ] && action="build"
+    # build-for-testing, not build: the app scheme's build action covers only
+    # EdgeControl.app, so warnings in the test target were never counted.
+    local action="clean build-for-testing"
+    [ "${SKIP_CLEAN:-0}" = "1" ] && action="build-for-testing"
 
     step "build — unsigned ($action)"
     local log
@@ -62,14 +66,24 @@ build() {
         return 1
     fi
 
-    local count
-    count=$(grep -cE '^/.*warning: ' "$log" || true)
+    # Count what is displayed, not raw log lines: xcodebuild emits the same
+    # file-level warning from more than one job, and counting rows the reader
+    # cannot see turns a clean build into an unexplained failure.
+    #
+    # Every pipeline here ends in `|| true`. Under `set -o pipefail` a grep that
+    # matches nothing exits 1, which errexit would turn into a failed build at
+    # exactly the moment the warning count reaches zero.
+    local warnings count
+    warnings=$(grep -E '^/.*warning: ' "$log" \
+        | sed -E 's|^.*/([^/]+\.swift):([0-9]+):[0-9]+: warning: |  \1:\2  |' \
+        | sed -E 's/ \[#[A-Za-z]+\]$//' \
+        | sort -u || true)
+    rm -f "$log"
+
+    if [ -z "$warnings" ]; then count=0; else count=$(printf '%s\n' "$warnings" | wc -l | tr -d ' '); fi
     echo
     echo "Compiler warnings: $count (budget $WARN_BUDGET)"
-    grep -E '^/.*warning: ' "$log" \
-        | sed -E 's|^.*/([^/]+\.swift):([0-9]+):[0-9]+: warning: |  \1:\2  |' \
-        | sort -u
-    rm -f "$log"
+    if [ -n "$warnings" ]; then printf '%s\n' "$warnings"; fi
 
     if [ "$count" -gt "$WARN_BUDGET" ]; then
         echo "New warnings introduced — budget is $WARN_BUDGET, saw $count." >&2
@@ -84,12 +98,14 @@ build() {
 run_tests() {
     step "test"
     rm -rf "$RESULT_BUNDLE"
+    # test-without-building: build() already produced the test bundle with
+    # build-for-testing, so this runs it instead of compiling everything twice.
     xcodebuild -project "$PROJECT" -scheme "$SCHEME" \
         -configuration Debug -destination "$DEST" \
         "${UNSIGNED[@]}" \
         -enableCodeCoverage YES \
         -resultBundlePath "$RESULT_BUNDLE" \
-        test
+        test-without-building
 }
 
 coverage() {
@@ -103,7 +119,7 @@ coverage() {
 
 case "${1:-all}" in
     build) generate; build ;;
-    test)  generate; run_tests; coverage ;;
+    test)  generate; build; run_tests; coverage ;;
     all)   generate; build; run_tests; coverage ;;
     *)     echo "usage: $0 [build|test|all]" >&2; exit 2 ;;
 esac
