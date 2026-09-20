@@ -90,27 +90,10 @@ private struct CICDRunsWidgetView: View {
         )
     }
 
-    /// Latest run per (account, repository, workflow). The widget is a status
-    /// board, not an activity log: re-runs and repeat deployments (Pages runs
-    /// all share one title) collapse to the workflow's current state.
-    private func latestPerWorkflow(_ runs: [CIRun]) -> [CIRun] {
-        var latest: [String: CIRun] = [:]
-        for run in runs {
-            // run.id is "<accountID>/<repo full name>/<run number>"; dropping
-            // the run number yields a key that survives same-named repos in
-            // different orgs, which repositoryName (the short name) would not.
-            let repoKey = run.id[..<(run.id.lastIndex(of: "/") ?? run.id.endIndex)]
-            let key = "\(repoKey)|\(run.workflowName)"
-            if let existing = latest[key], existing.startedAt >= run.startedAt { continue }
-            latest[key] = run
-        }
-        return latest.values.sorted { $0.startedAt > $1.startedAt }
-    }
-
-    /// The header badge counts what the list shows: distinct workflows, not
-    /// raw runs, once collapsing is in effect.
+    /// The header badge counts what the list shows. CICDService.merge already
+    /// collapsed to one run per workflow, so this is a plain count.
     private var headerCount: Int {
-        if case .runs(let runs, _) = state { return latestPerWorkflow(runs).count }
+        if case .runs(let runs, _) = state { return runs.count }
         return service.runs.count
     }
 
@@ -187,7 +170,7 @@ private struct CICDRunsWidgetView: View {
             // the list to 50.
             TouchScrollView {
                 VStack(spacing: 4) {
-                    ForEach(latestPerWorkflow(runs)) { run in
+                    ForEach(runs) { run in
                         runRow(run)
                     }
                 }

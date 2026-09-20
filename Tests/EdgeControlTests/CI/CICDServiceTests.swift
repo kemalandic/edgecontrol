@@ -6,14 +6,15 @@ final class CICDServiceTests: XCTestCase {
         _ id: String,
         _ state: CIRunState,
         _ minutesAgo: Int,
-        host: String = "github.com"
+        host: String = "github.com",
+        workflow: String = "ci"
     ) -> CIRun {
         CIRun(
             id: id,
             accountID: UUID(),
             hostLabel: host,
             repositoryName: "repo",
-            workflowName: "ci",
+            workflowName: workflow,
             title: "t",
             branch: "main",
             state: state,
@@ -47,6 +48,37 @@ final class CICDServiceTests: XCTestCase {
             [run("long-running", .running, 600)],
         ])
         XCTAssertEqual(merged.map(\.id), ["long-running", "just-finished"])
+    }
+
+    /// The collapse has to come before the cap. A repository busy enough to fill
+    /// the cap with repeat runs of one workflow would otherwise push every other
+    /// repository out of the data, and the widget would show a single row.
+    func testCollapsingHappensBeforeTheCap() {
+        let account = UUID().uuidString
+        let busy = (0..<80).map {
+            run("\(account)/acme/busy/\($0)", .success, $0, workflow: "ci")
+        }
+        // Older than every one of them, so a cap applied first would drop it.
+        let quiet = [run("\(account)/acme/quiet/1", .success, 500, workflow: "deploy")]
+
+        let merged = CICDService.merge([busy, quiet])
+
+        XCTAssertEqual(merged.count, 2, "expected one row per workflow")
+        XCTAssertTrue(
+            merged.contains { $0.id.contains("/quiet/") },
+            "the quiet repository was pushed out by the busy one"
+        )
+    }
+
+    /// Two repositories with the same short name in different orgs are distinct
+    /// workflows, not one.
+    func testSameWorkflowNameInTwoReposStaysSeparate() {
+        let account = UUID().uuidString
+        let merged = CICDService.merge([[
+            run("\(account)/acme/app/1", .success, 10, workflow: "ci"),
+            run("\(account)/other/app/1", .success, 20, workflow: "ci"),
+        ]])
+        XCTAssertEqual(merged.count, 2)
     }
 
     func testMergeCapsAtFifty() {

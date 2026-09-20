@@ -273,11 +273,26 @@ public final class CICDService: ObservableObject {
     // `nonisolated`: these touch no state, and callers (including tests and the
     // widget bridge) should not have to hop to the main actor to use them.
 
-    /// Active runs first, then newest first. Capped so the list stays bounded
-    /// no matter how many accounts are configured.
+    /// Latest run per workflow — active first, then newest first — capped so the
+    /// list stays bounded no matter how many accounts are configured.
+    ///
+    /// The collapse happens before the cap, not after. Spending the budget on
+    /// repeat runs of one busy workflow and collapsing afterwards pushes every
+    /// other repository out of the data entirely, and the widget is left showing
+    /// a single row. The cap is for distinct workflows.
     public nonisolated static func merge(_ groups: [[CIRun]]) -> [CIRun] {
-        groups
-            .flatMap { $0 }
+        var latest: [String: CIRun] = [:]
+        for run in groups.flatMap({ $0 }) {
+            // run.id is "<accountID>/<repo full name>/<run number>"; dropping the
+            // run number keys by repository, which survives two repositories with
+            // the same short name in different orgs where repositoryName would not.
+            let repoKey = run.id[..<(run.id.lastIndex(of: "/") ?? run.id.endIndex)]
+            let key = "\(repoKey)|\(run.workflowName)"
+            if let existing = latest[key], existing.startedAt >= run.startedAt { continue }
+            latest[key] = run
+        }
+
+        return latest.values
             .sorted { a, b in
                 if a.state.isActive != b.state.isActive { return a.state.isActive }
                 return a.startedAt > b.startedAt
