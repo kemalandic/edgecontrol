@@ -14,6 +14,23 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         public let modified: Date?
     }
 
+    /// The order the list is shown in: anything with a due date comes before
+    /// anything without, earliest first, and undated reminders fall back to
+    /// title order so the list is stable rather than arbitrary.
+    ///
+    /// nonisolated and taking plain values, so it can be exercised without an
+    /// EventKit store — the pure core of this service, per docs/testing.md.
+    public nonisolated static func ordered(_ items: [Item]) -> [Item] {
+        items.sorted {
+            switch ($0.dueDate, $1.dueDate) {
+            case let (a?, b?): return a < b
+            case (_?, nil): return true
+            case (nil, _?): return false
+            default: return $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+            }
+        }
+    }
+
     public enum Access { case unknown, granted, denied }
 
     @Published public private(set) var access: Access = .unknown
@@ -81,24 +98,18 @@ public final class RemindersService: ObservableObject, ServiceLifecycle {
         )
         // Same XPC-queue contract as the access completion above.
         store.fetchReminders(matching: predicate) { @Sendable [weak self] reminders in
-            let mapped = (reminders ?? [])
-                .map { reminder in
-                    Item(
-                        id: reminder.calendarItemIdentifier,
-                        title: reminder.title ?? "",
-                        dueDate: reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) },
-                        created: reminder.creationDate,
-                        modified: reminder.lastModifiedDate
-                    )
-                }
-                .sorted {
-                    switch ($0.dueDate, $1.dueDate) {
-                    case let (a?, b?): return a < b
-                    case (_?, nil): return true
-                    case (nil, _?): return false
-                    default: return $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+            let mapped = Self.ordered(
+                (reminders ?? [])
+                    .map { reminder in
+                        Item(
+                            id: reminder.calendarItemIdentifier,
+                            title: reminder.title ?? "",
+                            dueDate: reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) },
+                            created: reminder.creationDate,
+                            modified: reminder.lastModifiedDate
+                        )
                     }
-                }
+            )
             Task { @MainActor [weak self] in self?.items = mapped }
         }
     }
