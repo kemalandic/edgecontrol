@@ -33,11 +33,10 @@ generate() {
 # raise it only when a toolchain moves under us, never to make a new warning go
 # away.
 #
-# One left: AudioService.swift, where CoreAudio writes a CFStringRef into a
-# CFString slot. The fix is Unmanaged<CFString>?, which changes how device names
-# are read and wants testing against real audio hardware rather than a drive-by
-# edit.
-WARN_BUDGET="${WARN_BUDGET:-1}"
+# Zero, and it should stay there. Raise it only when a toolchain moves under us,
+# never to make a new warning go away — a warning that earns a raise is a
+# warning worth reading first.
+WARN_BUDGET="${WARN_BUDGET:-0}"
 
 build() {
     # A runner always starts from an empty derived-data directory, so its build is

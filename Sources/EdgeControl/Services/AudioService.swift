@@ -172,17 +172,22 @@ public final class AudioService: ObservableObject {
     }
 
     private func readDeviceName() -> String {
-        var name: CFString = "" as CFString
-        var size = UInt32(MemoryLayout<CFString>.size)
+        // Unmanaged, not a CFString variable. CoreAudio writes a +1 retained
+        // CFStringRef into whatever this points at, and pointing it at a slot
+        // ARC manages means type-punning a managed reference as a raw buffer:
+        // the empty string already there is overwritten without a release, and
+        // the balance only works out by accident. Taking the value as
+        // Unmanaged states the ownership CoreAudio is actually handing over.
+        var name: Unmanaged<CFString>?
+        var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
         var address = AudioObjectPropertyAddress(
             mSelector: kAudioDevicePropertyDeviceNameCFString,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        if AudioObjectGetPropertyData(defaultDeviceID, &address, 0, nil, &size, &name) == noErr {
-            return name as String
-        }
-        return "Unknown"
+        guard AudioObjectGetPropertyData(defaultDeviceID, &address, 0, nil, &size, &name) == noErr,
+              let name else { return "Unknown" }
+        return name.takeRetainedValue() as String
     }
 
     // MARK: - Volume Control
