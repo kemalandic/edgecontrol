@@ -49,14 +49,14 @@ jobs:
       # budget, tests with coverage, and prints the coverage table. Keeping the
       # commands in the script rather than here is what makes a local run and a
       # CI run the same thing.
-      # The budget in the script is measured on Xcode 27 locally. Until the first
-      # run tells us which Xcode this image carries, report the count here rather
-      # than gate on it — a number from a different compiler would fail for
-      # reasons unrelated to any change. The pin and the real budget land
-      # together once there is a measurement.
+      # The budget gates here now. Measured: the macos-15 image carries Xcode
+      # 16.0-16.4 and 26.x, the step above selects the newest, and that toolchain
+      # reports the same single warning this project carries locally.
+      #
+      # Selecting the newest rather than pinning a version is deliberate. When
+      # the image gains a compiler that reports something different, CI says so
+      # loudly instead of silently drifting — which is the ratchet doing its job.
       - name: Build and test
-        env:
-          WARN_BUDGET: 999
         run: ./Scripts/ci-local.sh all
 
       - name: Report coverage

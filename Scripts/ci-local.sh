@@ -33,16 +33,11 @@ generate() {
 # raise it only when a toolchain moves under us, never to make a new warning go
 # away.
 #
-# The 21 that remain break down as:
-#   19  the test target's main-actor isolation warnings in LayoutEngineTests and
-#       RateLimitTrackingTransportTests — fixed by PR #9, which is what takes
-#       this budget to 2.
-#    1  AudioService.swift: CoreAudio writes a CFStringRef into a CFString slot.
-#       The fix is Unmanaged<CFString>?, which changes how device names are read
-#       and wants testing on real hardware rather than a drive-by edit.
-#    1  DashboardShell.swift: main-actor isolation on the edit-mode toggle, also
-#       fixed by PR #9.
-WARN_BUDGET="${WARN_BUDGET:-21}"
+# One left: AudioService.swift, where CoreAudio writes a CFStringRef into a
+# CFString slot. The fix is Unmanaged<CFString>?, which changes how device names
+# are read and wants testing against real audio hardware rather than a drive-by
+# edit.
+WARN_BUDGET="${WARN_BUDGET:-1}"
 
 build() {
     # A runner always starts from an empty derived-data directory, so its build is
