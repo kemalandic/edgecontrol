@@ -19,3 +19,70 @@ struct WidgetHeader: View {
         }
     }
 }
+
+// MARK: - Rate Pair
+
+/// Two labeled rates (down/up, read/write) rendered identically wherever a
+/// widget shows them, so equal box sizes produce equal layouts across
+/// Network, Disk I/O and friends.
+struct RatePairView: View {
+    struct Entry {
+        let icon: String
+        let label: String
+        let value: String
+        let color: Color
+    }
+
+    let first: Entry
+    let second: Entry
+    var compact: Bool = false
+    /// One-column cells stack the groups; anything wider sits side by side.
+    var vertical: Bool = false
+
+    @Environment(\.themeSettings) private var ts
+
+    var body: some View {
+        if vertical {
+            VStack(alignment: .leading, spacing: 8) {
+                group(first)
+                group(second)
+            }
+        } else {
+            HStack(spacing: 12) {
+                group(first)
+                group(second)
+            }
+        }
+    }
+
+    private func group(_ entry: Entry) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 2 : 4) {
+            HStack(spacing: 4) {
+                Image(systemName: entry.icon)
+                    .font(.system(size: (compact ? 12 : 18) * ts.fontScale))
+                    .foregroundStyle(entry.color)
+                Text(entry.label)
+                    .font(Theme.label(ts))
+                    .foregroundStyle(Theme.text3(ts))
+            }
+            Text(Self.padded(entry.value))
+                .font(Theme.value(ts))
+                .foregroundStyle(Theme.text1(ts))
+                .monospacedDigit()
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Live values arrive at varying widths ("3.5 KB/s" vs "216.5 KB/s"), and
+    /// letting each width pick its own scale made the type pulse with the
+    /// data. Padding every value to the formatters' widest possible output
+    /// ("1023.9 KB/s", 11 figures) with figure spaces holds the measured
+    /// width — and therefore the rendered size — perfectly still.
+    private static func padded(_ value: String) -> String {
+        let target = 11
+        guard value.count < target else { return value }
+        return value + String(repeating: "\u{2007}", count: target - value.count)
+    }
+}

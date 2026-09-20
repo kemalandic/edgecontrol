@@ -27,8 +27,7 @@ public final class SSDTempWidget: DashboardWidget {
             service: service,
             showLabel: config.bool("showLabel", default: true),
             isBar: size.height <= 1,
-            isChart: size.height == 2 && size.width >= 3,
-            isCompact: size.width <= 2 && size.height <= 2
+            isChart: size.height == 2 && size.width >= 3
         )
     }
 }
@@ -40,7 +39,6 @@ private struct SSDTempWidgetView: View {
     let showLabel: Bool
     let isBar: Bool
     let isChart: Bool
-    let isCompact: Bool
 
     private var temp: Double? { service.ssdTemperature }
 
@@ -121,31 +119,19 @@ private struct SSDTempWidgetView: View {
     }
 
     private var gaugeLayout: some View {
-        VStack(spacing: isCompact ? 4 : 8) {
+        VStack(spacing: 8) {
             if let temp {
                 let color = tempColor(temp)
 
-                if isCompact {
-                    VStack(spacing: 2) {
-                        Image(systemName: "internaldrive")
-                            .font(.system(size: 18 * ts.fontScale))
-                            .foregroundStyle(color)
-                        Text(units.degrees(fromCelsius: temp))
-                            .font(Theme.value(ts))
-                            .foregroundStyle(color)
-                            .monospacedDigit()
-                    }
-                } else {
-                    RadialGaugeView(
-                        value: temp,
-                        maxValue: 100,
-                        label: "SSD",
-                        displayValue: units.temperatureText(fromCelsius: temp),
-                        unit: "",
-                        accentColor: color,
-                        showLabel: showLabel
-                    )
-                }
+                RadialGaugeView(
+                    value: temp,
+                    maxValue: 100,
+                    label: "SSD",
+                    displayValue: units.temperatureText(fromCelsius: temp),
+                    unit: "",
+                    accentColor: color,
+                    showLabel: showLabel
+                )
             } else {
                 Image(systemName: "internaldrive")
                     .font(.system(size: 24 * ts.fontScale))

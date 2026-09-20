@@ -70,33 +70,17 @@ private struct BluetoothWidgetView: View {
                     .frame(maxWidth: .infinity)
                 Spacer()
             } else {
-                ForEach(connectedDevices) { device in
-                    HStack(spacing: 8) {
-                        Image(systemName: device.icon)
-                            .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
-                            .foregroundStyle(Theme.widgetPrimary("bluetooth", ts: ts, default: .blue))
-                            .frame(width: 24)
-
-                        Text(device.name)
-                            .font(Theme.body(ts))
-                            .foregroundStyle(Theme.text1(ts))
-                            .lineLimit(1)
-
-                        Spacer()
-
-                        if showBattery, let battery = device.batteryLevel {
-                            HStack(spacing: 4) {
-                                Image(systemName: batteryIcon(battery))
-                                    .font(.system(size: 14 * ts.fontScale))
-                                    .foregroundStyle(batteryColor(battery))
-                                Text("\(battery)%")
-                                    .font(Theme.label(ts))
-                                    .foregroundStyle(batteryColor(battery))
-                                    .monospacedDigit()
+                // Overflow scrolls; a short list centers in the viewport via
+                // minHeight so the card doesn't end in a void under the rows.
+                GeometryReader { geo in
+                    TouchScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(connectedDevices) { device in
+                                deviceRow(device)
                             }
                         }
+                        .frame(minHeight: geo.size.height, alignment: .center)
                     }
-                    .padding(.vertical, 4)
                 }
             }
 
@@ -104,6 +88,35 @@ private struct BluetoothWidgetView: View {
         }
         .padding(isCompact ? Theme.compactPadding : Theme.widgetPadding)
         .widgetCard()
+    }
+
+    private func deviceRow(_ device: BTDevice) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: device.icon)
+                .font(.system(size: (isCompact ? 14 : 18) * ts.fontScale))
+                .foregroundStyle(Theme.widgetPrimary("bluetooth", ts: ts, default: .blue))
+                .frame(width: 24)
+
+            Text(device.name)
+                .font(Theme.body(ts))
+                .foregroundStyle(Theme.text1(ts))
+                .lineLimit(1)
+
+            Spacer()
+
+            if showBattery, let battery = device.batteryLevel {
+                HStack(spacing: 4) {
+                    Image(systemName: batteryIcon(battery))
+                        .font(.system(size: 14 * ts.fontScale))
+                        .foregroundStyle(batteryColor(battery))
+                    Text("\(battery)%")
+                        .font(Theme.label(ts))
+                        .foregroundStyle(batteryColor(battery))
+                        .monospacedDigit()
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 
     private func batteryIcon(_ level: Int) -> String {

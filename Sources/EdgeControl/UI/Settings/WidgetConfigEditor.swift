@@ -71,7 +71,7 @@ struct WidgetConfigEditor: View {
                 set: { config[entry.key] = .string($0) }
             )) {
                 ForEach(options, id: \.self) { option in
-                    Text(option.capitalized.replacingOccurrences(of: "Daybar", with: "Day Bar").replacingOccurrences(of: "Dotmatrix", with: "Dot Matrix"))
+                    Text(option.capitalized.replacingOccurrences(of: "Daybar", with: "Day Bar").replacingOccurrences(of: "Dotmatrix", with: "Dot Matrix").replacingOccurrences(of: "Cpu", with: "CPU"))
                         .tag(option)
                 }
             }

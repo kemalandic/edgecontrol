@@ -11,7 +11,6 @@ public final class CPUTempWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "unit", label: "Unit", type: .picker, defaultValue: .string("C")),
         ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(85)),
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
@@ -31,8 +30,7 @@ public final class CPUTempWidget: DashboardWidget {
             label: "CPU",
             defaultCoolColor: .cyan,
             isBar: size.height <= 1,
-            isChart: size.height == 2 && size.width >= 3,
-            isCompact: size.width <= 2 && size.height <= 2
+            isChart: size.height == 2 && size.width >= 3
         )
     }
 }
@@ -48,7 +46,6 @@ public final class GPUTempWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "unit", label: "Unit", type: .picker, defaultValue: .string("C")),
         ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(90)),
     ]
     public let defaultColors = WidgetColors(primary: .orange)
@@ -68,8 +65,7 @@ public final class GPUTempWidget: DashboardWidget {
             label: "GPU",
             defaultCoolColor: .orange,
             isBar: size.height <= 1,
-            isChart: size.height == 2 && size.width >= 3,
-            isCompact: size.width <= 2 && size.height <= 2
+            isChart: size.height == 2 && size.width >= 3
         )
     }
 }
@@ -90,7 +86,6 @@ private struct TempGaugeWidgetView: View {
     let defaultCoolColor: ThemeColor
     let isBar: Bool
     let isChart: Bool
-    let isCompact: Bool
 
     private var temp: Double? {
         switch sensor {
@@ -188,31 +183,19 @@ private struct TempGaugeWidgetView: View {
     // MARK: - Gauge Layout (2x2+)
 
     private var gaugeLayout: some View {
-        VStack(spacing: isCompact ? 4 : 8) {
+        VStack(spacing: 8) {
             if let temp {
                 let color = tempColor(temp)
 
-                if isCompact {
-                    VStack(spacing: 2) {
-                        Image(systemName: sensor == .cpu ? "cpu" : "gpu")
-                            .font(.system(size: 18 * ts.fontScale))
-                            .foregroundStyle(color)
-                        Text(units.degrees(fromCelsius: temp))
-                            .font(Theme.value(ts))
-                            .foregroundStyle(color)
-                            .monospacedDigit()
-                    }
-                } else {
-                    RadialGaugeView(
-                        value: temp,
-                        maxValue: 110,
-                        label: label,
-                        displayValue: units.temperatureText(fromCelsius: temp),
-                        unit: "",
-                        accentColor: color,
-                        showLabel: true
-                    )
-                }
+                RadialGaugeView(
+                    value: temp,
+                    maxValue: 110,
+                    label: label,
+                    displayValue: units.temperatureText(fromCelsius: temp),
+                    unit: "",
+                    accentColor: color,
+                    showLabel: true
+                )
             } else {
                 Image(systemName: sensor == .cpu ? "cpu" : "gpu")
                     .font(.system(size: 24 * ts.fontScale))

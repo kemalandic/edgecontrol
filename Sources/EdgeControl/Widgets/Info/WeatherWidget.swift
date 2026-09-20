@@ -26,7 +26,9 @@ public final class WeatherWidget: DashboardWidget {
         WeatherWidgetBody(
             service: service,
             showForecast: config.bool("showForecast", default: true),
-            isCompact: size.height <= 3
+            // Minimum size is 4x4, so the compact layout must trigger at 4 or
+            // it never renders; the full 64pt/72pt layout needs 5+ rows.
+            isCompact: size.height <= 4
         )
     }
 }

@@ -98,6 +98,9 @@ struct GridPageView: View {
                             .padding(CGFloat(layoutEngine.document.globalSettings.theme.widgetGap))
                         }
                         .frame(width: w, height: h)
+                        // Compact layouts at large font scales can overflow a
+                        // 1-row cell; never let a widget paint over neighbors.
+                        .clipped()
                         .opacity(isDragging ? 0.5 : isResizing ? 0.7 : 1)
                         .overlay {
                             if editMode {

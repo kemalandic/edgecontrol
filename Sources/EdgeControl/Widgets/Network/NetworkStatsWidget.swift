@@ -7,7 +7,7 @@ public final class NetworkStatsWidget: DashboardWidget {
     public let iconName = "network"
     public let category: WidgetCategory = .network
     public let requiredServices: Set<ServiceKey> = [.network]
-    public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
+    public let supportedSizes = WidgetSizeRange(min: .size(1, 1), max: .size(8, 4))
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = []
@@ -21,7 +21,14 @@ public final class NetworkStatsWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        NetworkStatsWidgetView(service: service, isCompact: size.height <= 2)
+        NetworkStatsWidgetView(
+            service: service,
+            isCompact: size.height <= 2,
+            isBar: size.height <= 1,
+            isNarrow: size.width <= 1,
+            showTitle: true,
+            showCompactTotals: size.width >= 5 && size.height >= 2
+        )
     }
 }
 
@@ -29,51 +36,53 @@ private struct NetworkStatsWidgetView: View {
     @ObservedObject var service: NetworkMonitorService
     @Environment(\.themeSettings) private var ts
     let isCompact: Bool
+    // Single grid row: the stacked DOWN/UP rows would overflow ~112px of
+    // interior height at larger font scales, so render them side by side.
+    let isBar: Bool
+    // One grid column: stacked groups under a slim caption.
+    let isNarrow: Bool
+    // Keep the widget's name visible wherever it fits — full header down to
+    // 2 rows, a bare caption in the 1-row layout — matching Disk I/O.
+    let showTitle: Bool
+    // Wide-and-tall compact (width >= 5, height >= 2) has room for the
+    // DL/UL totals row; the 1-row bar layout never does.
+    let showCompactTotals: Bool
 
     var body: some View {
         let primary = Theme.widgetPrimary("network-stats", ts: ts, default: .green)
         let secondary = Theme.widgetSecondary("network-stats", ts: ts, default: .cyan) ?? Theme.accentCyan
 
         VStack(spacing: isCompact ? 6 : 12) {
-            if !isCompact {
+            if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "NETWORK", color: primary)
+            } else if showTitle {
+                Text("NETWORK")
+                    .font(Theme.caption(ts))
+                    .foregroundStyle(Theme.text3(ts))
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
-                        .foregroundStyle(primary)
-                    Text("DOWN")
-                        .font(Theme.label(ts))
-                        .foregroundStyle(Theme.text3(ts))
-                    Spacer()
-                    Text(NetworkMonitorService.formatSpeed(service.downloadSpeed))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                }
-            }
+            Spacer(minLength: 0)
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: (isCompact ? 14 : 20) * ts.fontScale))
-                        .foregroundStyle(secondary)
-                    Text("UP")
-                        .font(Theme.label(ts))
-                        .foregroundStyle(Theme.text3(ts))
-                    Spacer()
-                    Text(NetworkMonitorService.formatSpeed(service.uploadSpeed))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(Theme.text1(ts))
-                        .monospacedDigit()
-                        .minimumScaleFactor(0.5)
-                }
-            }
+            // Same component Disk I/O renders — equal boxes, equal layout.
+            RatePairView(
+                first: .init(
+                    icon: "arrow.down.circle.fill", label: "DOWN",
+                    value: NetworkMonitorService.formatSpeed(service.downloadSpeed),
+                    color: primary
+                ),
+                second: .init(
+                    icon: "arrow.up.circle.fill", label: "UP",
+                    value: NetworkMonitorService.formatSpeed(service.uploadSpeed),
+                    color: secondary
+                ),
+                compact: isCompact,
+                vertical: isNarrow
+            )
 
-            if !isCompact {
+            if !isBar && (!isCompact || showCompactTotals) {
                 HStack(spacing: 10) {
                     totalChip("DL", value: NetworkMonitorService.formatBytes(service.totalDownloaded), color: primary)
                     totalChip("UL", value: NetworkMonitorService.formatBytes(service.totalUploaded), color: secondary)
@@ -85,6 +94,8 @@ private struct NetworkStatsWidgetView: View {
         .padding(isCompact ? Theme.compactPadding : Theme.widgetPadding)
         .widgetCard()
     }
+
+
 
     private func totalChip(_ label: String, value: String, color: Color) -> some View {
         HStack(spacing: 6) {

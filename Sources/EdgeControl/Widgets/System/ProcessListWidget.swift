@@ -12,7 +12,10 @@ public final class ProcessListWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(6, 4)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu")),
+        ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu"), options: ["cpu", "memory"]),
+        // "auto" fills whatever height the widget has; a number pins the row
+        // count and scrolls past it.
+        ConfigSchemaEntry(key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"), options: ["auto", "4", "6", "8", "10", "12", "16"]),
     ]
     public let defaultColors = WidgetColors(primary: .purple, secondary: .cyan)
 
@@ -24,14 +27,27 @@ public final class ProcessListWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        ProcessListWidgetView(service: service, isCompact: size.height <= 3)
+        ProcessListWidgetView(
+            service: service,
+            sortByMemory: config.string("sortBy", default: "cpu") == "memory",
+            fixedRows: Int(config.string("rows", default: "auto"))
+        )
     }
 }
 
 private struct ProcessListWidgetView: View {
     @ObservedObject var service: ProcessMonitorService
     @Environment(\.themeSettings) private var ts
-    let isCompact: Bool
+    @EnvironmentObject private var model: AppModel
+    // Tapping a column header re-sorts live, overriding the configured
+    // default for this on-screen session; tap again to flip direction.
+    @State private var tappedSort: (memory: Bool, ascending: Bool)?
+    let sortByMemory: Bool
+    /// nil = fit rows to the widget height; a number pins the count.
+    let fixedRows: Int?
+
+    // Row = 26pt icon + 2x8pt vertical padding + 1pt divider.
+    private let rowHeight: CGFloat = 43
 
     var body: some View {
         VStack(spacing: 0) {
@@ -42,12 +58,8 @@ private struct ProcessListWidgetView: View {
             HStack {
                 Text("APP")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Text("CPU")
-                    .frame(width: 70, alignment: .trailing)
-                if !isCompact {
-                    Text("MEM")
-                        .frame(width: 70, alignment: .trailing)
-                }
+                sortHeader("CPU", memory: false)
+                sortHeader("MEM", memory: true)
             }
             .font(Theme.label(ts))
             .foregroundStyle(Theme.text3(ts))
@@ -56,24 +68,55 @@ private struct ProcessListWidgetView: View {
 
             Divider().background(Theme.border(ts))
 
-            if service.topProcesses.isEmpty {
-                Text("Loading...")
-                    .font(Theme.body(ts))
-                    .foregroundStyle(Theme.text3(ts))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                let maxCount = isCompact ? 4 : 8
-                ForEach(Array(service.topProcesses.prefix(maxCount))) { proc in
-                    processRow(proc)
-                    if proc.id != service.topProcesses.prefix(maxCount).last?.id {
-                        Divider().background(Theme.border(ts)).padding(.leading, 50)
+            GeometryReader { geo in
+                if service.topProcesses.isEmpty {
+                    Text("Loading...")
+                        .font(Theme.body(ts))
+                        .foregroundStyle(Theme.text3(ts))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    let fitCount = min(max(Int(geo.size.height / rowHeight), 3), 16)
+                    let maxCount = fixedRows ?? fitCount
+                    let memSort = tappedSort?.memory ?? sortByMemory
+                    let ascending = tappedSort?.ascending ?? false
+                    let ranked = service.topProcesses.sorted {
+                        let (a, b) = memSort ? ($0.memoryMB, $1.memoryMB) : ($0.cpuPercent, $1.cpuPercent)
+                        return ascending ? a < b : a > b
+                    }
+                    let visible = Array(ranked.prefix(maxCount))
+                    // Scrolls only when a pinned row count exceeds the height.
+                    TouchScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(visible) { proc in
+                                processRow(proc)
+                                if proc.id != visible.last?.id {
+                                    Divider().background(Theme.border(ts)).padding(.leading, 50)
+                                }
+                            }
+                        }
                     }
                 }
             }
-
-            Spacer(minLength: 0)
         }
         .widgetCard()
+    }
+
+    private func sortHeader(_ label: String, memory: Bool) -> some View {
+        let memSort = tappedSort?.memory ?? sortByMemory
+        let ascending = tappedSort?.ascending ?? false
+        let active = memSort == memory
+        return Text(active ? label + (ascending ? " ▲" : " ▼") : label)
+            .foregroundStyle(active ? Theme.text1(ts) : Theme.text3(ts))
+            .frame(width: 70, alignment: .trailing)
+            .touchTappable(id: "proc-sort-\(label)", registry: model.touchService.zoneRegistry) {
+                Task { @MainActor in
+                    if active {
+                        tappedSort = (memory, !ascending)
+                    } else {
+                        tappedSort = (memory, false)
+                    }
+                }
+            }
     }
 
     private func processRow(_ proc: ProcessInfo_EC) -> some View {
@@ -102,13 +145,11 @@ private struct ProcessListWidgetView: View {
                 .monospacedDigit()
                 .frame(width: 70, alignment: .trailing)
 
-            if !isCompact {
-                Text(String(format: "%.0f MB", proc.memoryMB))
-                    .font(Theme.body(ts))
-                    .foregroundStyle(proc.memoryMB > 1024 ? Theme.accentOrange : Theme.text2(ts))
-                    .monospacedDigit()
-                    .frame(width: 70, alignment: .trailing)
-            }
+            Text(String(format: "%.0f MB", proc.memoryMB))
+                .font(Theme.body(ts))
+                .foregroundStyle(proc.memoryMB > 1024 ? Theme.accentOrange : Theme.text2(ts))
+                .monospacedDigit()
+                .frame(width: 70, alignment: .trailing)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

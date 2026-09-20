@@ -47,9 +47,9 @@ private struct CPUGaugeWidgetView: View {
             maxValue: 100,
             label: "CPU",
             displayValue: String(format: "%.0f%%", cpu),
-            unit: isCompact ? "" : abbreviate(brand),
+            unit: abbreviate(brand),
             accentColor: Theme.widgetPrimary("cpu-gauge", ts: ts, default: .cyan),
-            showLabel: showLabel && !isCompact
+            showLabel: showLabel
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(Theme.compactPadding)

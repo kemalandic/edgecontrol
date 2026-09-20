@@ -21,14 +21,31 @@ public final class CPUCoresWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        CPUCoresWidgetView(metricsService: metricsService, columns: size.width >= 8 ? 2 : 1)
+        CPUCoresWidgetView(metricsService: metricsService, size: size)
     }
 }
 
 private struct CPUCoresWidgetView: View {
     @ObservedObject var metricsService: SystemMetricsService
     @Environment(\.themeSettings) private var ts
-    let columns: Int
+    let size: WidgetSize
+
+    // Row geometry: coreRow fixed frame + VStack spacing; header title line + vertical padding.
+    private static let rowHeight: CGFloat = 18
+    private static let rowSpacing: CGFloat = 2
+    private static let headerChrome: CGFloat = 34
+
+    private var columns: Int {
+        let count = metricsService.perCoreUsage.count
+        let available = CGFloat(size.height) * GridConstants.cellHeight - Self.headerChrome
+        let rowsThatFit = max(1, Int((available + Self.rowSpacing) / (Self.rowHeight + Self.rowSpacing)))
+        let maxByWidth = size.width >= 6 ? 2 : 1
+        for cols in 1...maxByWidth where (count + cols - 1) / cols <= rowsThatFit {
+            return cols
+        }
+        // Even maxByWidth columns overflow: keep width-only choice, TouchScrollView scrolls the rest.
+        return size.width >= 8 ? 2 : 1
+    }
 
     private var primary: Color { Theme.widgetPrimary("cpu-cores", ts: ts, default: .purple) }
 

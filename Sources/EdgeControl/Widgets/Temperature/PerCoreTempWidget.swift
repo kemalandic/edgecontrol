@@ -21,7 +21,7 @@ public final class PerCoreTempWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        PerCoreTempWidgetView(service: service, columns: size.width >= 8 ? 2 : 1)
+        PerCoreTempWidgetView(service: service, size: size)
     }
 }
 
@@ -29,7 +29,24 @@ private struct PerCoreTempWidgetView: View {
     @ObservedObject var service: SMCService
     @Environment(\.themeSettings) private var ts
     @Environment(\.unitSystem) private var units
-    let columns: Int
+    let size: WidgetSize
+
+    // Row geometry: coreRow fixed frame + VStack spacing; header title line + vertical padding.
+    private static let rowHeight: CGFloat = 18
+    private static let rowSpacing: CGFloat = 2
+    private static let headerChrome: CGFloat = 34
+
+    private var columns: Int {
+        let count = service.cpuCoreTemps.count
+        let available = CGFloat(size.height) * GridConstants.cellHeight - Self.headerChrome
+        let rowsThatFit = max(1, Int((available + Self.rowSpacing) / (Self.rowHeight + Self.rowSpacing)))
+        let maxByWidth = size.width >= 6 ? 2 : 1
+        for cols in 1...maxByWidth where (count + cols - 1) / cols <= rowsThatFit {
+            return cols
+        }
+        // Even maxByWidth columns overflow: keep width-only choice, TouchScrollView scrolls the rest.
+        return size.width >= 8 ? 2 : 1
+    }
 
     private var primary: Color { Theme.widgetPrimary("per-core-temp", ts: ts, default: .cyan) }
     private var secondary: Color { Theme.widgetSecondary("per-core-temp", ts: ts, default: .green) ?? Theme.accentGreen }

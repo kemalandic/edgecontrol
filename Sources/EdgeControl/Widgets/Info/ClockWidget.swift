@@ -424,24 +424,32 @@ private struct ClockContainer: View {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     private var dayBarStyle: some View {
-        VStack(spacing: isCompact ? 6 : 10) {
-            // Day bar
+        VStack(spacing: isCompact ? 8 : 14) {
+            // Day bar: justified chips that hug their labels, so the strip's
+            // visible edges equal the container's — and therefore the clock's
+            // — on every day. A first/last-day highlight capsule ends exactly
+            // at the edge instead of overhanging an inset clock.
             HStack(spacing: 0) {
                 ForEach(Array(dayNames.enumerated()), id: \.offset) { i, name in
                     Text(name)
-                        .font(.system(size: (isCompact ? 9 : 11) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
+                        .font(.system(size: (isCompact ? 12 : 15) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
                         .foregroundStyle(weekday == i + 1 ? .white : Theme.text3(ts))
-                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, isCompact ? 5 : 7)
                         .padding(.vertical, isCompact ? 3 : 5)
                         .background(
                             weekday == i + 1 ? primary.opacity(0.3) : Color.clear,
                             in: RoundedRectangle(cornerRadius: 4, style: .continuous)
                         )
+                    if i < dayNames.count - 1 { Spacer(minLength: 2) }
                 }
             }
 
-            // Time
-            timeRow(size: isCompact ? ts.fontSizeValue * 2.0 : ts.fontSizeValue * 2.5, weight: .semibold)
+            // Time — stretches to the same width as the day strip above:
+            // fittedTimeRow starts oversized and scales down to fit. Width
+            // only: a greedy height would pin the day strip to the top edge,
+            // and the container centers the hugging group vertically instead.
+            fittedTimeRow(weight: .semibold)
+                .frame(maxWidth: .infinity)
 
             if showDate && !isCompact {
                 Text(fullDate)
@@ -576,6 +584,30 @@ private struct ClockContainer: View {
         .monospacedDigit()
         .minimumScaleFactor(0.2)
         .lineLimit(1)
+    }
+
+    /// The time as ONE concatenated Text, so minimumScaleFactor scales every
+    /// segment together: at a deliberately oversized base size it always
+    /// shrinks to exactly fill its container's width (or height, whichever is
+    /// tighter) — no fixed font size involved.
+    private func fittedTimeRow(weight: Font.Weight) -> some View {
+        var text = Text(hourStr).foregroundStyle(Theme.text1(ts))
+            + Text(":").foregroundStyle(primary)
+            + Text(minStr).foregroundStyle(Theme.text1(ts))
+        if showSeconds {
+            text = text + Text(":").foregroundStyle(primary.opacity(0.4))
+                + Text(secStr).foregroundStyle(Theme.text3(ts))
+        }
+        if !use24h {
+            // Sized relative to the base so the ratio survives scaling.
+            text = text + Text(" " + ampm)
+                .font(Theme.font(size: 160, weight: .semibold, settings: ts))
+                .foregroundStyle(primary.opacity(0.6))
+        }
+        return text
+            .font(Theme.font(size: 400, weight: weight, settings: ts).monospacedDigit())
+            .minimumScaleFactor(0.02)
+            .lineLimit(1)
     }
 
     private var secondsBar: some View {
