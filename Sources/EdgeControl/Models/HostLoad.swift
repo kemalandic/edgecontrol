@@ -42,18 +42,28 @@ public enum HostLoad {
         return ((user + system + nice) / total) * 100
     }
 
+    /// What the storage gauge shows.
+    public struct StorageSnapshot: Equatable, Sendable {
+        public let usedPercent: Double
+        public let usedGB: Double
+        public let totalGB: Double
+    }
+
     /// Used share of a volume, from its total and what is available.
     ///
     /// Returns nil for a total of zero rather than dividing by a fudge factor:
     /// there is no such thing as a percentage of no disk, and reporting one
     /// hides the failed read that produced it.
-    public static func storage(totalBytes: Int64, availableBytes: Int64)
-        -> (usedPercent: Double, usedGB: Double, totalGB: Double)? {
+    public static func storage(totalBytes: Int64, availableBytes: Int64) -> StorageSnapshot? {
         guard totalBytes > 0 else { return nil }
         let gigabyte = 1024.0 * 1024 * 1024
         let clampedAvailable = min(max(availableBytes, 0), totalBytes)
         let totalGB = Double(totalBytes) / gigabyte
         let usedGB = Double(totalBytes - clampedAvailable) / gigabyte
-        return (min(max(usedGB / totalGB * 100, 0), 100), usedGB, totalGB)
+        return StorageSnapshot(
+            usedPercent: min(max(usedGB / totalGB * 100, 0), 100),
+            usedGB: usedGB,
+            totalGB: totalGB
+        )
     }
 }

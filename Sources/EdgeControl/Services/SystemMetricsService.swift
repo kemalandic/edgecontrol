@@ -186,7 +186,7 @@ public final class SystemMetricsService: ObservableObject {
         guard let snapshot = HostLoad.storage(totalBytes: Int64(total), availableBytes: Int64(available)) else {
             return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
         }
-        return snapshot
+        return (snapshot.usedPercent, snapshot.usedGB, snapshot.totalGB)
     }
 
     private func currentSwapUsedMB() -> Double? {
