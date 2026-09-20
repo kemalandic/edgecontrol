@@ -26,14 +26,14 @@ struct StickyNoteMarkupTests {
         #expect(StickyNoteMarkup.marker(of: "") == nil)
     }
 
-    /// Where the editor draws the line between a list item and a sentence that
-    /// opens with a number. The head — digits plus the dot — may be six
-    /// characters, so five digits count and six do not.
+    /// Reading a line that already carries a marker is deliberately permissive:
+    /// a list may legitimately start at any number, so "1998.<tab>" is item
+    /// 1998 and reads back as one. What a number may *not* do is turn prose
+    /// into a list in the first place — that is startsOrderedList's job, below.
     ///
-    /// Worth pinning because the boundary is arbitrary and invisible: a note
-    /// beginning "1998.<tab>the year everything changed" does become item 1998
-    /// of a list, which is surprising but is what the editor does. Anyone
-    /// changing the cap should have to change this test on purpose.
+    /// The cap is the only limit here, and it is arbitrary and invisible: the
+    /// head, digits plus the dot, may be six characters. Anyone changing it
+    /// should have to change this test on purpose.
     @Test("the number in a marker may be five digits, not six")
     func markerNumberLengthLimit() {
         #expect(StickyNoteMarkup.marker(of: "1998.\tthe year") == .ordered(1998))
@@ -146,6 +146,38 @@ struct StickyNoteMarkupTests {
     @Test("an empty list renumbers to nothing")
     func emptyList() {
         #expect(StickyNoteMarkup.renumber([]).isEmpty)
+    }
+
+    // MARK: starting an ordered list
+
+    /// The bug this rule exists for. Typing "1998. " while writing about a year
+    /// is ordinary prose, and it used to become item 1998 of a list — the
+    /// conversion fires on the space, so there was nothing deliberate about it.
+    @Test("a year in prose does not start a list", arguments: [
+        "1998.", "2026.", "1066.", "42.",
+    ])
+    func proseNumbersDoNotStartLists(typed: String) {
+        #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: false) == false)
+    }
+
+    @Test("on a plain line, only 1. starts a list")
+    func onlyOneStartsAList() {
+        #expect(StickyNoteMarkup.startsOrderedList("1.", continuingExistingItem: false))
+        #expect(StickyNoteMarkup.startsOrderedList("2.", continuingExistingItem: false) == false)
+    }
+
+    /// Inside a list any number is fine: the renumbering pass decides what the
+    /// item actually shows, so typing over one is not a way to break the list.
+    @Test("inside a list, any number is accepted", arguments: ["1.", "2.", "42.", "1998."])
+    func insideAListAnyNumberWorks(typed: String) {
+        #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: true))
+    }
+
+    @Test("what is not a number does not start a list", arguments: [
+        "", ".", "a.", "1", "1.5.", "123456.",
+    ])
+    func nonNumbersDoNotStart(typed: String) {
+        #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: true) == false)
     }
 
     // MARK: links

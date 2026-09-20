@@ -393,9 +393,9 @@ final class LinkPasteTextView: NSTextView {
             replace(fullRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
             return true
         }
-        // Ordered list: any number followed by "." and a space.
-        if typed.hasSuffix("."), typed.count <= 5, !typed.dropLast().isEmpty,
-           Int(typed.dropLast()) != nil {
+        // Ordered list: a number followed by "." and a space. On a plain line
+        // only "1." starts one — see StickyNoteMarkup.startsOrderedList.
+        if StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: markerLen > 0) {
             replace(fullRange, with: NSAttributedString(string: typed + "\t", attributes: listAttributes(level: level)))
             return true
         }

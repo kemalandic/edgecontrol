@@ -90,6 +90,25 @@ public enum StickyNoteMarkup {
         }
     }
 
+    /// Whether what has just been typed, followed by a space, should become an
+    /// ordered-list marker.
+    ///
+    /// On a line that is already a list item, any number is accepted — the
+    /// renumbering pass settles what it actually shows. On a plain line only
+    /// "1." starts a list.
+    ///
+    /// That restriction is the difference between a note editor and a nuisance.
+    /// Writing "1998. That was the year everything changed" is ordinary prose,
+    /// and without the rule it silently became item 1998 of a list. CommonMark
+    /// draws the line in the same place and for the same reason: an ordered
+    /// list may only interrupt a paragraph when it starts at one.
+    public static func startsOrderedList(_ typed: String, continuingExistingItem: Bool) -> Bool {
+        guard typed.hasSuffix("."), typed.count <= 5 else { return false }
+        let digits = typed.dropLast()
+        guard !digits.isEmpty, let number = Int(digits) else { return false }
+        return continuingExistingItem || number == 1
+    }
+
     /// Whether pasted text is a web link worth turning into one.
     ///
     /// Deliberately narrow: a scheme this app will open, a host, and no spaces.
