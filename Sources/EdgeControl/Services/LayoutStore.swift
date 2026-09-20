@@ -91,10 +91,12 @@ public final class LayoutStore: Sendable {
 
     // MARK: - Export / Import
 
-    public func exportData() -> Data? {
+    public func exportData(_ document: LayoutDocument? = nil) -> Data? {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let doc = load()
+        // Callers with a live document pass it in; store writes pause during
+        // edit sessions, so the disk copy can lag far behind the screen.
+        let doc = document ?? load()
         return try? encoder.encode(doc)
     }
 

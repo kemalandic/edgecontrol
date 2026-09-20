@@ -66,21 +66,9 @@ public final class AppModel: ObservableObject {
         metricsService.start()
         touchService.start()
 
-        // React to touch swipes for page changes
-        touchService.$swipeDirection
-            .compactMap { $0 }
-            .receive(on: RunLoop.main)
-            .sink { [weak self] direction in
-                guard let self else { return }
-                switch direction {
-                case .left:
-                    self.currentPage += 1
-                case .right:
-                    if self.currentPage > 0 { self.currentPage -= 1 }
-                }
-                self.touchService.consumeSwipe()
-            }
-            .store(in: &cancellables)
+        // Page changes ride the live drag stream (liveSwipeDX) straight into
+        // DashboardShell, which owns the decision; a discrete subscription
+        // here would double-navigate.
 
         // Note: other services are started on-demand via updateActiveServices()
     }

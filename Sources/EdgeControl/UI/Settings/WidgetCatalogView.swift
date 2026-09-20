@@ -161,7 +161,16 @@ struct WidgetCatalogView: View {
             width: widget.defaultSize.width,
             height: widget.defaultSize.height
         )
-        guard let pos = positions.first else { return }
+        // A full page no longer blocks adding: park the widget at the origin
+        // as a staged overlap. Entering edit mode makes the overlap legal and
+        // visible, and the edit session cannot end until it's resolved.
+        let pos: GridCell
+        if let free = positions.first {
+            pos = free
+        } else {
+            layoutEngine.isEditing = true
+            pos = GridCell(col: 0, row: 0)
+        }
         layoutEngine.placeWidget(
             pageId: page.id,
             widgetId: widget.widgetId,

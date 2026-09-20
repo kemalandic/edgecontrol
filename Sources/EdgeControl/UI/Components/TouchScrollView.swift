@@ -115,7 +115,14 @@ public struct TouchScrollView<Content: View>: View {
                     }
             )
             .onPreferenceChange(ContentHeightKey.self) { h in
-                if h > 0 { contentHeight = h }
+                if h > 0 {
+                    contentHeight = h
+                    // Content can shrink (devices disconnect, run lists
+                    // collapse): a stale offset would pin the viewport past
+                    // the new end with no gesture able to bring it back.
+                    let maxScroll = max(0, h - geo.size.height)
+                    if offset < -maxScroll { offset = -maxScroll }
+                }
             }
         }
     }

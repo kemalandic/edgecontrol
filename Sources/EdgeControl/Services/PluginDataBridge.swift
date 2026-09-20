@@ -98,7 +98,9 @@ public final class PluginDataBridge {
                 ]
 
             case .processes:
-                data["processes"] = model.processService.topProcesses.map { proc in
+                // The widget shows up to 12 now, but the plugin API always delivered
+                // at most 5 — keep that contract stable.
+                data["processes"] = model.processService.topProcesses.prefix(5).map { proc in
                     [
                         "pid": proc.id,
                         "name": proc.name,

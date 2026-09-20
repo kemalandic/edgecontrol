@@ -190,6 +190,10 @@ public final class HardwareTouchService: ObservableObject {
 
     // Touch gesture detection
     @Published public private(set) var swipeDirection: SwipeDirection?
+    /// Live horizontal finger travel in screen points while a drag is in
+    /// progress; nil when no finger is down or the drag is vertical. Lets the
+    /// dashboard track the finger instead of waiting for release.
+    @Published public private(set) var liveSwipeDX: CGFloat?
 
     public enum SwipeDirection: Equatable {
         case left, right
@@ -291,6 +295,19 @@ public final class HardwareTouchService: ObservableObject {
             }
         }
 
+        if sample.pressed, let startPoint = touchStartPoint {
+            let rawPoint = CGPoint(x: sample.x, y: sample.y)
+            if let current = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
+                let dx = current.x - startPoint.x
+                let dy = current.y - startPoint.y
+                // Engage once the drag reads as horizontal; stay engaged
+                // until release so the page doesn't flicker mid-gesture.
+                if liveSwipeDX != nil || (abs(dx) > 12 && abs(dx) > abs(dy) * 1.5) {
+                    liveSwipeDX = dx
+                }
+            }
+        }
+
         if !sample.pressed && wasPressed {
             // Touch release — classify as tap or swipe
             if let startPoint = touchStartPoint,
@@ -314,6 +331,7 @@ public final class HardwareTouchService: ObservableObject {
             }
             touchStartPoint = nil
             touchStartTime = nil
+            liveSwipeDX = nil
         }
 
         previousPressed = sample.pressed
