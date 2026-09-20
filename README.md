@@ -8,7 +8,7 @@
 
 **A native macOS system dashboard that turns any display into a fully customizable monitoring station.**
 
-Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on any screen: ultrawide monitors, iPads via Sidecar, vertical displays, TVs, or the CORSAIR XENEON EDGE. Includes macOS desktop widgets and full touch support.
+Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on any screen: ultrawide monitors, iPads via Sidecar, vertical displays, TVs, or the CORSAIR XENEON EDGE. Includes macOS desktop widgets, notes you can actually write in, and full touch support.
 
 ![EdgeControl Dashboard](screenshots/dashboard.png)
 
@@ -16,11 +16,11 @@ Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on 
 
 I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
 
-What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 27 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. It's something I use every single day, and it keeps getting better.
+What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 27 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. Contributors then pushed it past a thing to glance at: it has a real note editor now, a key that captures a line from any app, and a door to Apple Reminders. It's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
-EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor.
+EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor. And when you need to write something down, the notes are right there rather than in another app.
 
 ### 27 Built-in Widgets
 
