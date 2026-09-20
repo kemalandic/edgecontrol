@@ -56,6 +56,28 @@ was green came from actually running it.
 - No third-party dependencies — keep it native
 - Follow existing patterns in the codebase
 
+## How the code is laid out
+
+One type per file, named after it. Files that belong together live in a folder
+named after what they make — `Widgets/Info/StickyNote/` holds the widget, its
+view, the AppKit bridge, the editor and the checkbox it draws.
+
+There is no line limit, but there is a signal. Once a file passes roughly four
+hundred lines it is usually holding more than one idea, and it is worth asking
+which type wants out. The average file here is under two hundred.
+
+When a file does grow, prefer moving *logic* out over slicing a type into
+extensions. Pulling a pure piece into its own type — the line parsing in
+`StickyNoteMarkup`, the geometry in `StickyNoteLayout` — shrinks the file and
+makes the piece testable at the same time. Splitting a cohesive class across
+files only moves braces, and in Swift it costs real encapsulation, because
+`private` members stop being private to their own type the moment the type
+spans more than one file.
+
+Anything that reads the system splits in two regardless of size: a testable
+core taking plain values, and a thin shell that performs the syscall. That one
+is not a preference; see `docs/testing.md`.
+
 ## Ideas & Feature Requests
 
 Use [Discussions](https://github.com/kemalandic/edgecontrol/discussions) for feature ideas and general questions.
