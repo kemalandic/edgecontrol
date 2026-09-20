@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Recorded so the Xcode pin in a follow-up commit is based on what the
+      # image actually carries rather than on assumption. EdgeControl builds on
+      # Xcode 26.x; whether this image offers one is the open question.
+      - name: Record available Xcode versions
+        run: |
+          for app in /Applications/Xcode*.app; do
+            [ -e "$app" ] || continue
+            echo "$app"
+          done
+          xcodebuild -version
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      # Everything below is Scripts/ci-local.sh, which generates the project,
+      # builds clean and unsigned, reports the compiler-warning count against a
+      # budget, tests with coverage, and prints the coverage table. Keeping the
+      # commands in the script rather than here is what makes a local run and a
+      # CI run the same thing.
+      - name: Build and test
+        run: ./Scripts/ci-local.sh all
+
+      - name: Report coverage
+        if: always()
+        run: |
+          if [ -d TestResults.xcresult ]; then
+            {
+              echo "### Code coverage"
+              echo '```'
+              xcrun xccov view --report --only-targets TestResults.xcresult
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No result bundle produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
