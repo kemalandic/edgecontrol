@@ -10,6 +10,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
 
+    /// Exposed so file panels can attach as sheets. The settings window sits
+    /// above the status-bar level; a detached NSSavePanel/NSOpenPanel orders
+    /// at the much lower modal-panel level and pops under it, while a sheet
+    /// is a child window and always renders over its parent.
+    var settingsWindow: NSWindow? { window }
+
     private override init() {
         super.init()
     }
@@ -36,7 +42,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
         // If window exists and is still valid, just bring to front
         if let win = window {
-            win.level = NSWindow.Level(NSWindow.Level.statusBar.rawValue + 1)
+            win.level = .normal
+            moveOffKioskScreen(win)
             win.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -58,14 +65,33 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let win = NSWindow(contentViewController: hosting)
         win.title = "EdgeControl Settings"
         win.styleMask = [.titled, .closable, .resizable]
-        win.setContentSize(NSSize(width: 700, height: 500))
+        win.setContentSize(NSSize(width: 1130, height: 755))
         win.center()
         win.isReleasedWhenClosed = false
-        win.level = NSWindow.Level(NSWindow.Level.statusBar.rawValue + 1)
+        win.level = .normal
         win.delegate = self
+        moveOffKioskScreen(win)
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         window = win
+    }
+
+    /// At normal level this window is buried whenever it sits on the kiosk
+    /// display (the kiosk deliberately stays above the status-bar level), and
+    /// center() centers on whichever screen has focus — often the kiosk after
+    /// touch use. Keep the window on a screen where it can actually be seen.
+    private func moveOffKioskScreen(_ win: NSWindow) {
+        let kioskScreen = NSApp.windows.first { $0 is KioskWindow }?.screen
+        guard let kioskScreen,
+              win.screen == kioskScreen || win.screen == nil,
+              let target = NSScreen.screens.first(where: { $0 != kioskScreen })
+        else { return }
+        let size = win.frame.size
+        let v = target.visibleFrame
+        win.setFrameOrigin(NSPoint(
+            x: v.midX - size.width / 2,
+            y: v.midY - size.height / 2
+        ))
     }
 
     func close() {

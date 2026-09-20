@@ -140,7 +140,9 @@ struct DashboardShell: View {
             WindowPlacement.configure(
                 window,
                 display: model.selectedDisplay,
-                kioskMode: layoutEngine.document.globalSettings.kioskMode
+                kioskMode: layoutEngine.document.globalSettings.kioskMode,
+                strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity,
+                allowSystemPanels: layoutEngine.document.globalSettings.allowSystemPanels
             )
         })
         .onAppear {

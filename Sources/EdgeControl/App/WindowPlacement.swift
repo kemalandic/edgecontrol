@@ -24,7 +24,8 @@ public enum WindowPlacement {
         _ window: NSWindow?,
         display: DisplayDescriptor?,
         kioskMode: Bool,
-        strictMonitorAffinity: Bool = false
+        strictMonitorAffinity: Bool = false,
+        allowSystemPanels: Bool = false
     ) -> Bool {
         guard let window else { return false }
 
@@ -56,7 +57,13 @@ public enum WindowPlacement {
         guard let screen = targetScreen else { return false }
 
         window.styleMask = [.borderless]
-        window.level = .statusBar
+        // Paste-class panels present at the menu-bar level (24) on the key
+        // window's screen; at .statusBar (25) the kiosk buries them
+        // invisibly. One notch below lets them through, at the cost of the
+        // menu bar being able to draw over the dashboard.
+        window.level = allowSystemPanels
+            ? NSWindow.Level(NSWindow.Level.mainMenu.rawValue - 1)
+            : .statusBar
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]
         window.setFrame(screen.frame, display: true)
         window.orderFrontRegardless()

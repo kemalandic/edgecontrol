@@ -142,6 +142,27 @@ struct WidgetConfigEditor: View {
             ))
             .textFieldStyle(.roundedBorder)
             .frame(width: 160)
+
+            if entry.key == WidgetLaunch.configKey {
+                Button("Browse…") { browseForApp(entry.key) }
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+            }
+        }
+    }
+
+    /// App picker for the launcher field, sheet-attached like every other
+    /// panel so it cannot pop under the settings window.
+    private func browseForApp(_ key: String) {
+        let panel = NSOpenPanel()
+        panel.title = "Choose Application"
+        panel.directoryURL = URL(fileURLWithPath: "/Applications", isDirectory: true)
+        panel.allowedContentTypes = [.application]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
+            config[key] = .string(url.path)
         }
     }
 }

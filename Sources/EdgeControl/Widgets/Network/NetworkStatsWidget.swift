@@ -56,10 +56,9 @@ private struct NetworkStatsWidgetView: View {
             if (!isCompact || (showTitle && !isBar)) && !isNarrow {
                 WidgetHeader(title: "NETWORK", color: primary)
             } else if showTitle {
-                Text("NETWORK")
+                Text(isNarrow ? "NET" : "NETWORK")
                     .font(Theme.caption(ts))
                     .foregroundStyle(Theme.text3(ts))
-                    .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

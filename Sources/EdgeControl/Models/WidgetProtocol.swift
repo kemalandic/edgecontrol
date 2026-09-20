@@ -403,6 +403,18 @@ public enum WidgetLaunch {
             CFPreferencesAppSynchronize("com.apple.ActivityMonitor" as CFString)
         }
         let fm = FileManager.default
+        // A full path (from Browse… or typed, tilde ok) is used directly.
+        // No quoting concerns: this never touches a shell — NSWorkspace takes
+        // a file URL, and URLs carry spaces natively.
+        let expanded = NSString(string: trimmed).expandingTildeInPath
+        if expanded.hasPrefix("/") {
+            if fm.fileExists(atPath: expanded) {
+                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: expanded), configuration: NSWorkspace.OpenConfiguration())
+            } else {
+                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+            }
+            return
+        }
         let candidates = [
             "/Applications/\(trimmed).app",
             "/System/Applications/\(trimmed).app",
