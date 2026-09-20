@@ -8,6 +8,9 @@ public final class DiskIOService: ObservableObject {
     @Published public var readHistory: [Double] = []
     @Published public var writeHistory: [Double] = []
 
+    /// Monotonic, so the rate is divided by the interval that actually
+    /// elapsed rather than the one the timer was asked for.
+    private var lastSampleNanos: UInt64 = 0
     private var previousRead: UInt64 = 0
     private var previousWrite: UInt64 = 0
     private var hasPrevious = false
@@ -35,11 +38,14 @@ public final class DiskIOService: ObservableObject {
     private func sample() {
         let (read, write) = readDiskCounters()
 
+        let nowNanos = DispatchTime.now().uptimeNanoseconds
+        let elapsed = ByteRate.elapsedSeconds(since: lastSampleNanos, now: nowNanos)
+
         if hasPrevious {
-            let deltaRead = read >= previousRead ? read - previousRead : 0
-            let deltaWrite = write >= previousWrite ? write - previousWrite : 0
-            readBytesPerSec = Double(deltaRead) / 2.0
-            writeBytesPerSec = Double(deltaWrite) / 2.0
+
+
+            readBytesPerSec = ByteRate.perSecond(previous: previousRead, current: read, elapsed: elapsed)
+            writeBytesPerSec = ByteRate.perSecond(previous: previousWrite, current: write, elapsed: elapsed)
 
             readHistory.append(readBytesPerSec)
             writeHistory.append(writeBytesPerSec)
@@ -47,6 +53,7 @@ public final class DiskIOService: ObservableObject {
             if writeHistory.count > maxHistory { writeHistory.removeFirst() }
         }
 
+        lastSampleNanos = nowNanos
         previousRead = read
         previousWrite = write
         hasPrevious = true
@@ -79,15 +86,4 @@ public final class DiskIOService: ObservableObject {
         return (totalRead, totalWrite)
     }
 
-    public static func formatSpeed(_ bytesPerSec: Double) -> String {
-        if bytesPerSec < 1024 {
-            return String(format: "%.0f B/s", bytesPerSec)
-        } else if bytesPerSec < 1024 * 1024 {
-            return String(format: "%.1f KB/s", bytesPerSec / 1024)
-        } else if bytesPerSec < 1024 * 1024 * 1024 {
-            return String(format: "%.1f MB/s", bytesPerSec / (1024 * 1024))
-        } else {
-            return String(format: "%.2f GB/s", bytesPerSec / (1024 * 1024 * 1024))
-        }
-    }
 }

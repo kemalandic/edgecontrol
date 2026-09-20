@@ -69,12 +69,12 @@ private struct NetworkStatsWidgetView: View {
             RatePairView(
                 first: .init(
                     icon: "arrow.down.circle.fill", label: "DOWN",
-                    value: NetworkMonitorService.formatSpeed(service.downloadSpeed),
+                    value: ByteRate.formatted(service.downloadSpeed),
                     color: primary
                 ),
                 second: .init(
                     icon: "arrow.up.circle.fill", label: "UP",
-                    value: NetworkMonitorService.formatSpeed(service.uploadSpeed),
+                    value: ByteRate.formatted(service.uploadSpeed),
                     color: secondary
                 ),
                 compact: isCompact,

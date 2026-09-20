@@ -55,12 +55,12 @@ private struct DiskIOWidgetView: View {
             RatePairView(
                 first: .init(
                     icon: "arrow.down.circle.fill", label: "READ",
-                    value: formatSpeed(service.readBytesPerSec),
+                    value: ByteRate.formatted(service.readBytesPerSec),
                     color: Theme.widgetSecondary("disk-io", ts: ts, default: .green) ?? Theme.accentGreen
                 ),
                 second: .init(
                     icon: "arrow.up.circle.fill", label: "WRITE",
-                    value: formatSpeed(service.writeBytesPerSec),
+                    value: ByteRate.formatted(service.writeBytesPerSec),
                     color: Theme.widgetTertiary("disk-io", ts: ts, default: .orange) ?? Theme.accentOrange
                 ),
                 compact: isCompact,
@@ -73,10 +73,4 @@ private struct DiskIOWidgetView: View {
         .widgetCard()
     }
 
-    private func formatSpeed(_ bytesPerSec: Double) -> String {
-        if bytesPerSec < 1024 { return String(format: "%.0f B/s", bytesPerSec) }
-        if bytesPerSec < 1024 * 1024 { return String(format: "%.1f KB/s", bytesPerSec / 1024) }
-        if bytesPerSec < 1024 * 1024 * 1024 { return String(format: "%.1f MB/s", bytesPerSec / (1024 * 1024)) }
-        return String(format: "%.2f GB/s", bytesPerSec / (1024 * 1024 * 1024))
-    }
 }

@@ -7,6 +7,9 @@ public final class NetworkMonitorService: ObservableObject {
     @Published public var totalDownloaded: UInt64 = 0
     @Published public var totalUploaded: UInt64 = 0
 
+    /// Monotonic, so the rate is divided by the interval that actually
+    /// elapsed rather than the one the timer was asked for.
+    private var lastSampleNanos: UInt64 = 0
     private var previousIn: UInt64 = 0
     private var previousOut: UInt64 = 0
     private var hasPrevious = false
@@ -35,13 +38,15 @@ public final class NetworkMonitorService: ObservableObject {
         totalDownloaded = bytesIn
         totalUploaded = bytesOut
 
+        let nowNanos = DispatchTime.now().uptimeNanoseconds
+        let elapsed = ByteRate.elapsedSeconds(since: lastSampleNanos, now: nowNanos)
+
         if hasPrevious {
-            let deltaIn = bytesIn >= previousIn ? bytesIn - previousIn : 0
-            let deltaOut = bytesOut >= previousOut ? bytesOut - previousOut : 0
-            downloadSpeed = Double(deltaIn) / 2.0
-            uploadSpeed = Double(deltaOut) / 2.0
+            downloadSpeed = ByteRate.perSecond(previous: previousIn, current: bytesIn, elapsed: elapsed)
+            uploadSpeed = ByteRate.perSecond(previous: previousOut, current: bytesOut, elapsed: elapsed)
         }
 
+        lastSampleNanos = nowNanos
         previousIn = bytesIn
         previousOut = bytesOut
         hasPrevious = true
@@ -77,17 +82,6 @@ public final class NetworkMonitorService: ObservableObject {
 // MARK: - Formatting
 
 extension NetworkMonitorService {
-    public static func formatSpeed(_ bytesPerSec: Double) -> String {
-        if bytesPerSec < 1024 {
-            return String(format: "%.0f B/s", bytesPerSec)
-        } else if bytesPerSec < 1024 * 1024 {
-            return String(format: "%.1f KB/s", bytesPerSec / 1024)
-        } else if bytesPerSec < 1024 * 1024 * 1024 {
-            return String(format: "%.1f MB/s", bytesPerSec / (1024 * 1024))
-        } else {
-            return String(format: "%.2f GB/s", bytesPerSec / (1024 * 1024 * 1024))
-        }
-    }
 
     public static func formatBytes(_ bytes: UInt64) -> String {
         if bytes < 1024 * 1024 {
