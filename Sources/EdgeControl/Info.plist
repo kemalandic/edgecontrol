@@ -30,5 +30,7 @@
     <string>EdgeControl uses your location for accurate weather data on your dashboard.</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>EdgeControl displays your connected Bluetooth devices on the dashboard.</string>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>EdgeControl reads what is playing in your browser and music apps and controls playback from the dashboard.</string>
 </dict>
 </plist>

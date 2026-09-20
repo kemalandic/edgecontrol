@@ -17,6 +17,8 @@ public enum AppLog {
     public static let plugins = Logger(subsystem: subsystem, category: "Plugins")
     /// CI/CD accounts and providers.
     public static let cicd = Logger(subsystem: subsystem, category: "CICD")
+    /// Now Playing queries and media commands.
+    public static let media = Logger(subsystem: subsystem, category: "Media")
 }
 
 extension AppLog {

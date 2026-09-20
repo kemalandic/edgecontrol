@@ -36,6 +36,14 @@ targets:
         SWIFT_STRICT_CONCURRENCY: complete
     dependencies:
       - target: EdgeControlWidgets
+      # Runs the Now Playing AppleScript in place of osascript — see
+      # Sources/EdgeControlScriptRunner/main.swift for why.
+      - target: EdgeControlScriptRunner
+        embed: true
+        codeSign: true
+        copy:
+          destination: wrapper
+          subpath: Contents/Helpers
 
   EdgeControlWidgets:
     type: app-extension
@@ -78,6 +86,37 @@ targets:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
     dependencies: []
 
+  EdgeControlScriptRunner:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/EdgeControlScriptRunner
+    info:
+      path: Sources/EdgeControlScriptRunner/Info.plist
+      properties:
+        CFBundleDisplayName: EdgeControl Script Runner
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # Never a Dock icon, never a menu bar — the reason this helper exists.
+        LSBackgroundOnly: true
+        # The helper is the process that sends the Apple events, so it needs the
+        # key as well as the entitlement. The permission itself is still granted
+        # to EdgeControl, which launches it.
+        NSAppleEventsUsageDescription: EdgeControl reads what is playing in your browser and music apps and controls playback from the dashboard.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ai.pakslab.edgecontrol.scriptrunner
+        PRODUCT_NAME: EdgeControlScriptRunner
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: CNRZ47Y629
+        SWIFT_STRICT_CONCURRENCY: complete
+        CODE_SIGN_ENTITLEMENTS: Sources/EdgeControlScriptRunner/EdgeControlScriptRunner.entitlements
+        # Embedded in EdgeControl.app; archiving it on its own would put a second
+        # app in the archive's Products/Applications.
+        SKIP_INSTALL: true
+        ENABLE_HARDENED_RUNTIME: true
+    dependencies: []
+
   EdgeControlTests:
     type: bundle.unit-test
     platform: macOS
@@ -101,9 +140,8 @@ targets:
         DEVELOPMENT_TEAM: CNRZ47Y629
         CODE_SIGN_STYLE: Automatic
         # Swift Testing lives beside XCTest in the platform's Developer
-        # frameworks. Xcode links it for targets it creates itself; an
-        # xcodegen-generated bundle needs it stated or @Test functions compile
-        # and then never run.
+        # frameworks. Xcode links it automatically for targets it creates
+        # itself; an xcodegen-generated bundle needs it stated.
         ENABLE_TESTING_SEARCH_PATHS: YES
 
 schemes:
