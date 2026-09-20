@@ -18,3 +18,4 @@ CLAUDE.md
 *.profraw
 *.log
 TestPlugins/
+TestResults.xcresult
