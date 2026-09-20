@@ -390,6 +390,9 @@ enum EdgeControlExecutable {
         let model = AppModel(selectedDisplayName: layoutEngine.document.globalSettings.selectedDisplayName)
         model.startIfNeeded()
 
+        // Notes used to live inside the layout document; move any that still do.
+        layoutEngine.migrateNotes(into: model.noteStore)
+
         let pluginManager = PluginManager()
         pluginManager.discoverAndLoad()
 

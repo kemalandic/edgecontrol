@@ -24,6 +24,7 @@ public final class AppModel: ObservableObject {
     public let bluetoothService = BluetoothService()
     public let remindersService = RemindersService()
     public let accountStore = CIAccountStore()
+    public let noteStore = NoteStore()
     public private(set) lazy var cicdService = CICDService(accountStore: accountStore)
     public var widgetDataBridge: WidgetDataBridge?
     public var pluginWidgetRenderer: PluginWidgetRenderer?

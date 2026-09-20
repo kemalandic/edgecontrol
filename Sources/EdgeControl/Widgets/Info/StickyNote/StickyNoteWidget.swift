@@ -13,8 +13,9 @@ public final class StickyNoteWidget: DashboardWidget {
     public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(8, 6))
     public let defaultSize = WidgetSize.size(3, 2)
 
+    // The note itself is no longer configuration — it lives in the note store
+    // and the widget holds its id. What is left here is how the note looks.
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
         ConfigSchemaEntry(
             key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
             options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
@@ -37,13 +38,17 @@ public final class StickyNoteWidget: DashboardWidget {
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
 
-    public init() {}
+    private let store: NoteStore
+
+    public init(store: NoteStore) {
+        self.store = store
+    }
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
         StickyNoteWidgetView(
-            note: config.string("note"),
-            rtf: config.string("rtf"),
+            store: store,
+            noteId: config.string(NoteMigration.idKey),
             colorName: config.string("color", default: "yellow"),
             textColorName: config.string("textColor", default: "soft white"),
             tintOpacity: config.double("opacity", default: 0.5),
@@ -59,5 +64,4 @@ public final class StickyNoteWidget: DashboardWidget {
 /// A markdown-lite rich note: type "- ", "- [ ] ", "# " or "---" and they
 /// convert to bullets, checkboxes, headings and rules on the spot — the note
 /// is rich text from then on, never markdown. Links paste as titled links.
-/// Storage is RTF (with a plain-text mirror in "note" for the settings field
-/// and for pre-RTF notes).
+/// Storage is RTF in the note store; the widget keeps only the note's id.

@@ -66,6 +66,23 @@ One build setting makes this work: `ENABLE_TESTING_SEARCH_PATHS: YES` on the tes
 target. Without it `@Test` functions compile cleanly and then never run — the
 suite reports success having skipped them. If you add a test target, set it.
 
+## The app runs during tests
+
+The app bundle is the test host, so `EdgeControlExecutable.main()` runs for real
+on every test run: it loads the layout document, starts services and migrates
+notes. Against the default storage location that means a test run rewrites the
+dashboard and the notes of whoever ran it — silently, because nothing about it
+looks like a test failure.
+
+`AppSupport.directory` is the guard. It resolves to a scratch directory under
+the system temporary folder whenever XCTest is in the environment, and both
+`LayoutStore` and `NoteStore` take it as their default. `AppSupportTests` locks
+that in place.
+
+If you add something that persists to disk, give it an injectable directory and
+default it to `AppSupport.directory`. Never reach for
+`.applicationSupportDirectory` directly.
+
 ## Fixtures are recorded, never invented
 
 Test inputs come from real output captured once and committed: recorded API

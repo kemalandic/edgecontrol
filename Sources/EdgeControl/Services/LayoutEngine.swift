@@ -100,6 +100,29 @@ public final class LayoutEngine: ObservableObject {
         self.document = store.load()
     }
 
+    /// Moves sticky note bodies out of the layout document and into the note
+    /// store, once, at launch.
+    ///
+    /// Not done in `init`: the note store belongs to the app model, which is
+    /// built from this document's own settings, so it does not exist yet.
+    /// A layout with nothing to move costs one walk and no writes.
+    public func migrateNotes(into notes: NoteStore) {
+        let (migrated, plans) = NoteMigration.plans(for: document)
+        guard !plans.isEmpty else { return }
+        for var plan in plans {
+            // A note written before the rich editor has no RTF, only text.
+            // Converting here means the store holds one representation and
+            // the editor never meets a legacy note again.
+            if plan.rtfBase64.isEmpty, !plan.plainText.isEmpty {
+                plan.rtfBase64 = StickyNoteLegacy.rtfBase64(fromPlainText: plan.plainText, config: plan.config)
+            }
+            notes.adopt(plan)
+        }
+        document = migrated
+        save()
+        AppLog.persistence.info("moved \(plans.count) note(s) into the note store")
+    }
+
     // MARK: - Current Page
 
     public var currentPage: PageConfig? {
