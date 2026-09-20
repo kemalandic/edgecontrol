@@ -84,10 +84,11 @@ targets:
     sources:
       - path: Tests/EdgeControlTests
         excludes:
-          - "CI/Fixtures/**"
+          - "Fixtures/**"
       # Recorded API responses, copied into the test bundle so providers can be
-      # exercised without network access.
-      - path: Tests/EdgeControlTests/CI/Fixtures
+      # exercised without network access. Copied flat — filenames must be unique
+      # across every subdirectory here.
+      - path: Tests/EdgeControlTests/Fixtures
         buildPhase: resources
     dependencies:
       - target: EdgeControl
@@ -99,3 +100,22 @@ targets:
         # the test bundle: "different Team IDs".
         DEVELOPMENT_TEAM: CNRZ47Y629
         CODE_SIGN_STYLE: Automatic
+        # Swift Testing lives beside XCTest in the platform's Developer
+        # frameworks. Xcode links it for targets it creates itself; an
+        # xcodegen-generated bundle needs it stated or @Test functions compile
+        # and then never run.
+        ENABLE_TESTING_SEARCH_PATHS: YES
+
+schemes:
+  EdgeControl:
+    build:
+      targets:
+        EdgeControl: all
+    test:
+      gatherCoverageData: true
+      coverageTargets:
+        - EdgeControl
+      targets:
+        - EdgeControlTests
+    run:
+      config: Debug
