@@ -64,6 +64,10 @@ public final class BluetoothService: ObservableObject {
         // Task only made the outer one hold a strong reference so it had
         // something to weakly capture.
         Self.bluetoothQueue.async { [weak self] in
+            // Before the call, not after: collectPairedDevices can park on a
+            // CoreBluetooth semaphore for seconds, and there is no reason to
+            // spend that on a service that is already gone.
+            guard self != nil else { return }
             // collectPairedDevices is nonisolated + returns Sendable values;
             // safe to call from a background dispatch queue, and the result
             // hops back to the main actor for the @Published assignment.
