@@ -16,13 +16,13 @@ Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on 
 
 I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
 
-What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 25 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. It's something I use every single day, and it keeps getting better.
+What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 27 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. It's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
 EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor.
 
-### 25 Built-in Widgets
+### 27 Built-in Widgets
 
 **System (9)** — CPU Gauge, Memory Gauge, CPU History, Memory History, Process List, Disk I/O, Storage Bars, Memory Pressure, CPU Cores (per-core usage)
 
@@ -32,7 +32,7 @@ EdgeControl turns any display into a fully customizable system dashboard. You cr
 
 **Media (2)** — Now Playing (Safari, Chrome, Edge, Spotify, Apple Music — controls, artwork, progress), Audio Devices (output, volume)
 
-**Info (5)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase
+**Info (7)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase, Sticky Note (a real editor — see below), Reminders (your actual Reminders lists)
 
 **DevTools (1)** — CI/CD Runs (GitHub Actions and Forgejo/Gitea, across all your hosts)
 
@@ -70,7 +70,33 @@ EdgeControl provides native macOS desktop widgets via WidgetKit — add system m
 - **CI/CD** — Workflow run status from GitHub and Forgejo/Gitea (small/medium/large)
 
 See [CI/CD setup](docs/cicd-setup.md) for adding accounts and the token scopes required.
+- **Note** — The unfinished to-dos of a note from the dashboard (small/medium/large)
 - **Plugin Widget** — Any plugin with `desktopWidget` support rendered as a desktop widget
+
+### Notes
+
+The Sticky Note widget is a rich text editor, not a text field. Markup converts as
+you type — `- ` becomes a bullet, `- [ ] ` a checkbox, `# ` a heading, `---` a rule,
+`` `code` `` a chip, ``` ``` ``` a block — and a slash at the start of a line offers
+the same things as a menu. Selecting text raises a formatting bar, which is how any
+of this is reachable on a touch panel with no keyboard.
+
+- **Notes are files.** `~/Library/Application Support/EdgeControl/Notes/` holds one
+  real RTF per note, a plain-text mirror Spotlight indexes, and the last twenty
+  versions of each. Back up the folder and you have backed up the notes.
+- **Markdown in and out.** Paste markdown and it becomes a note; ⌘⇧C copies a note —
+  or a selection — back out. **Export Notes** in General writes every note as
+  Markdown with its images alongside, so the exported folder stands on its own.
+- **Images** paste in and live next to the note rather than inside it, which is what
+  keeps the folder readable.
+- **Quick capture.** ⌃⌥Space opens a box from any app; what you type lands in the
+  Inbox note. Turn it off in General if the key is spoken for.
+- **Reminders.** ⌘⇧R sends the caret's unfinished to-do — or every one in a
+  selection — to Apple Reminders, skipping what is already there.
+- **Fill the panel.** A note in a small cell is a note you cannot write in; the
+  corner button expands it to the whole display, Esc brings the dashboard back.
+- **Several notes per widget.** Point a widget at any note, or keep a few within
+  reach as tabs.
 
 ### Plugin System
 
