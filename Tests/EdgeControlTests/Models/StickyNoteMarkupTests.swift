@@ -54,6 +54,65 @@ struct StickyNoteMarkupTests {
         #expect(StickyNoteMarkup.marker(of: "1. no tab here") == nil)
     }
 
+    // MARK: the older note format
+
+    /// Notes written before the tab separator used a non-breaking space, and
+    /// they are still in people's layout.json. Reading only tabs meant a legacy
+    /// note's list items were not list items: no indent, no renumbering, and
+    /// Return did not continue them.
+    @Test("a marker separated by a non-breaking space is still a marker")
+    func legacySeparatorRecognised() {
+        #expect(StickyNoteMarkup.marker(of: "•\u{00A0}milk") == .bullet)
+        #expect(StickyNoteMarkup.marker(of: "\u{FFFC}\u{00A0}todo") == .checkbox)
+        #expect(StickyNoteMarkup.marker(of: "3.\u{00A0}third") == .ordered(3))
+    }
+
+    /// Storage keeps checkboxes as characters and the view draws them, so both
+    /// spellings turn up depending on whether the note has been normalised yet.
+    @Test("a checkbox reads the same drawn or stored", arguments: [
+        "\u{FFFC}", "☐", "☑",
+    ])
+    func storedAndDrawnCheckboxes(head: String) {
+        #expect(StickyNoteMarkup.marker(of: head + "\t x") == .checkbox)
+        #expect(StickyNoteMarkup.marker(of: head + "\u{00A0}x") == .checkbox)
+    }
+
+    @Test("marker length counts the legacy separator too")
+    func legacyMarkerLength() {
+        #expect(StickyNoteMarkup.markerLength(of: "•\u{00A0}milk") == 2)
+        #expect(StickyNoteMarkup.markerLength(of: "12.\u{00A0}twelfth") == 4)
+    }
+
+    // MARK: a line that is only a marker
+
+    /// An item the user has not typed into yet. Return or Backspace there
+    /// removes it rather than leaving an orphan bullet, so every spelling of
+    /// "nothing but a marker" has to be recognised — the editor used to carry a
+    /// hand-written list of ten of them.
+    @Test("every empty marker form is recognised", arguments: [
+        "•", "•\t", "•\u{00A0}",
+        "☐", "☐\u{00A0}", "☑", "☑\u{00A0}",
+        "\u{FFFC}", "\u{FFFC}\t", "\u{FFFC}\u{00A0}",
+        "1.", "1.\t", "12.\u{00A0}",
+    ])
+    func bareMarkers(line: String) {
+        #expect(StickyNoteMarkup.isBareMarker(line), "not recognised as bare: \(line.debugDescription)")
+    }
+
+    @Test("a marker with text after it is not bare", arguments: [
+        "•\tmilk", "\u{FFFC}\ttodo", "1.\tfirst", "☑\u{00A0}done",
+    ])
+    func filledMarkersAreNotBare(line: String) {
+        #expect(StickyNoteMarkup.isBareMarker(line) == false)
+    }
+
+    @Test("ordinary text is not a bare marker", arguments: [
+        "", "hello", "a.", ".", "1998", "-",
+    ])
+    func textIsNotBare(line: String) {
+        #expect(StickyNoteMarkup.isBareMarker(line) == false)
+    }
+
     // MARK: marker length
 
     /// The text system measures in UTF-16, so the length has to as well — the

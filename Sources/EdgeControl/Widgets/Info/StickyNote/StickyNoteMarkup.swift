@@ -13,6 +13,20 @@ public enum StickyNoteMarkup {
     /// is how a drawn checkbox appears in the text.
     public static let checkboxCharacter = "\u{FFFC}"
 
+    /// How a checkbox is written to storage. The view draws attachments; the
+    /// file keeps characters, so a note still makes sense to anything else that
+    /// opens the RTF and to notes written before checkboxes were drawn.
+    public static let uncheckedGlyph = "☐"
+    public static let checkedGlyph = "☑"
+
+    /// A marker is separated from its text by a tab. Older notes used a
+    /// non-breaking space, and they are still out there, so both are read —
+    /// this is the vocabulary that was spelled out by hand in four different
+    /// places in the editor.
+    public static let separators = ["\t", "\u{00A0}"]
+
+    private static var checkboxHeads: [String] { [checkboxCharacter, uncheckedGlyph, checkedGlyph] }
+
     public enum Marker: Equatable {
         case bullet
         case checkbox
@@ -26,10 +40,13 @@ public enum StickyNoteMarkup {
     /// short and actually a number — "1998.\tthe year" is prose, and a line
     /// starting with a fifteen-digit figure is not a list.
     public static func marker(of line: String) -> Marker? {
-        if line.hasPrefix("•\t") { return .bullet }
-        if line.hasPrefix(checkboxCharacter + "\t") { return .checkbox }
-        guard let tab = line.firstIndex(of: "\t") else { return nil }
-        let head = line[..<tab]
+        for separator in separators {
+            if line.hasPrefix("•" + separator) { return .bullet }
+            if checkboxHeads.contains(where: { line.hasPrefix($0 + separator) }) { return .checkbox }
+        }
+        guard let separatorIndex = line.firstIndex(where: { separators.contains(String($0)) })
+        else { return nil }
+        let head = line[..<separatorIndex]
         guard head.hasSuffix("."), head.count <= 6,
               !head.dropLast().isEmpty, let number = Int(head.dropLast())
         else { return nil }
@@ -43,8 +60,9 @@ public enum StickyNoteMarkup {
         case .bullet, .checkbox:
             return 2
         case .ordered:
-            guard let tab = line.firstIndex(of: "\t") else { return 0 }
-            return (String(line[...tab]) as NSString).length
+            guard let separatorIndex = line.firstIndex(where: { separators.contains(String($0)) })
+            else { return 0 }
+            return (String(line[...separatorIndex]) as NSString).length
         case nil:
             return 0
         }
@@ -60,6 +78,24 @@ public enum StickyNoteMarkup {
         let ns = line as NSString
         guard ns.length > length else { return false }
         return !ns.substring(from: length).trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    /// Whether a line is a marker and nothing else — including a marker whose
+    /// separator was never typed, which is what a list item looks like the
+    /// instant before the user types anything into it.
+    ///
+    /// Pressing Return or Backspace there removes the item rather than leaving
+    /// an orphan bullet behind, so this is the check that decides it.
+    public static func isBareMarker(_ line: String) -> Bool {
+        let heads = ["•"] + checkboxHeads
+        for head in heads {
+            if line == head { return true }
+            if separators.contains(where: { line == head + $0 }) { return true }
+        }
+        // A number and its dot, with or without the separator.
+        var head = Substring(line)
+        if let last = head.last, separators.contains(String(last)) { head = head.dropLast() }
+        return head.hasSuffix(".") && !head.dropLast().isEmpty && Int(head.dropLast()) != nil
     }
 
     /// The marker text that continues a list after this line, or nil when the

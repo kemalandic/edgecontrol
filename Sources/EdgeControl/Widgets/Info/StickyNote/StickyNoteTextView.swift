@@ -206,7 +206,7 @@ final class LinkPasteTextView: NSTextView {
 
             // Migrate legacy no-break-space separators to tabs so old notes
             // pick up the aligned list column; re-run the same paragraph.
-            if line.count >= 2, line.hasPrefix("•\u{00A0}") || line.hasPrefix("\u{FFFC}\u{00A0}") {
+            if line.count >= 2, StickyNoteMarkup.marker(of: line) != nil, !line.contains("\t") {
                 storage.replaceCharacters(
                     in: NSRange(location: paragraph.location + 1, length: 1), with: "\t"
                 )
@@ -444,7 +444,7 @@ final class LinkPasteTextView: NSTextView {
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         let marker = ns.substring(with: NSRange(location: lineRange.location, length: min(2, ns.length - lineRange.location)))
         guard loc - lineRange.location == 2,
-              marker == "\u{FFFC}\t" || marker == "\u{FFFC}\u{00A0}",
+              StickyNoteMarkup.separators.contains(where: { marker == StickyNoteMarkup.checkboxCharacter + $0 }),
               storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
         else { return false }
         let markerRange = NSRange(location: lineRange.location, length: 2)
@@ -462,13 +462,7 @@ final class LinkPasteTextView: NSTextView {
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
         var content = ns.substring(with: lineRange)
         if content.hasSuffix("\n") { content.removeLast() }
-        let markers = ["•\u{00A0}", "☐\u{00A0}", "☑\u{00A0}", "•", "☐", "☑",
-                       "\u{FFFC}\u{00A0}", "\u{FFFC}", "•\t", "\u{FFFC}\t"]
-        let bareNumber: Bool = {
-            let head = content.hasSuffix("\t") ? String(content.dropLast()) : content
-            return head.hasSuffix(".") && Int(head.dropLast()) != nil && !head.dropLast().isEmpty
-        }()
-        guard markers.contains(content) || bareNumber else { return false }
+        guard StickyNoteMarkup.isBareMarker(content) else { return false }
         let deleteRange = NSRange(location: lineRange.location, length: (content as NSString).length)
         replace(deleteRange, with: NSAttributedString(string: ""))
         typingAttributes = bodyAttributes
@@ -509,7 +503,7 @@ final class LinkPasteTextView: NSTextView {
             ? textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
             : nil
         let level = indentLevel(of: existing, isList: true)
-        for sep in ["\t", "\u{00A0}"] {
+        for sep in StickyNoteMarkup.separators {
             if line.hasPrefix("•" + sep) {
                 return hasContent(after: "•" + sep)
                     ? NSAttributedString(string: "•\t", attributes: listAttributes(level: level)) : nil
