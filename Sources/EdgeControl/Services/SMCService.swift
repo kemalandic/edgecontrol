@@ -109,46 +109,7 @@ private class SMCConnection {
 
     func getValue(_ key: String) -> Double? {
         guard let data = readKey(key) else { return nil }
-        let bytes = data.bytes
-
-        // Check all zero
-        if bytes.allSatisfy({ $0 == 0 }) { return nil }
-
-        switch data.dataType {
-        case "ui8 ":
-            return Double(bytes[0])
-        case "ui16":
-            return Double(UInt16(bytes[0]) << 8 | UInt16(bytes[1]))
-        case "ui32":
-            return Double(UInt32(bytes[0]) << 24 | UInt32(bytes[1]) << 16 | UInt32(bytes[2]) << 8 | UInt32(bytes[3]))
-        case "sp78":
-            let raw = Int16(Int16(bytes[0]) << 8 | Int16(bytes[1]))
-            return Double(raw) / 256.0
-        case "sp87":
-            let raw = Int16(Int16(bytes[0]) << 8 | Int16(bytes[1]))
-            return Double(raw) / 128.0
-        case "sp96":
-            let raw = Int16(Int16(bytes[0]) << 8 | Int16(bytes[1]))
-            return Double(raw) / 64.0
-        case "spa5":
-            let raw = UInt16(bytes[0]) << 8 | UInt16(bytes[1])
-            return Double(raw) / 32.0
-        case "spb4":
-            let raw = Int16(Int16(bytes[0]) << 8 | Int16(bytes[1]))
-            return Double(raw) / 16.0
-        case "spf0":
-            return Double(Int16(bytes[0]) << 8 | Int16(bytes[1]))
-        case "flt ":
-            guard bytes.count >= 4 else { return nil }
-            let value = bytes.withUnsafeBufferPointer { buf in
-                buf.baseAddress!.withMemoryRebound(to: Float32.self, capacity: 1) { $0.pointee }
-            }
-            return Double(value)
-        case "fpe2":
-            return Double((Int(bytes[0]) << 6) + (Int(bytes[1]) >> 2))
-        default:
-            return nil
-        }
+        return SMCValue.decode(type: data.dataType, bytes: data.bytes)
     }
 }
 
