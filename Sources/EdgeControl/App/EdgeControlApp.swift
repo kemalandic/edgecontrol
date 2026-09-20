@@ -294,6 +294,13 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         editMenu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
         editMenu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
         editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+        editMenu.addItem(.separator())
+        // Pasting markdown needs no command — the editor recognises it. This
+        // is the other direction: a note on its way into an issue or a commit.
+        let copyMarkdownItem = NSMenuItem(
+            title: "Copy as Markdown", action: Selector(("copyAsMarkdown:")), keyEquivalent: "c")
+        copyMarkdownItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(copyMarkdownItem)
         editMenuItem.submenu = editMenu
         mainMenu.addItem(editMenuItem)
 

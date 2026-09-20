@@ -614,6 +614,7 @@ final class LinkPasteTextView: NSTextView {
                 .trimmingCharacters(in: .whitespacesAndNewlines),
             isLink(pasted)
         else {
+            if pasteAsMarkdown() { return }
             super.paste(sender)
             return
         }
@@ -634,6 +635,39 @@ final class LinkPasteTextView: NSTextView {
     }
 
     private func isLink(_ s: String) -> Bool { StickyNoteMarkup.isWebLink(s) }
+
+    /// Markdown on the pasteboard arrives as a note rather than as the
+    /// characters someone else's editor used to describe one.
+    ///
+    /// Rich text on the pasteboard is left alone: it already carries the
+    /// styling, and reading its plain-text fallback as markdown would throw
+    /// that away to guess at it.
+    private func pasteAsMarkdown() -> Bool {
+        let board = NSPasteboard.general
+        guard board.data(forType: .rtf) == nil, board.data(forType: .rtfd) == nil,
+            let text = board.string(forType: .string),
+            NoteMarkdown.looksLikeMarkdown(text)
+        else { return false }
+
+        let converted = NoteMarkdown.attributed(
+            fromMarkdown: text, baseFont: defaultFont, textColor: defaultColor)
+        guard converted.length > 0 else { return false }
+        insertText(converted, replacementRange: selectedRange())
+        return true
+    }
+
+    /// The note as markdown, on the pasteboard: the selection when there is
+    /// one, the whole note when there is not.
+    @objc func copyAsMarkdown(_ sender: Any?) {
+        guard let storage = textStorage else { return }
+        let selection = selectedRange()
+        let range = selection.length > 0 ? selection : NSRange(location: 0, length: storage.length)
+        let markdown = NoteMarkdown.markdown(
+            from: storage.attributedSubstring(from: range), baseFont: defaultFont)
+        let board = NSPasteboard.general
+        board.clearContents()
+        board.setString(markdown, forType: .string)
+    }
 
     private static func promptForTitle(defaultTitle: String) -> String? {
         let alert = NSAlert()
