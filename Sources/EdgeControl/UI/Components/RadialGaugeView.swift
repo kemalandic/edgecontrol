@@ -36,9 +36,14 @@ struct RadialGaugeView: View {
             // Dampened ratio (0.5x) — gauge already has large proportional sizes, full ratio overshoots.
             let valueRatio = 1.0 + (ts.fontSizeValue / 28.0 - 1.0) * 0.5
             let captionRatio = 1.0 + (ts.fontSizeCaption / 11.0 - 1.0) * 0.5
+            // The ring label is a heading — "MEMORY", "PRESSURE" — so it follows
+            // the Title size the way the rest of the dashboard's headings do.
+            // Moving it inside the ring made it smaller, which is a density
+            // choice worth keeping; dropping it off the setting was not.
+            let titleRatio = 1.0 + (ts.fontSizeTitle / 18.0 - 1.0) * 0.5
             let valueFontSize = (isCompact ? minDim * 0.28 : minDim * 0.20) * scale * valueRatio
             let unitFontSize = (isCompact ? minDim * 0.10 : minDim * 0.07) * scale * captionRatio
-            let labelFontSize = (isCompact ? minDim * 0.09 : minDim * 0.065) * scale * captionRatio
+            let labelFontSize = (isCompact ? minDim * 0.09 : minDim * 0.065) * scale * titleRatio
             let lwScaled = isCompact ? lineWidth * 0.7 : lineWidth
             let design = ts.fontFamily.design
 
@@ -85,6 +90,11 @@ struct RadialGaugeView: View {
                             .font(.system(size: labelFontSize, weight: .bold, design: design))
                             .foregroundStyle(Theme.text3(ts))
                             .textCase(.uppercase)
+                            // The only text in the ring without one. With just
+                            // lineLimit a long label — "PRESSURE" in a small
+                            // cell — is truncated rather than scaled, while the
+                            // value and unit beside it shrink to fit.
+                            .minimumScaleFactor(0.4)
                             .lineLimit(1)
                     }
                 }
