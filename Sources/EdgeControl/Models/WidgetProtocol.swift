@@ -305,6 +305,10 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     /// capture writes to. The options cannot be part of the schema, which is
     /// a constant, because the notes change while the app runs.
     case notePicker
+    /// The notes a widget keeps within reach, as a list that can be added to
+    /// and taken from. Its options are the notes that exist, for the same
+    /// reason `notePicker`'s are.
+    case noteStack
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time

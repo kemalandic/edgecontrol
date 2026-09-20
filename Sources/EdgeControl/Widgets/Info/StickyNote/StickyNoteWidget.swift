@@ -19,6 +19,9 @@ public final class StickyNoteWidget: DashboardWidget {
         ConfigSchemaEntry(
             key: NoteMigration.idKey, label: "Note", type: .notePicker, defaultValue: .string("")),
         ConfigSchemaEntry(
+            key: NoteStack.key, label: "Also within reach", type: .noteStack,
+            defaultValue: .stringArray([])),
+        ConfigSchemaEntry(
             key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
             options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
         ConfigSchemaEntry(
@@ -51,6 +54,7 @@ public final class StickyNoteWidget: DashboardWidget {
         StickyNoteWidgetView(
             store: store,
             noteId: config.string(NoteMigration.idKey),
+            stackIds: config.stringArray(NoteStack.key),
             colorName: config.string("color", default: "yellow"),
             textColorName: config.string("textColor", default: "soft white"),
             tintOpacity: config.double("opacity", default: 0.5),

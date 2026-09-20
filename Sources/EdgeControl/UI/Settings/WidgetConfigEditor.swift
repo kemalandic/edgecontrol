@@ -36,6 +36,8 @@ struct WidgetConfigEditor: View {
             pickerRow(entry)
         case .notePicker:
             notePickerRow(entry)
+        case .noteStack:
+            noteStackRow(entry)
         case .stepper:
             stepperRow(entry)
         case .slider:
@@ -80,6 +82,54 @@ struct WidgetConfigEditor: View {
             .pickerStyle(.menu)
             .tint(accent)
             .frame(maxWidth: 200)
+        }
+    }
+
+    /// The notes a widget keeps as tabs.
+    ///
+    /// Removing one takes it off the widget and leaves it on disk — a stack
+    /// is a list of shortcuts, and deleting somebody's list because they
+    /// closed a tab would be indefensible.
+    private func noteStackRow(_ entry: ConfigSchemaEntry) -> some View {
+        let records = NoteStore().records()
+        let chosen = config.stringArray(entry.key)
+        let titles = Dictionary(uniqueKeysWithValues: records.map { ($0.id, $0.title) })
+
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(entry.label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+
+            ForEach(chosen, id: \.self) { id in
+                HStack {
+                    Text(titles[id] ?? "Untitled note")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundStyle(.white)
+                    Spacer()
+                    Button {
+                        config[entry.key] = .stringArray(chosen.filter { $0 != id })
+                    } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .foregroundStyle(Theme.accentRed)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Take this note off the widget; it stays on disk")
+                }
+            }
+
+            let available = records.filter { !chosen.contains($0.id) }
+            if !available.isEmpty {
+                Menu("Add a note") {
+                    ForEach(available) { record in
+                        Button(record.title) {
+                            config[entry.key] = .stringArray(NoteStack.adding(record.id, to: chosen))
+                        }
+                    }
+                }
+                .menuStyle(.borderlessButton)
+                .tint(accent)
+                .frame(maxWidth: 200, alignment: .leading)
+            }
         }
     }
 

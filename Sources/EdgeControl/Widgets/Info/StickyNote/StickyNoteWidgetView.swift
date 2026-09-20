@@ -6,6 +6,7 @@ import SwiftUI
 struct StickyNoteWidgetView: View {
     let store: NoteStore
     let noteId: String
+    let stackIds: [String]
     let colorName: String
     let textColorName: String
     let tintOpacity: Double
@@ -29,29 +30,15 @@ struct StickyNoteWidgetView: View {
     private var primary: Color { StickyNotePalette.tint(colorName, ts: ts) }
     private var textNSColor: NSColor { StickyNotePalette.text(textColorName) }
 
+    private var tabs: [NoteStack.Tab] {
+        NoteStack.tabs(ids: stackIds, active: noteId) { store.record(id: $0)?.title }
+    }
+
     var body: some View {
-        RichStickyTextView(
-            rtfBase64: $rtfDraft,
-            plainText: $plainDraft,
-            // Nothing legacy reaches the editor any more: a pre-RTF note is
-            // converted once, on its way into the store.
-            legacyMarkdown: "",
-            baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
-            textColor: textNSColor,
-            linkColor: NSColor(primary),
-            onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
-            onFontSizeReset: { persistFontSize(18) },
-            writeMedia: { data in
-                guard !activeId.isEmpty else { return nil }
-                return store.writeMedia(data, for: activeId)
-            },
-            readMedia: { name in
-                guard !activeId.isEmpty else { return nil }
-                return store.mediaData(named: name, for: activeId)
-            },
-            promoteToReminders: { titles in promote(titles) }
-        )
-        .padding(Theme.compactPadding)
+        VStack(spacing: 0) {
+            if NoteStack.showsStrip(tabs) { tabStrip }
+            editor
+        }
         .background(primary.opacity(tintOpacity))
         .widgetCard()
         // A note in a six-row cell is a note you cannot write in. The panel
@@ -82,6 +69,10 @@ struct StickyNoteWidgetView: View {
         // back round as a changed prop.
         .onChange(of: noteId) { _, incoming in
             guard !incoming.isEmpty, incoming != activeId else { return }
+            // Whatever is in the old note is written before the new one
+            // replaces it on screen.
+            saveTask?.cancel()
+            save()
             seeded = false
             seed()
         }
@@ -99,6 +90,69 @@ struct StickyNoteWidgetView: View {
             saveTask?.cancel()
             save()
         }
+    }
+
+    /// One row, the note names in it, the shown one lit.
+    private var tabStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(tabs) { tab in
+                    Button {
+                        show(tab.id)
+                    } label: {
+                        Text(tab.title)
+                            .font(Theme.caption(ts))
+                            .foregroundStyle(tab.isActive ? Color(textNSColor) : Color(textNSColor).opacity(0.55))
+                            .lineLimit(1)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(Color.black.opacity(tab.isActive ? 0.28 : 0.10))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.top, 6)
+        }
+    }
+
+    private var editor: some View {
+        RichStickyTextView(
+            rtfBase64: $rtfDraft,
+            plainText: $plainDraft,
+            // Nothing legacy reaches the editor any more: a pre-RTF note is
+            // converted once, on its way into the store.
+            legacyMarkdown: "",
+            baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
+            textColor: textNSColor,
+            linkColor: NSColor(primary),
+            onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
+            onFontSizeReset: { persistFontSize(18) },
+            writeMedia: { data in
+                guard !activeId.isEmpty else { return nil }
+                return store.writeMedia(data, for: activeId)
+            },
+            readMedia: { name in
+                guard !activeId.isEmpty else { return nil }
+                return store.mediaData(named: name, for: activeId)
+            },
+            promoteToReminders: { titles in promote(titles) }
+        )
+        .padding(Theme.compactPadding)
+    }
+
+    /// Switching tabs writes the widget's own note id, so there is never a
+    /// second idea of which note is on screen.
+    private func show(_ id: String) {
+        guard id != noteId, !instanceId.isEmpty else { return }
+        saveTask?.cancel()
+        save()
+        var config = persistableConfig
+        config[NoteMigration.idKey] = .string(id)
+        layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
     }
 
     // MARK: - Loading
