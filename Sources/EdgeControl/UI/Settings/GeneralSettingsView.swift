@@ -173,6 +173,21 @@ struct GeneralSettingsView: View {
                     .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
                 .buttonStyle(.plain)
+
+                Button {
+                    exportNotes()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "text.document")
+                        Text("Export Notes")
+                    }
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
 
             Divider().background(Theme.borderSubtle)
@@ -234,6 +249,26 @@ struct GeneralSettingsView: View {
         panel.beginSheetModal(for: win) { response in
             guard response == .OK, let url = panel.url else { return }
             try? data.write(to: url, options: .atomic)
+        }
+    }
+
+    /// Notes as a folder of markdown files. A directory rather than a single
+    /// file, because the point is that each note stays a note — readable,
+    /// editable, and syncable on its own if the folder happens to be in
+    /// iCloud Drive.
+    private func exportNotes() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.prompt = "Export Here"
+        panel.message = "Choose a folder for the notes"
+        guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
+        panel.beginSheetModal(for: win) { response in
+            guard response == .OK, let url = panel.url else { return }
+            let result = NoteExport.write(store: NoteStore(), to: url)
+            AppLog.persistence.info(
+                "exported \(result.written) note(s), skipped \(result.skipped)")
         }
     }
 
