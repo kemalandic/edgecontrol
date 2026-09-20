@@ -67,6 +67,136 @@ final class LayoutEngineTests: XCTestCase {
         )
     }
 
+    // MARK: - Displacing overlaps on drop
+
+    /// A drop keeps the widget exactly where the user put it and moves what it
+    /// covers. If the dropped widget shifted even a cell, the gesture would not
+    /// mean what it looked like.
+    func testTheDroppedWidgetDoesNotMove() throws {
+        let settled = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 2, row: 1, width: 4, height: 3)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped)
+
+        let kept = try widget(dropped)
+        XCTAssertEqual(kept.col, 2)
+        XCTAssertEqual(kept.row, 1)
+        XCTAssertNotEqual(try widget(settled).gridRect, GridRect(col: 0, row: 0, width: 4, height: 3),
+                          "the covered widget should have been displaced")
+    }
+
+    /// After a drop the page is clean again: nothing overlaps anything.
+    func testDisplacedWidgetsLandOnFreeCells() throws {
+        for col in stride(from: 0, to: 12, by: 4) {
+            XCTAssertNotNil(
+                engine.placeWidget(pageId: pageId, widgetId: "clock", col: col, row: 0, width: 4, height: 3)
+            )
+        }
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 1, row: 0, width: 6, height: 3)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped)
+
+        XCTAssertFalse(engine.hasOverlaps, "the page still holds overlaps after resolving")
+        XCTAssertEqual(widgets.count, 4, "no widget was dropped from the page")
+    }
+
+    /// Nearest by Manhattan distance, so a displaced widget lands beside where
+    /// it was rather than wherever the scan happened to reach first.
+    func testDisplacementPrefersTheNearestFreeSpot() throws {
+        let settled = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 8, row: 0, width: 2, height: 2)
+        )
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 8, row: 0, width: 2, height: 2)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped)
+
+        let moved = try widget(settled)
+        let distance = abs(moved.col - 8) + abs(moved.row - 0)
+        XCTAssertLessThanOrEqual(distance, 2, "moved to (\(moved.col), \(moved.row)), further than it had to")
+    }
+
+    /// A relocated widget only takes genuinely free cells — displacement does
+    /// not cascade, or one drop could rearrange the whole page.
+    func testARelocatedWidgetDoesNotBumpAThird() throws {
+        let a = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 0, row: 0, width: 3, height: 2)
+        )
+        let b = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "clock", col: 3, row: 0, width: 3, height: 2)
+        )
+        let bRect = try widget(b).gridRect
+
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 3, height: 2)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped)
+
+        XCTAssertEqual(try widget(b).gridRect, bRect, "an untouched widget was moved")
+        XCTAssertNotEqual(try widget(a).gridRect, bRect)
+        XCTAssertFalse(engine.hasOverlaps)
+    }
+
+    /// With the page full and no minimum to shrink to, the displaced widget
+    /// stays where it is — overlapped, which is the staged state the session is
+    /// allowed to hold and refuses to save.
+    func testNothingFitsAnywhereLeavesTheOverlapStaged() throws {
+        let columns = engine.currentGrid.columns
+        let rows = engine.currentGrid.rows
+        let filler = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge",
+                               col: 0, row: 0, width: columns, height: rows)
+        )
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 2, height: 2)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped)
+
+        XCTAssertEqual(try widget(filler).gridRect,
+                       GridRect(col: 0, row: 0, width: columns, height: rows))
+        XCTAssertTrue(engine.hasOverlaps, "nowhere to go, so the overlap stays staged")
+    }
+
+    /// When nothing fits at full size, a widget that declares a minimum shrinks
+    /// rather than staying on top of the drop. The page is filled except for a
+    /// 2x2 gap, so the displaced 4x2 widget has to give up width to land.
+    func testAWidgetShrinksWhenItCannotFitAtFullSize() throws {
+        let big = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 0, row: 0, width: 4, height: 2)
+        )
+        // Everything else, leaving only (19,4)-(20,5) free on the 21x6 grid.
+        XCTAssertNotNil(engine.placeWidget(pageId: pageId, widgetId: "clock", col: 4, row: 0, width: 17, height: 2))
+        XCTAssertNotNil(engine.placeWidget(pageId: pageId, widgetId: "clock", col: 0, row: 2, width: 21, height: 2))
+        XCTAssertNotNil(engine.placeWidget(pageId: pageId, widgetId: "clock", col: 0, row: 4, width: 19, height: 2))
+
+        engine.isEditing = true
+        let dropped = try XCTUnwrap(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 2)
+        )
+
+        engine.resolveOverlaps(pageId: pageId, keeping: dropped) { _ in .size(1, 1) }
+
+        let shrunk = try widget(big)
+        XCTAssertLessThan(shrunk.width, 4, "no full-size spot existed, so it had to shrink")
+        XCTAssertFalse(engine.hasOverlaps)
+        XCTAssertEqual(try widget(dropped).gridRect, GridRect(col: 0, row: 0, width: 4, height: 2),
+                       "the dropped widget still must not move")
+    }
+
     // MARK: - Edit sessions and persistence
 
     /// The guarantee the whole staging design rests on: an overlapping layout
