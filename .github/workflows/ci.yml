@@ -15,7 +15,7 @@ jobs:
     name: build-and-test
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Recorded so the Xcode pin in a follow-up commit is based on what the
       # image actually carries rather than on assumption. EdgeControl builds on
