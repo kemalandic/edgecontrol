@@ -19,6 +19,19 @@ public struct LayoutDocument: Codable, Sendable {
         self.pages = pages
         self.globalSettings = globalSettings
     }
+
+    // Same reasoning as GlobalSettings below: synthesized Decodable throws on a
+    // missing key even where the struct has a default, so a layout.json written
+    // before a field existed stops decoding the moment one is added. The store
+    // quarantines an unreadable file rather than overwriting it, so nothing is
+    // lost — but the dashboard still resets, and it need not.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        grid = try c.decodeIfPresent(GridDimensions.self, forKey: .grid) ?? GridDimensions()
+        pages = try c.decodeIfPresent([PageConfig].self, forKey: .pages) ?? []
+        globalSettings = try c.decodeIfPresent(GlobalSettings.self, forKey: .globalSettings) ?? GlobalSettings()
+    }
 }
 
 // MARK: - Grid Dimensions

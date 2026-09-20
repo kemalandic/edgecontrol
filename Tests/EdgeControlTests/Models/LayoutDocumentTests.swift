@@ -43,6 +43,43 @@ struct LayoutDocumentTests {
         #expect(w.col == 3 && w.row == 1 && w.width == 4 && w.height == 2)
     }
 
+    /// A layout.json written before a field existed has to keep decoding, or
+    /// adding one resets every dashboard in the field. The store quarantines an
+    /// unreadable file rather than overwriting it, so the arrangement is
+    /// recoverable either way — but it should not come to that.
+    @Test("a document missing top-level keys still decodes", arguments: [
+        "version", "grid", "pages", "globalSettings",
+    ])
+    func missingKeysFallBackToDefaults(dropped: String) throws {
+        let full = LayoutDocument(
+            version: 1,
+            grid: GridDimensions(columns: 21, rows: 6),
+            pages: [page("Main", order: 0)]
+        )
+        var object = try JSONSerialization.jsonObject(
+            with: JSONEncoder().encode(full)) as! [String: Any]
+        object.removeValue(forKey: dropped)
+
+        let restored = try JSONDecoder().decode(
+            LayoutDocument.self,
+            from: JSONSerialization.data(withJSONObject: object)
+        )
+
+        // Whatever was dropped falls back; everything else survives.
+        if dropped != "pages" { #expect(restored.pages.count == 1) }
+        if dropped != "grid" { #expect(restored.grid.columns == 21) }
+        #expect(restored.version == 1)
+    }
+
+    /// An empty object is the degenerate case of the same thing.
+    @Test("an empty object decodes to a usable default document")
+    func emptyObjectDecodes() throws {
+        let doc = try JSONDecoder().decode(LayoutDocument.self, from: Data("{}".utf8))
+        #expect(doc.version == 1)
+        #expect(doc.pages.isEmpty)
+        #expect(doc.grid.columns == GridConstants.columns)
+    }
+
     @Test("widget config values survive the round trip")
     func configRoundTrips() throws {
         var values: [String: ConfigValue] = [:]
