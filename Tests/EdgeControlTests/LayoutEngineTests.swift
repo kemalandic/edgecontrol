@@ -67,6 +67,84 @@ final class LayoutEngineTests: XCTestCase {
         )
     }
 
+    // MARK: - Edit sessions and persistence
+
+    /// The guarantee the whole staging design rests on: an overlapping layout
+    /// never reaches disk. Three gates enforce it — the debounced save refuses
+    /// while editing, the exit path refuses to leave edit mode, and this one,
+    /// the flush on quit. Only the comments said so before this test.
+    func testQuittingMidEditDoesNotPersistOverlaps() throws {
+        let store = LayoutStore(directory: directory)
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        engine.flushSave()
+        XCTAssertEqual(store.load().pages.first?.widgets.count, 1, "the clean layout should be on disk")
+
+        engine.isEditing = true
+        // Overlapping is legal mid-session; that is the staging state.
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 1, row: 1, width: 4, height: 3)
+        )
+        XCTAssertTrue(engine.hasOverlaps)
+
+        engine.flushSave()
+
+        XCTAssertEqual(
+            store.load().pages.first?.widgets.count, 1,
+            "quitting mid-edit persisted an overlapping layout"
+        )
+    }
+
+    /// Esc abandons the session: the layout returns to what it was when editing
+    /// began, which is by construction overlap-free.
+    func testCancellingAnEditSessionRestoresTheBaseline() {
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3)
+        )
+        engine.isEditing = true
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge", col: 1, row: 1, width: 4, height: 3)
+        )
+        XCTAssertTrue(engine.hasOverlaps)
+
+        engine.cancelEditing()
+
+        XCTAssertFalse(engine.isEditing)
+        XCTAssertFalse(engine.hasOverlaps, "the session was abandoned but overlaps survived")
+        XCTAssertEqual(widgets.count, 1)
+    }
+
+    /// Undo steps back one gesture at a time within the session.
+    func testUndoAndRedoStepThroughTheSession() {
+        engine.isEditing = true
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 2, height: 2)
+        )
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "clock", col: 4, row: 0, width: 2, height: 2)
+        )
+        XCTAssertEqual(widgets.count, 2)
+
+        engine.undoLayout()
+        XCTAssertEqual(widgets.count, 1)
+        engine.undoLayout()
+        XCTAssertEqual(widgets.count, 0)
+
+        engine.redoLayout()
+        XCTAssertEqual(widgets.count, 1)
+    }
+
+    /// The history only exists while a session is open, so undo outside one is
+    /// a no-op rather than a way to walk backwards through earlier work.
+    func testUndoDoesNothingOutsideAnEditSession() {
+        XCTAssertNotNil(
+            engine.placeWidget(pageId: pageId, widgetId: "cpu-gauge", col: 0, row: 0, width: 2, height: 2)
+        )
+        engine.undoLayout()
+        XCTAssertEqual(widgets.count, 1)
+    }
+
     // MARK: - Move and resize
 
     func testMovingOntoAnotherWidgetLeavesTheOriginalWhereItWas() throws {
