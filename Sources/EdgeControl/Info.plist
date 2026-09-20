@@ -24,6 +24,10 @@
     <string>public.app-category.utilities</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>NSRemindersFullAccessUsageDescription</key>
+    <string>The Reminders widget shows your lists and lets you add and complete reminders from the dashboard.</string>
+    <key>NSRemindersUsageDescription</key>
+    <string>The Reminders widget shows your lists and lets you add and complete reminders from the dashboard.</string>
     <key>NSLocationUsageDescription</key>
     <string>EdgeControl uses your location for accurate weather data on your dashboard.</string>
     <key>NSLocationWhenInUseUsageDescription</key>

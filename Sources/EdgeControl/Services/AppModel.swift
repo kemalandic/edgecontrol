@@ -22,6 +22,7 @@ public final class AppModel: ObservableObject {
     public let audioService = AudioService()
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
+    public let remindersService = RemindersService()
     public let accountStore = CIAccountStore()
     public private(set) lazy var cicdService = CICDService(accountStore: accountStore)
     public var widgetDataBridge: WidgetDataBridge?
@@ -130,6 +131,7 @@ public final class AppModel: ObservableObject {
         case .diskIO: return diskIOService
         case .process: return processService
         case .cicd: return cicdService
+        case .reminders: return remindersService
         }
     }
 

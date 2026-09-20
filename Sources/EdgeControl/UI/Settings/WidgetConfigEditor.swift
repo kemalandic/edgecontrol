@@ -14,7 +14,15 @@ struct WidgetConfigEditor: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(schema, id: \.key) { entry in
-                configRow(entry)
+                VStack(alignment: .leading, spacing: 3) {
+                    configRow(entry)
+                    if let help = entry.help {
+                        Text(help)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
         }
     }
@@ -32,6 +40,8 @@ struct WidgetConfigEditor: View {
             sliderRow(entry)
         case .text:
             textRow(entry)
+        case .time:
+            timeRow(entry)
         case .colorPicker:
             EmptyView()
         }
@@ -148,6 +158,40 @@ struct WidgetConfigEditor: View {
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
             }
         }
+    }
+
+    // MARK: - Time
+
+    /// Time-of-day picker persisting as "HH:mm" — the stored form stays a
+    /// plain string, so old configs and the text-field era round-trip.
+    private func timeRow(_ entry: ConfigSchemaEntry) -> some View {
+        let fallback: String = { if case .string(let v) = entry.defaultValue { return v }; return "18:00" }()
+        let currentValue = config.string(entry.key, default: fallback)
+
+        return HStack {
+            Text(entry.label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+            Spacer()
+            DatePicker("", selection: Binding(
+                get: { Self.date(fromHHmm: currentValue) },
+                set: { config[entry.key] = .string(Self.hhmm(from: $0)) }
+            ), displayedComponents: .hourAndMinute)
+            .datePickerStyle(.stepperField)
+            .labelsHidden()
+        }
+    }
+
+    private static func date(fromHHmm s: String) -> Date {
+        let parts = s.split(separator: ":")
+        let hour = parts.count == 2 ? Int(parts[0]) ?? 18 : 18
+        let minute = parts.count == 2 ? Int(parts[1]) ?? 0 : 0
+        return Calendar.current.date(bySettingHour: hour, minute: minute, second: 0, of: Date()) ?? Date()
+    }
+
+    private static func hhmm(from date: Date) -> String {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return String(format: "%02d:%02d", c.hour ?? 18, c.minute ?? 0)
     }
 
     /// App picker for the launcher field, sheet-attached like every other
