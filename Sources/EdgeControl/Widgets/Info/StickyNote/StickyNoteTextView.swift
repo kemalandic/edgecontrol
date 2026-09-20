@@ -1,431 +1,10 @@
 import AppKit
 import SwiftUI
 
-public final class StickyNoteWidget: DashboardWidget {
-    public let widgetId = "sticky-note"
-    public let displayName = "Sticky Note"
-    public let description = "A free-form note, edited in place and saved with the layout"
-    public let iconName = "note.text"
-    public let category: WidgetCategory = .info
-    public let requiredServices: Set<ServiceKey> = []
-    public let supportedSizes = WidgetSizeRange(min: .size(2, 1), max: .size(8, 6))
-    public let defaultSize = WidgetSize.size(3, 2)
+// The editor itself: paragraph styling, list markers, typing conversions,
+// checkbox toggling and link pasting.
 
-    public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
-        ConfigSchemaEntry(key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
-                          options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
-        ConfigSchemaEntry(key: "textColor", label: "Text Color", type: .picker,
-                          defaultValue: .string("soft white"),
-                          options: ["soft white", "white", "gray", "black", "yellow", "orange",
-                                    "pink", "red", "green", "mint", "blue", "purple"]),
-        ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.5),
-                          minValue: 0.0, maxValue: 1.0, step: 0.05),
-        ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("mono"),
-                          options: ["system", "rounded", "serif", "mono", "marker", "noteworthy"]),
-        ConfigSchemaEntry(key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(18),
-                          minValue: 10, maxValue: 24, step: 1),
-    ]
-    public let defaultColors = WidgetColors(primary: .yellow)
-
-    public init() {}
-
-    @MainActor
-    public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        StickyNoteWidgetView(
-            note: config.string("note"),
-            rtf: config.string("rtf"),
-            colorName: config.string("color", default: "yellow"),
-            textColorName: config.string("textColor", default: "soft white"),
-            tintOpacity: config.double("opacity", default: 0.5),
-            fontFamily: config.string("font", default: "mono"),
-            fontSize: config.double("fontSize", default: 18),
-            pageId: config.string("_pageId"),
-            instanceId: config.string("_instanceId"),
-            baseConfig: config
-        )
-    }
-}
-
-/// A markdown-lite rich note: type "- ", "- [ ] ", "# " or "---" and they
-/// convert to bullets, checkboxes, headings and rules on the spot — the note
-/// is rich text from then on, never markdown. Links paste as titled links.
-/// Storage is RTF (with a plain-text mirror in "note" for the settings field
-/// and for pre-RTF notes).
-private struct StickyNoteWidgetView: View {
-    let note: String
-    let rtf: String
-    let colorName: String
-    let textColorName: String
-    let tintOpacity: Double
-    let fontFamily: String
-    let fontSize: Double
-    let pageId: String
-    let instanceId: String
-    let baseConfig: WidgetConfig
-
-    @EnvironmentObject private var layoutEngine: LayoutEngine
-    @Environment(\.themeSettings) private var ts
-    @State private var rtfDraft = ""
-    @State private var plainDraft = ""
-    @State private var seeded = false
-    @State private var saveTask: Task<Void, Never>?
-
-    private var primary: Color {
-        switch colorName {
-        case "orange": .orange
-        case "pink": .pink
-        case "red": .red
-        case "green": .green
-        case "mint": .mint
-        case "blue": .blue
-        case "purple": .purple
-        case "gray": .gray
-        default: Theme.widgetPrimary("sticky-note", ts: ts, default: .yellow)
-        }
-    }
-
-    /// "soft white" is a touch darker than pure white — easier on the eyes
-    /// against the tinted card.
-    private var textNSColor: NSColor {
-        switch textColorName {
-        case "white": .white
-        case "gray": .systemGray
-        case "black": .black
-        case "yellow": .systemYellow
-        case "orange": .systemOrange
-        case "pink": .systemPink
-        case "red": .systemRed
-        case "green": .systemGreen
-        case "mint": .systemMint
-        case "blue": .systemBlue
-        case "purple": .systemPurple
-        default: NSColor(white: 0.85, alpha: 1)
-        }
-    }
-
-    var body: some View {
-        RichStickyTextView(
-            rtfBase64: $rtfDraft,
-            plainText: $plainDraft,
-            legacyMarkdown: note,
-            baseFont: RichStickyTextView.makeFont(family: fontFamily, size: fontSize * ts.fontScale),
-            textColor: textNSColor,
-            linkColor: NSColor(primary),
-            onFontSizeDelta: { delta in persistFontSize(fontSize + delta) },
-            onFontSizeReset: { persistFontSize(18) }
-        )
-        .padding(Theme.compactPadding)
-        .background(primary.opacity(tintOpacity))
-        .widgetCard()
-        .onAppear {
-            if !seeded {
-                rtfDraft = rtf
-                plainDraft = note
-                seeded = true
-            }
-        }
-        // External edits (settings field, layout import) win over a stale
-        // on-screen draft only when they actually differ.
-        .onChange(of: rtf) { _, newValue in
-            if newValue != rtfDraft { rtfDraft = newValue }
-        }
-        // Debounced: saving mutates the layout document, and doing that per
-        // keystroke re-rendered every widget on the dashboard per character.
-        .onChange(of: rtfDraft) { _, _ in
-            saveTask?.cancel()
-            saveTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(800))
-                guard !Task.isCancelled else { return }
-                save()
-            }
-        }
-        .onDisappear {
-            saveTask?.cancel()
-            save()
-        }
-    }
-
-    /// 18 is the schema default; Cmd+0 snaps back to it.
-    private func persistFontSize(_ newSize: Double) {
-        guard !instanceId.isEmpty else { return }
-        var config = baseConfig
-        config["fontSize"] = .double(min(24, max(10, newSize)))
-        // Carry the live drafts so the size write can't clobber newer text
-        // than the config snapshot holds.
-        config["rtf"] = .string(rtfDraft)
-        config["note"] = .string(plainDraft)
-        config["_pageId"] = nil
-        config["_instanceId"] = nil
-        layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
-    }
-
-    private func save() {
-        guard !instanceId.isEmpty, rtfDraft != rtf else { return }
-        // Strip the injected identity keys: they describe the render pass,
-        // not the widget's persistent state.
-        var config = baseConfig
-        config["rtf"] = .string(rtfDraft)
-        config["note"] = .string(plainDraft)
-        config["_pageId"] = nil
-        config["_instanceId"] = nil
-        layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: config)
-    }
-}
-
-// MARK: - Rich text view
-
-private struct RichStickyTextView: NSViewRepresentable {
-    @Binding var rtfBase64: String
-    @Binding var plainText: String
-    let legacyMarkdown: String
-    let baseFont: NSFont
-    let textColor: NSColor
-    let linkColor: NSColor
-    let onFontSizeDelta: (Double) -> Void
-    let onFontSizeReset: () -> Void
-
-    func makeNSView(context: Context) -> NSScrollView {
-        let textView = LinkPasteTextView()
-        textView.delegate = context.coordinator
-        textView.isRichText = true
-        textView.allowsUndo = true
-        textView.usesFontPanel = true
-        textView.drawsBackground = false
-        textView.focusRingType = .none
-        textView.isAutomaticQuoteSubstitutionEnabled = false
-        textView.isAutomaticDashSubstitutionEnabled = false
-        textView.textContainerInset = .zero
-        textView.autoresizingMask = [.width]
-        textView.isVerticallyResizable = true
-        textView.textContainer?.widthTracksTextView = true
-        textView.linkTextAttributes = [
-            .foregroundColor: linkColor,
-            .underlineStyle: NSUnderlineStyle.single.rawValue,
-            .cursor: NSCursor.pointingHand,
-        ]
-        textView.defaultFont = baseFont
-        textView.defaultColor = textColor
-        textView.insertionPointColor = textColor
-        context.coordinator.appliedFontKey = fontKey
-        context.coordinator.appliedColorKey = colorKey
-
-        if let restored = Self.fromRTF(rtfBase64) {
-            textView.textStorage?.setAttributedString(restored)
-        } else {
-            textView.textStorage?.setAttributedString(
-                Self.parseLegacy(legacyMarkdown, font: baseFont, textColor: textColor)
-            )
-        }
-        textView.accentColor = linkColor
-        textView.onFontSizeDelta = onFontSizeDelta
-        textView.onFontSizeReset = onFontSizeReset
-        textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
-        textView.normalizeCheckboxes()
-
-        let scroll = NSScrollView()
-        scroll.documentView = textView
-        scroll.drawsBackground = false
-        scroll.hasVerticalScroller = false
-        scroll.verticalScrollElasticity = .none
-        return scroll
-    }
-
-    func updateNSView(_ scroll: NSScrollView, context: Context) {
-        guard let textView = scroll.documentView as? LinkPasteTextView else { return }
-        textView.insertionPointColor = textColor
-        textView.accentColor = linkColor
-        textView.onFontSizeDelta = onFontSizeDelta
-        textView.onFontSizeReset = onFontSizeReset
-        let fontChanged = context.coordinator.appliedFontKey != fontKey
-        let colorChanged = context.coordinator.appliedColorKey != colorKey
-        // Reload only on a genuine external change — and never on the pass
-        // that changes the font or color: the binding still holds the
-        // pre-restyle RTF then, and reloading from it would undo the reflow
-        // or recolor (the bug that shipped first).
-        if !fontChanged, !colorChanged,
-           Self.rtfString(textView.attributedString()) != rtfBase64,
-           let restored = Self.fromRTF(rtfBase64) {
-            textView.textStorage?.setAttributedString(restored)
-            textView.normalizeCheckboxes()
-        }
-        // Reflow when the configured family/size changes, preserving traits
-        // and relative heading sizes; checkboxes redraw to match.
-        if fontChanged {
-            let ratio = baseFont.pointSize / textView.defaultFont.pointSize
-            reapplyBaseFont(in: textView, ratio: ratio)
-            textView.defaultFont = baseFont
-            context.coordinator.appliedFontKey = fontKey
-            textView.refreshCheckboxImages()
-            textView.normalizeCheckboxes()
-            // Push the scaled content on the next runloop tick: binding
-            // writes during a SwiftUI update pass are unreliable.
-            let coordinator = context.coordinator
-            DispatchQueue.main.async { coordinator.pushChanges(from: textView) }
-        }
-        // Recolor when the configured text color changes: every non-link
-        // run takes the new color (dimmed runs like rules keep their alpha),
-        // and the checkboxes redraw their strokes to match.
-        if colorChanged {
-            textView.defaultColor = textColor
-            recolorText(in: textView)
-            context.coordinator.appliedColorKey = colorKey
-            textView.refreshCheckboxImages()
-            textView.normalizeCheckboxes()
-            let coordinator = context.coordinator
-            DispatchQueue.main.async { coordinator.pushChanges(from: textView) }
-        }
-    }
-
-    private var fontKey: String { "\(baseFont.fontName)-\(baseFont.pointSize)" }
-    private var colorKey: String { textColor.description }
-
-    private func recolorText(in textView: LinkPasteTextView) {
-        guard let storage = textView.textStorage, storage.length > 0 else { return }
-        storage.beginEditing()
-        storage.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
-            if storage.attribute(.link, at: range.location, effectiveRange: nil) != nil { return }
-            let alpha = (value as? NSColor)?.alphaComponent ?? 1
-            let color = alpha < 1 ? textColor.withAlphaComponent(alpha) : textColor
-            storage.addAttribute(.foregroundColor, value: color, range: range)
-        }
-        storage.endEditing()
-        textView.typingAttributes[.foregroundColor] = textColor
-    }
-
-    private func reapplyBaseFont(in textView: LinkPasteTextView, ratio: CGFloat) {
-        guard let storage = textView.textStorage else { return }
-        storage.beginEditing()
-        storage.enumerateAttribute(.font, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
-            guard let old = value as? NSFont else { return }
-            let traits = old.fontDescriptor.symbolicTraits
-            var descriptor = baseFont.fontDescriptor.withSymbolicTraits(traits)
-            if NSFont(descriptor: descriptor, size: 0) == nil { descriptor = baseFont.fontDescriptor }
-            let newFont = NSFont(descriptor: descriptor, size: old.pointSize * ratio)
-                ?? baseFont
-            storage.addAttribute(.font, value: newFont, range: range)
-        }
-        storage.endEditing()
-        textView.typingAttributes[.font] = baseFont
-    }
-
-    static func makeFont(family: String, size: Double) -> NSFont {
-        let s = CGFloat(size)
-        switch family {
-        case "mono":
-            return .monospacedSystemFont(ofSize: s, weight: .regular)
-        case "rounded":
-            let d = NSFont.systemFont(ofSize: s).fontDescriptor.withDesign(.rounded)
-            return d.flatMap { NSFont(descriptor: $0, size: s) } ?? .systemFont(ofSize: s)
-        case "serif":
-            let d = NSFont.systemFont(ofSize: s).fontDescriptor.withDesign(.serif)
-            return d.flatMap { NSFont(descriptor: $0, size: s) } ?? .systemFont(ofSize: s)
-        case "marker":
-            return NSFont(name: "Marker Felt", size: s) ?? .systemFont(ofSize: s)
-        case "noteworthy":
-            return NSFont(name: "Noteworthy", size: s) ?? .systemFont(ofSize: s)
-        default:
-            return .systemFont(ofSize: s)
-        }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(self) }
-
-    @MainActor
-    final class Coordinator: NSObject, NSTextViewDelegate {
-        var parent: RichStickyTextView
-        var appliedFontKey = ""
-        var appliedColorKey = ""
-        init(_ parent: RichStickyTextView) { self.parent = parent }
-
-        func textDidChange(_ notification: Notification) {
-            guard let textView = notification.object as? NSTextView else { return }
-            pushChanges(from: textView)
-        }
-
-        func pushChanges(from textView: NSTextView) {
-            let attributed = textView.attributedString()
-            parent.rtfBase64 = RichStickyTextView.rtfString(attributed)
-            parent.plainText = RichStickyTextView.plainMirror(attributed)
-        }
-
-        func textView(_ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int) -> Bool {
-            let url = (link as? URL) ?? (link as? String).flatMap(URL.init(string:))
-            if let url { NSWorkspace.shared.open(url) }
-            return true
-        }
-    }
-
-    // MARK: Storage
-
-    /// Drawn checkboxes live only in the view; storage keeps the glyph
-    /// characters, so RTF, the plain mirror and pre-attachment notes all
-    /// stay compatible.
-    static func rtfString(_ attributed: NSAttributedString) -> String {
-        guard attributed.length > 0 else { return "" }
-        let mapped = NSMutableAttributedString()
-        attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
-            if let box = attrs[.attachment] as? CheckboxAttachment {
-                var plain = attrs
-                plain.removeValue(forKey: .attachment)
-                plain.removeValue(forKey: .cursor)
-                mapped.append(NSAttributedString(string: box.checked ? "☑" : "☐", attributes: plain))
-            } else {
-                mapped.append(attributed.attributedSubstring(from: range))
-            }
-        }
-        let range = NSRange(location: 0, length: mapped.length)
-        return mapped.rtf(from: range, documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf])?
-            .base64EncodedString() ?? ""
-    }
-
-    static func fromRTF(_ base64: String) -> NSAttributedString? {
-        guard !base64.isEmpty, let data = Data(base64Encoded: base64) else { return nil }
-        return NSAttributedString(rtf: data, documentAttributes: nil)
-    }
-
-    /// Plain mirror for the settings field / export readability: links keep
-    /// their [title](url) form, formatting is dropped.
-    static func plainMirror(_ attributed: NSAttributedString) -> String {
-        var out = ""
-        attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attrs, range, _ in
-            let text = attributed.attributedSubstring(from: range).string
-            if let box = attrs[.attachment] as? CheckboxAttachment {
-                out += box.checked ? "☑" : "☐"
-            } else if let link = attrs[.link] {
-                let url = (link as? URL)?.absoluteString ?? (link as? String ?? "")
-                out += "[\(text)](\(url))"
-            } else {
-                out += text
-            }
-        }
-        return out
-    }
-
-    /// Pre-RTF notes stored `[title](url)` markdown; parse once on load.
-    static func parseLegacy(_ markdown: String, font: NSFont, textColor: NSColor) -> NSAttributedString {
-        let plain: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
-        let result = NSMutableAttributedString()
-        var rest = Substring(markdown)
-        let pattern = /\[([^\]]+)\]\(([^)\s]+)\)/
-        while let match = rest.firstMatch(of: pattern) {
-            result.append(NSAttributedString(string: String(rest[rest.startIndex..<match.range.lowerBound]), attributes: plain))
-            var linkAttrs = plain
-            linkAttrs[.link] = String(match.2)
-            result.append(NSAttributedString(string: String(match.1), attributes: linkAttrs))
-            rest = rest[match.range.upperBound...]
-        }
-        result.append(NSAttributedString(string: String(rest), attributes: plain))
-        return result
-    }
-}
-
-// MARK: - The editor
-
-/// Markdown-lite conversions at the keystroke, links on paste, glyph
-/// checkboxes that toggle on click, and a strikethrough action for the
-/// Format menu.
-private final class LinkPasteTextView: NSTextView {
+final class LinkPasteTextView: NSTextView {
     var defaultFont: NSFont = .systemFont(ofSize: 18)
     var defaultColor: NSColor = .white
     var accentColor: NSColor = .systemYellow
@@ -451,14 +30,24 @@ private final class LinkPasteTextView: NSTextView {
         }
     }
 
-    /// Marker Felt and Noteworthy set their letters so tight on the small
-    /// panel that they blur together; a little tracking keeps them legible.
-    private var noteKern: CGFloat {
-        switch defaultFont.familyName {
-        case "Marker Felt", "Noteworthy": return defaultFont.pointSize * 0.08
-        default: return 0
-        }
+    /// All line geometry lives in StickyNoteLayout, which needs only the font.
+    private var layout: StickyNoteLayout { StickyNoteLayout(font: defaultFont) }
+    private var noteKern: CGFloat { layout.kern }
+    private var listTextIndent: CGFloat { layout.listTextIndent }
+    private var indentStep: CGFloat { layout.indentStep }
+    private var maxIndentLevel: Int { layout.maxIndentLevel }
+
+    private func markerInset(for line: String) -> CGFloat { layout.markerInset(for: line) }
+
+    private func paragraphStyle(isHeading: Bool, isList: Bool, markerInset: CGFloat, level: Int) -> NSParagraphStyle {
+        layout.paragraphStyle(isHeading: isHeading, isList: isList, markerInset: markerInset, level: level)
     }
+
+    private func indentLevel(of style: NSParagraphStyle?, isList: Bool) -> Int {
+        layout.indentLevel(of: style, isList: isList)
+    }
+
+    private func headingFont(_ level: Int) -> NSFont { layout.headingFont(level) }
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
         [.font: defaultFont, .foregroundColor: defaultColor,
@@ -470,38 +59,6 @@ private final class LinkPasteTextView: NSTextView {
         paragraphStyle(isHeading: false, isList: false, markerInset: 0, level: 0)
     }
 
-    /// Column where list text begins; markers sit before a tab. Wide
-    /// enough for a two-digit number and its dot, whatever the note font —
-    /// a marker wider than its column would push the tab a full extra
-    /// column to the right.
-    private var listTextIndent: CGFloat {
-        let twoDigits = ("88." as NSString).size(withAttributes: [.font: defaultFont]).width
-        return max((defaultFont.pointSize * 1.8).rounded(),
-                   (twoDigits + defaultFont.pointSize * 0.5).rounded())
-    }
-
-    /// One Tab/Shift-Tab step — the width of the list column, so nested
-    /// list text lands exactly one column further in.
-    private var indentStep: CGFloat { listTextIndent }
-    private let maxIndentLevel = 6
-
-    /// Markers right-align to a shared edge just before the text column:
-    /// number dots line up regardless of digit count, the checkbox's right
-    /// side sits on that edge, and the narrow bullet is centered over the
-    /// checkbox. Keeps every marker close to its text.
-    private func markerInset(for line: String) -> CGFloat {
-        let columnEnd = listTextIndent - defaultFont.pointSize * 0.45
-        let boxWidth = defaultFont.pointSize * 1.2
-        if line.hasPrefix("\u{FFFC}\t") { return max(0, (columnEnd - boxWidth).rounded()) }
-        if line.hasPrefix("•\t") {
-            let bulletWidth = ("•" as NSString).size(withAttributes: [.font: defaultFont]).width
-            return max(0, (columnEnd - boxWidth + (boxWidth - bulletWidth) / 2).rounded())
-        }
-        guard let tab = line.firstIndex(of: "\t") else { return 0 }
-        let width = (String(line[..<tab]) as NSString).size(withAttributes: [.font: defaultFont]).width
-        return max(0, (columnEnd - width).rounded())
-    }
-
     private var listParagraph: NSParagraphStyle {
         paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: 0)
     }
@@ -509,43 +66,6 @@ private final class LinkPasteTextView: NSTextView {
     /// Headings breathe a little more, especially above.
     private var headingParagraph: NSParagraphStyle {
         paragraphStyle(isHeading: true, isList: false, markerInset: 0, level: 0)
-    }
-
-    /// Single source of paragraph geometry: spacing rhythm per line kind
-    /// plus the Tab/Shift-Tab indent level. List lines keep one shared
-    /// text column (marker, tab, text) shifted right per level, with
-    /// wrapped lines hanging under the text.
-    private func paragraphStyle(isHeading: Bool, isList: Bool, markerInset: CGFloat, level: Int) -> NSParagraphStyle {
-        let p = NSMutableParagraphStyle()
-        let indent = CGFloat(level) * indentStep
-        if isHeading {
-            p.paragraphSpacing = defaultFont.pointSize * 0.3
-            p.paragraphSpacingBefore = defaultFont.pointSize * 0.5
-            p.firstLineHeadIndent = indent
-            p.headIndent = indent
-        } else if isList {
-            p.paragraphSpacing = defaultFont.pointSize * 0.22
-            p.firstLineHeadIndent = indent + markerInset
-            p.tabStops = [NSTextTab(textAlignment: .left, location: indent + listTextIndent)]
-            p.defaultTabInterval = listTextIndent
-            p.headIndent = indent + listTextIndent
-        } else {
-            p.paragraphSpacing = defaultFont.pointSize * 0.22
-            p.firstLineHeadIndent = indent
-            p.headIndent = indent
-        }
-        return p
-    }
-
-    /// The indent level is never stored separately — it is recovered from
-    /// the geometry of the line's current style, so it survives saves,
-    /// loads and every re-normalization pass.
-    private func indentLevel(of style: NSParagraphStyle?, isList: Bool) -> Int {
-        guard let style else { return 0 }
-        let base = isList
-            ? (style.tabStops.first?.location ?? listTextIndent) - listTextIndent
-            : style.firstLineHeadIndent
-        return max(0, min(maxIndentLevel, Int((base / indentStep).rounded())))
     }
 
     /// Leading marker of a line — "•", a drawn checkbox, or "N." — with its
@@ -751,14 +271,7 @@ private final class LinkPasteTextView: NSTextView {
         }
     }
 
-    private func headingFont(_ level: Int) -> NSFont {
-        let scale: CGFloat = level == 1 ? 1.6 : level == 2 ? 1.35 : 1.15
-        let descriptor = defaultFont.fontDescriptor.withSymbolicTraits(
-            defaultFont.fontDescriptor.symbolicTraits.union(.bold)
-        )
-        return NSFont(descriptor: descriptor, size: defaultFont.pointSize * scale)
-            ?? .boldSystemFont(ofSize: defaultFont.pointSize * scale)
-    }
+
 
     // MARK: Typing conversions
 
@@ -1128,49 +641,3 @@ private final class LinkPasteTextView: NSTextView {
 /// stroke square, filled with the note's accent plus a checkmark when done.
 /// The attachment exists only in the view — serialization maps it back to
 /// the glyph characters.
-private final class CheckboxAttachment: NSTextAttachment {
-    var checked = false
-
-    static func make(checked: Bool, font: NSFont, stroke: NSColor, accent: NSColor) -> CheckboxAttachment {
-        let side = (font.pointSize * 1.2).rounded()
-        let attachment = CheckboxAttachment()
-        attachment.checked = checked
-        attachment.image = drawImage(checked: checked, side: side, stroke: stroke, accent: accent)
-        // Center against the cap height so the box reads as part of the line.
-        attachment.bounds = CGRect(
-            x: 0, y: (font.capHeight - side) / 2, width: side, height: side
-        )
-        return attachment
-    }
-
-    private static func drawImage(checked: Bool, side: CGFloat, stroke: NSColor, accent: NSColor) -> NSImage {
-        NSImage(size: NSSize(width: side, height: side), flipped: false) { rect in
-            let inset = rect.insetBy(dx: 1, dy: 1)
-            let radius = side * 0.24
-            let path = NSBezierPath(roundedRect: inset, xRadius: radius, yRadius: radius)
-            if checked {
-                accent.setFill()
-                path.fill()
-                // Checkmark in whichever of black/white reads against the accent.
-                let rgb = accent.usingColorSpace(.deviceRGB)
-                let luminance = rgb.map {
-                    0.299 * $0.redComponent + 0.587 * $0.greenComponent + 0.114 * $0.blueComponent
-                } ?? 1
-                let mark = NSBezierPath()
-                mark.move(to: NSPoint(x: side * 0.26, y: side * 0.52))
-                mark.line(to: NSPoint(x: side * 0.44, y: side * 0.32))
-                mark.line(to: NSPoint(x: side * 0.76, y: side * 0.70))
-                mark.lineWidth = max(1.5, side * 0.14)
-                mark.lineCapStyle = .round
-                mark.lineJoinStyle = .round
-                (luminance > 0.6 ? NSColor.black.withAlphaComponent(0.85) : .white).setStroke()
-                mark.stroke()
-            } else {
-                stroke.withAlphaComponent(0.75).setStroke()
-                path.lineWidth = max(1.5, side * 0.11)
-                path.stroke()
-            }
-            return true
-        }
-    }
-}
