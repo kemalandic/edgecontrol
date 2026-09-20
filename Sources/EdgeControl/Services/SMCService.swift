@@ -74,7 +74,7 @@ private class SMCConnection {
     }
 
     func call(_ index: UInt8, input: inout SMCKeyData_t, output: inout SMCKeyData_t) -> kern_return_t {
-        var inputSize = MemoryLayout<SMCKeyData_t>.stride
+        let inputSize = MemoryLayout<SMCKeyData_t>.stride
         var outputSize = MemoryLayout<SMCKeyData_t>.stride
         return IOConnectCallStructMethod(conn, UInt32(index), &input, inputSize, &output, &outputSize)
     }

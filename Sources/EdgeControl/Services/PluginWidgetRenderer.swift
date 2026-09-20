@@ -110,7 +110,7 @@ public final class PluginWidgetRenderer {
     private func takeAllSnapshots() {
         let dataBridge = PluginDataBridge(model: model)
 
-        for (key, renderer) in renderers {
+        for (_, renderer) in renderers {
             // Push latest data before taking snapshot
             let payload = dataBridge.buildDataPayload(
                 permissions: renderer.permissions,
@@ -122,8 +122,11 @@ public final class PluginWidgetRenderer {
         }
 
         // Wait for WebViews to render updated data, then snapshot
-        Task { @MainActor in
+        // Weak on the outer Task: the inner completion handler cannot hold this
+        // object alive on its own once the Task lets go.
+        Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2))
+            guard let self else { return }
             for (key, renderer) in self.renderers {
                 renderer.takeSnapshot { [weak self] image in
                     guard let image else {

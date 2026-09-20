@@ -43,7 +43,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         }
 
         // Create new window
-        var settingsView = SettingsView()
+        let settingsView = SettingsView()
             .environmentObject(model)
             .environmentObject(layoutEngine)
             .environmentObject(registry)

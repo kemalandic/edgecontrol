@@ -143,7 +143,10 @@ public final class ProcessMonitorService: ObservableObject {
 
             var nameBuffer = [CChar](repeating: 0, count: 1024)
             proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-            let name = String(cString: nameBuffer)
+            // proc_name fills a fixed buffer and null-terminates; decode up to that
+            // terminator rather than through the trailing zeros.
+            let name = String(decoding: nameBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) },
+                              as: UTF8.self)
             if name.isEmpty { continue }
             if name.hasPrefix("(") || name == "EdgeControl" { continue }
 
