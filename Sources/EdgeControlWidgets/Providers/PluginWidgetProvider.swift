@@ -55,7 +55,9 @@ struct PluginWidgetEntry: TimelineEntry, Sendable {
     let date: Date
     let pluginId: String?
     let pluginName: String?
-    let snapshotImage: NSImage?
+    // NSImage is not Sendable; entries are only ever built and consumed on the
+    // main actor, so suppress the check rather than drop the conformance.
+    nonisolated(unsafe) let snapshotImage: NSImage?
     let isPlaceholder: Bool
 
     static let placeholder = PluginWidgetEntry(

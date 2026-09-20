@@ -72,7 +72,7 @@ final class RateLimitTrackingTransportTests: XCTestCase {
         XCTAssertNil(a.rateLimit(forHost: "git.example.dev"))
     }
 
-    func testSettingsRendersQuotaWithReset() {
+    @MainActor func testSettingsRendersQuotaWithReset() {
         // Fixed `now`, so the assertion cannot depend on how long the test took
         // to reach this line.
         let now = Date(timeIntervalSince1970: 1_800_000_000)
@@ -89,7 +89,7 @@ final class RateLimitTrackingTransportTests: XCTestCase {
     }
 
     /// Under a minute must read as "resetting", not "0m".
-    func testQuotaResetWithinAMinute() {
+    @MainActor func testQuotaResetWithinAMinute() {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let soon = CIRateLimit(limit: 60, remaining: 0, resetsAt: now.addingTimeInterval(20))
         XCTAssertEqual(CICDSettingsView.quotaText(soon, now: now), "0/60 · resetting")

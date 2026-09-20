@@ -185,8 +185,12 @@ struct DashboardShell: View {
                 activeColor: accent,
                 registry: model.touchService.zoneRegistry
             ) {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    editMode.toggle()
+                // The zone registry runs actions on the main actor, but the
+                // closure itself is @Sendable, so hop explicitly for Swift 6.
+                Task { @MainActor in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        editMode.toggle()
+                    }
                 }
             }
             .overlay {
