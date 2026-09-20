@@ -29,13 +29,18 @@ generate() {
 }
 
 # Warnings are counted, not fatal — a ratchet, so new work cannot add to the pile
-# while the existing ones are worked off. Raise this only when a toolchain moves
-# under us, never to make a new warning go away.
+# while the existing ones are worked off. Lower it whenever the count drops;
+# raise it only when a toolchain moves under us, never to make a new warning go
+# away.
 #
-# Xcode 26.6 -> 27.0 took the count from 6 to 28 without a line of our code
-# changing; most of the new ones are a single Swift 6.4 diagnostic about using
-# Combine types in a property declaration without importing Combine.
-WARN_BUDGET="${WARN_BUDGET:-28}"
+# The two that remain are deliberate:
+#   AudioService.swift    CoreAudio writes a CFStringRef into a CFString slot.
+#                         The fix is Unmanaged<CFString>?, which changes how
+#                         device names are read and wants testing on real
+#                         hardware rather than a drive-by edit.
+#   DashboardShell.swift  main-actor isolation on the edit-mode toggle, fixed by
+#                         an open pull request.
+WARN_BUDGET="${WARN_BUDGET:-2}"
 
 build() {
     # A runner always starts from an empty derived-data directory, so its build is
