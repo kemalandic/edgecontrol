@@ -1,0 +1,10 @@
+# Revisions that changed formatting only. git blame skips these so it keeps
+# pointing at whoever wrote a line.
+#
+# Enable locally:
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# GitHub honours this file automatically.
+
+# Format the codebase with swift-format
+d8fb178f7997fee460e7b91a4283275a7d30a9dc
