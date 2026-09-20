@@ -55,13 +55,34 @@ public enum AppleScriptRunner {
             AppLog.media.error("AppleScript helper failed to launch: \(error.localizedDescription, privacy: .public)")
             return .failure(.launchFailed)
         }
-        guard awaitExit(process, timeout: timeout) else { return .failure(.timedOut) }
+        // Drain the pipe while the helper runs, not after it exits. A pipe holds
+        // about 64 KiB; a script whose result is larger blocks writing, so it
+        // never exits, so a reader that waits for exit first waits forever and
+        // the deadline kills the helper with its answer still in the buffer.
+        // The Safari query concatenates a line per media tab, which is exactly
+        // the case that gets big.
+        let handle = pipe.fileHandleForReading
+        let buffer = OutputBuffer()
+        let group = DispatchGroup()
+        DispatchQueue.global(qos: .utility).async(group: group) {
+            buffer.store(handle.readDataToEndOfFile())
+        }
+
+        guard awaitExit(process, timeout: timeout) else {
+            // Terminating closes the write end, so the reader returns; bound the
+            // wait anyway rather than trade one hang for another.
+            _ = group.wait(timeout: .now() + 1)
+            return .failure(.timedOut)
+        }
+        group.wait()
+
         guard process.terminationStatus == 0 else {
             return .failure(.scriptFailed(status: process.terminationStatus))
         }
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        return .success(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines))
+        return .success(
+            String(decoding: buffer.take(), as: UTF8.self)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        )
     }
 
     /// Waits for `process`, killing it at the deadline; false means it had to be
@@ -69,8 +90,10 @@ public enum AppleScriptRunner {
     /// takes to answer, and that is unbounded while an Automation prompt sits
     /// unanswered.
     private static func awaitExit(_ process: Process, timeout: TimeInterval) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while process.isRunning && Date() < deadline {
+        // Monotonic. A wall-clock deadline stops bounding anything the moment
+        // NTP steps the clock backwards, and bounding the wait is the whole job.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(timeout))
+        while process.isRunning && ContinuousClock.now < deadline {
             Thread.sleep(forTimeInterval: 0.1)
         }
         if process.isRunning {
@@ -78,5 +101,21 @@ public enum AppleScriptRunner {
             return false
         }
         return true
+    }
+}
+
+/// Carries the helper's stdout from the reader queue back to the caller.
+private final class OutputBuffer: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data = Data()
+
+    func store(_ value: Data) {
+        lock.lock(); defer { lock.unlock() }
+        data = value
+    }
+
+    func take() -> Data {
+        lock.lock(); defer { lock.unlock() }
+        return data
     }
 }

@@ -51,6 +51,31 @@ struct AppleScriptRunnerTests {
         #expect(Date().timeIntervalSince(started) < 3)
     }
 
+    /// A pipe holds about 64 KiB. Reading it only after the helper exits
+    /// deadlocks on anything larger: the helper blocks writing, never exits, and
+    /// the deadline kills it with the answer still in the buffer. The Safari
+    /// query grows with the number of open media tabs, so this is the realistic
+    /// shape of it, not a synthetic limit.
+    @Test("Survives a result larger than the pipe buffer")
+    func resultLargerThanPipeBuffer() {
+        // 10 * 2^14 = 163,840 characters, comfortably past the buffer.
+        let script = """
+        set chunk to "0123456789"
+        repeat 14 times
+            set chunk to chunk & chunk
+        end repeat
+        return chunk
+        """
+        let result = AppleScriptRunner.run(script, timeout: 10)
+
+        switch result {
+        case .success(let text):
+            #expect(text.count == 163_840, "got \(text.count) characters")
+        case .failure(let failure):
+            Issue.record("expected the full result, got \(failure)")
+        }
+    }
+
     @Test("A missing helper fails instead of launching anything")
     func missingHelperFails() {
         let nowhere = URL(fileURLWithPath: "/nonexistent/EdgeControlScriptRunner")
