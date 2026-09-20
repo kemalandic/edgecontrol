@@ -306,7 +306,7 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         italicItem.target = NSFontManager.shared
         italicItem.tag = Int(NSFontTraitMask.italicFontMask.rawValue)
         formatMenu.addItem(italicItem)
-        formatMenu.addItem(NSMenuItem(title: "Underline", action: Selector(("underline:")), keyEquivalent: "u"))
+        formatMenu.addItem(NSMenuItem(title: "Underline", action: #selector(NSText.underline(_:)), keyEquivalent: "u"))
         let strikeItem = NSMenuItem(title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
         strikeItem.keyEquivalentModifierMask = [.command, .shift]
         formatMenu.addItem(strikeItem)

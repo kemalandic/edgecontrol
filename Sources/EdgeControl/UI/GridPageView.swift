@@ -596,6 +596,15 @@ private struct EditKeyCatcher: NSViewRepresentable {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                     guard let self, let engine = self.engine, engine.isEditing,
                           event.window === self.window else { return event }
+
+                    // A focused text view owns these keys. Inside a sticky note
+                    // Cmd+Z is text undo and Esc cancels the field, not the edit
+                    // session — taking them here would mean typing in a note
+                    // during edit mode silently loses both, and Esc would throw
+                    // the whole session away mid-sentence. NSTextView is an
+                    // NSText, as is the field editor a text field hands focus to.
+                    if self.window?.firstResponder is NSText { return event }
+
                     if event.keyCode == 53 { // Esc
                         engine.cancelEditing()
                         return nil
