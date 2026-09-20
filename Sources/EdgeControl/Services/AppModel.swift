@@ -25,6 +25,9 @@ public final class AppModel: ObservableObject {
     public let remindersService = RemindersService()
     public let accountStore = CIAccountStore()
     public let noteStore = NoteStore()
+    /// Held so the global key stays registered for the app's lifetime, and so
+    /// settings can turn it on and off.
+    public var quickCapture: QuickCaptureService?
     public private(set) lazy var cicdService = CICDService(accountStore: accountStore)
     public var widgetDataBridge: WidgetDataBridge?
     public var pluginWidgetRenderer: PluginWidgetRenderer?

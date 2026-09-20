@@ -3,6 +3,7 @@ import SwiftUI
 
 struct GeneralSettingsView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
+    @EnvironmentObject private var model: AppModel
     @State private var launchAtLogin: Bool = false
 
     private var accent: Color {
@@ -96,6 +97,25 @@ struct GeneralSettingsView: View {
                         var gs = layoutEngine.document.globalSettings
                         gs.allowSystemPanels = newValue
                         layoutEngine.updateGlobalSettings(gs)
+                    }
+                )
+            )
+
+            // Quick capture
+            settingsToggle(
+                "Quick Capture",
+                subtitle: "Control-Option-Space opens a box from any app; what you type lands in the Inbox note",
+                icon: "square.and.pencil",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.quickCaptureEnabled },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.quickCaptureEnabled = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                        // The key belongs to the whole machine, so it is
+                        // claimed and released as the setting changes rather
+                        // than held for the app's lifetime.
+                        if newValue { model.quickCapture?.start() } else { model.quickCapture?.stop() }
                     }
                 )
             )

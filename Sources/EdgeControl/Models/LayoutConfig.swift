@@ -154,6 +154,12 @@ public struct GlobalSettings: Codable, Sendable {
     /// invisibly buried behind it. The trade: the kiosk display's menu bar
     /// can also draw over the dashboard's top edge.
     public var allowSystemPanels: Bool
+    /// Whether Control-Option-Space opens the capture box from anywhere.
+    /// On by default: the feature is invisible otherwise, and a dashboard
+    /// nobody can write into from their editor is a dashboard, not a tool.
+    /// Off is there because a global key belongs to the whole machine and
+    /// somebody may already have that one.
+    public var quickCaptureEnabled: Bool
 
     public init(
         selectedDisplayName: String? = nil,
@@ -164,7 +170,8 @@ public struct GlobalSettings: Codable, Sendable {
         hideFromDock: Bool = false,
         units: UnitSystem = .localeDefault,
         theme: ThemeSettings = ThemeSettings(),
-        allowSystemPanels: Bool = false
+        allowSystemPanels: Bool = false,
+        quickCaptureEnabled: Bool = true
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
@@ -175,12 +182,14 @@ public struct GlobalSettings: Codable, Sendable {
         self.units = units
         self.theme = theme
         self.allowSystemPanels = allowSystemPanels
+        self.quickCaptureEnabled = quickCaptureEnabled
     }
 
     enum CodingKeys: String, CodingKey {
         case selectedDisplayName, kioskMode, launchAtLogin, debugMode
         case strictMonitorAffinity, hideFromDock, units, theme
         case allowSystemPanels
+        case quickCaptureEnabled
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -196,6 +205,7 @@ public struct GlobalSettings: Codable, Sendable {
         strictMonitorAffinity = try c.decodeIfPresent(Bool.self, forKey: .strictMonitorAffinity) ?? false
         hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
         units = try c.decodeIfPresent(UnitSystem.self, forKey: .units) ?? .localeDefault
+        quickCaptureEnabled = try c.decodeIfPresent(Bool.self, forKey: .quickCaptureEnabled) ?? true
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
         allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
     }
@@ -211,5 +221,6 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(units, forKey: .units)
         try c.encode(theme, forKey: .theme)
         try c.encode(allowSystemPanels, forKey: .allowSystemPanels)
+        try c.encode(quickCaptureEnabled, forKey: .quickCaptureEnabled)
     }
 }

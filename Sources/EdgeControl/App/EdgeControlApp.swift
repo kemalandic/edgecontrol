@@ -327,6 +327,10 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         // Cmd+Return: the "complete the item" convention (Obsidian, Todoist).
         formatMenu.addItem(
             NSMenuItem(title: "Toggle Checked", action: Selector(("toggleChecked:")), keyEquivalent: "\r"))
+        let remindersItem = NSMenuItem(
+            title: "Add to Reminders", action: Selector(("addToReminders:")), keyEquivalent: "r")
+        remindersItem.keyEquivalentModifierMask = [.command, .shift]
+        formatMenu.addItem(remindersItem)
         formatMenu.addItem(.separator())
         let bodyTextItem = NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0")
         bodyTextItem.keyEquivalentModifierMask = [.command, .shift]
@@ -399,6 +403,10 @@ enum EdgeControlExecutable {
 
         // Notes used to live inside the layout document; move any that still do.
         layoutEngine.migrateNotes(into: model.noteStore)
+
+        let quickCapture = QuickCaptureService(store: model.noteStore)
+        if layoutEngine.document.globalSettings.quickCaptureEnabled { quickCapture.start() }
+        model.quickCapture = quickCapture
 
         let pluginManager = PluginManager()
         pluginManager.discoverAndLoad()
