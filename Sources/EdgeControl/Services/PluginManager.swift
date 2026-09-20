@@ -68,17 +68,12 @@ public final class PluginManager: ObservableObject {
             return
         }
 
-        // Validate widgets have HTML files (with path traversal check).
-        //
-        // The prefix must carry the separator. Comparing against the bare bundle
-        // path lets a sibling directory whose name merely starts with the same
-        // characters satisfy it — "…/demo.ecplugin-evil/steal.html" has prefix
-        // "…/demo.ecplugin" while living outside the bundle entirely.
-        let bundleStd = bundlePath.standardizedFileURL.path
-        let bundlePrefix = bundleStd.hasSuffix("/") ? bundleStd : bundleStd + "/"
+        // Validate widgets have HTML files, and that each one stays inside the
+        // bundle. See PluginBundle.containedHTMLURL for what "inside" means.
         for widgetDef in manifest.widgets {
-            let htmlURL = bundlePath.appendingPathComponent(widgetDef.htmlFile).standardizedFileURL
-            guard htmlURL.path.hasPrefix(bundlePrefix) else {
+            guard let htmlURL = PluginBundle.containedHTMLURL(
+                bundlePath: bundlePath, htmlFile: widgetDef.htmlFile
+            ) else {
                 errors[manifest.id] = "Invalid widget HTML path: \(widgetDef.htmlFile)"
                 return
             }

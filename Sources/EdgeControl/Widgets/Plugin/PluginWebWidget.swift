@@ -355,10 +355,11 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
     /// Load the plugin's HTML file into the WebView.
     private func loadPluginHTML(into webView: WKWebView) {
-        let htmlURL = widget.bundlePath.appendingPathComponent(widget.htmlFile).standardizedFileURL
-        let bundlePath = widget.bundlePath.standardizedFileURL.path
-        // Verify HTML file is within the plugin bundle (prevent path traversal)
-        guard htmlURL.path.hasPrefix(bundlePath),
+        // Second line of defence: PluginManager refuses such a plugin at load
+        // time, but this view must not be the copy that trusts the manifest.
+        guard let htmlURL = PluginBundle.containedHTMLURL(
+                  bundlePath: widget.bundlePath, htmlFile: widget.htmlFile
+              ),
               FileManager.default.fileExists(atPath: htmlURL.path) else {
             webView.loadHTMLString(Self.errorHTML("Invalid or missing widget file"), baseURL: nil)
             return

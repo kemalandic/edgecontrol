@@ -171,6 +171,34 @@ public enum PluginConfigValue: Codable, Sendable {
 
 // MARK: - Loaded Plugin State
 
+/// Resolving a widget's HTML file against the bundle it must stay inside.
+///
+/// This lived as three hand-copied string comparisons — in PluginManager, in the
+/// WebView widget and in the desktop-widget snapshot path — and only one of them
+/// was ever correct. One place, three callers.
+public enum PluginBundle {
+    /// The URL of `htmlFile` inside `bundlePath`, or nil when it resolves
+    /// outside it.
+    ///
+    /// The prefix has to carry the separator: without it a sibling directory
+    /// whose name merely starts with the same characters passes, because
+    /// ".../demo.ecplugin-evil/x.html" does have the prefix ".../demo.ecplugin".
+    ///
+    /// Symlinks are resolved on both sides. Plugins are installed by extracting
+    /// an archive with `ditto`, which preserves links, so a link planted inside
+    /// the bundle would satisfy a purely textual check while pointing anywhere
+    /// on disk. Resolving both sides also keeps /var and /private/var from
+    /// looking like different roots.
+    public static func containedHTMLURL(bundlePath: URL, htmlFile: String) -> URL? {
+        let candidate = bundlePath.appendingPathComponent(htmlFile)
+            .standardizedFileURL.resolvingSymlinksInPath()
+        let root = bundlePath.standardizedFileURL.resolvingSymlinksInPath().path
+        let prefix = root.hasSuffix("/") ? root : root + "/"
+        guard candidate.path.hasPrefix(prefix) else { return nil }
+        return candidate
+    }
+}
+
 public struct LoadedPlugin: Identifiable, Sendable {
     public let manifest: PluginManifest
     public let bundlePath: URL

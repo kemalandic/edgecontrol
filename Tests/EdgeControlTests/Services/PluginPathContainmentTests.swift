@@ -108,6 +108,63 @@ struct PluginPathContainmentTests {
         }
     }
 
+    /// Plugins install by extracting an archive with `ditto`, which preserves
+    /// symlinks. A link planted inside the bundle satisfies any purely textual
+    /// prefix check while pointing anywhere on disk.
+    @Test("a symlink inside the bundle cannot lead out of it")
+    func symlinkEscapeRefused() throws {
+        try withTemporaryRoot { root in
+            let outside = root.appendingPathComponent("outside", isDirectory: true)
+            try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+            try Data("<html>outside the bundle</html>".utf8)
+                .write(to: outside.appendingPathComponent("steal.html"))
+
+            let bundle = try makeBundle(root: root, directoryName: "demo.ecplugin",
+                                        pluginId: "com.example.demo",
+                                        htmlFile: "out/steal.html")
+            try FileManager.default.createSymbolicLink(
+                at: bundle.appendingPathComponent("out"), withDestinationURL: outside)
+
+            let manager = PluginManager()
+            manager.loadPlugin(at: bundle)
+
+            #expect(manager.plugins.isEmpty, "a plugin reaching through a symlink was loaded")
+            #expect(manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
+                    "errors: \(manager.errors)")
+        }
+    }
+
+    // MARK: the helper itself
+
+    @Test("containedHTMLURL accepts a plain file and a nested one")
+    func helperAcceptsContainedPaths() {
+        let bundle = URL(fileURLWithPath: "/tmp/demo.ecplugin", isDirectory: true)
+        #expect(PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: "index.html") != nil)
+        #expect(PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: "pages/index.html") != nil)
+    }
+
+    @Test("containedHTMLURL refuses escapes", arguments: [
+        "../elsewhere/x.html",
+        "../demo.ecplugin-evil/x.html",
+        "",                              // resolves to the bundle directory itself
+    ])
+    func helperRefusesEscapes(htmlFile: String) {
+        let bundle = URL(fileURLWithPath: "/tmp/demo.ecplugin", isDirectory: true)
+        #expect(PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: htmlFile) == nil,
+                "accepted \(htmlFile)")
+    }
+
+    /// Worth pinning because it reads like a hole and is not one:
+    /// `appendingPathComponent` treats a leading slash as part of a relative
+    /// component, so an absolute htmlFile lands *inside* the bundle rather than
+    /// at the root. It is accepted here and then fails the existence check.
+    @Test("an absolute htmlFile is folded into the bundle, not followed")
+    func absolutePathIsFoldedIn() {
+        let bundle = URL(fileURLWithPath: "/tmp/demo.ecplugin", isDirectory: true)
+        let resolved = PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: "/etc/passwd")
+        #expect(resolved?.path == "/tmp/demo.ecplugin/etc/passwd")
+    }
+
     @Test("a plugin id containing path separators is refused")
     func unsafePluginIdRefused() throws {
         try withTemporaryRoot { root in

@@ -71,9 +71,13 @@ public final class PluginWidgetRenderer {
             guard let config = plugin.manifest.desktopWidget else { continue }
             guard let firstWidget = plugin.manifest.widgets.first else { continue }
 
-            let htmlURL = plugin.bundlePath.appendingPathComponent(firstWidget.htmlFile)
-            guard FileManager.default.fileExists(atPath: htmlURL.path) else {
-                logger.warning("Plugin \(plugin.id): HTML file not found at \(firstWidget.htmlFile)")
+            // This path had no containment check at all — it is handed straight
+            // to loadFileURL(_:allowingReadAccessTo:).
+            guard let htmlURL = PluginBundle.containedHTMLURL(
+                      bundlePath: plugin.bundlePath, htmlFile: firstWidget.htmlFile
+                  ),
+                  FileManager.default.fileExists(atPath: htmlURL.path) else {
+                logger.warning("Plugin \(plugin.id): HTML file missing or outside the bundle: \(firstWidget.htmlFile)")
                 continue
             }
 
