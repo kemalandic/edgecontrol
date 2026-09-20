@@ -34,6 +34,8 @@ struct WidgetConfigEditor: View {
             toggleRow(entry)
         case .picker:
             pickerRow(entry)
+        case .notePicker:
+            notePickerRow(entry)
         case .stepper:
             stepperRow(entry)
         case .slider:
@@ -44,6 +46,40 @@ struct WidgetConfigEditor: View {
             timeRow(entry)
         case .colorPicker:
             EmptyView()
+        }
+    }
+
+    // MARK: - Note picker
+
+    /// Lists the notes that exist and points the widget at one.
+    ///
+    /// "New note" is the empty id, which is what an unplaced widget carries —
+    /// the note is made the first time the widget draws itself, so choosing
+    /// it here means the same thing as adding a fresh widget.
+    private func notePickerRow(_ entry: ConfigSchemaEntry) -> some View {
+        let records = NoteStore().records()
+        let current = config.string(entry.key)
+
+        return HStack {
+            Text(entry.label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Picker(
+                "",
+                selection: Binding(
+                    get: { records.contains { $0.id == current } ? current : "" },
+                    set: { config[entry.key] = .string($0) }
+                )
+            ) {
+                Text("New note").tag("")
+                ForEach(records) { record in
+                    Text(record.title).tag(record.id)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(accent)
+            .frame(maxWidth: 200)
         }
     }
 

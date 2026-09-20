@@ -300,6 +300,11 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case slider
     case text
     case picker
+    /// A picker whose options are the notes that exist, so a widget can be
+    /// pointed at one that is already there — including the inbox that quick
+    /// capture writes to. The options cannot be part of the schema, which is
+    /// a constant, because the notes change while the app runs.
+    case notePicker
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time

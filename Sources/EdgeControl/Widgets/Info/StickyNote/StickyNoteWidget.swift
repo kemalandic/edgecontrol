@@ -17,6 +17,8 @@ public final class StickyNoteWidget: DashboardWidget {
     // and the widget holds its id. What is left here is how the note looks.
     public let configSchema: [ConfigSchemaEntry] = [
         ConfigSchemaEntry(
+            key: NoteMigration.idKey, label: "Note", type: .notePicker, defaultValue: .string("")),
+        ConfigSchemaEntry(
             key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
             options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
         ConfigSchemaEntry(
