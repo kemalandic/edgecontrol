@@ -40,7 +40,8 @@ struct HistoryGraphView: View {
                         )
 
                     linePath(in: geo.size)
-                        .stroke(color, style: StrokeStyle(lineWidth: isCompact ? 2 : 3, lineCap: .round, lineJoin: .round))
+                        .stroke(
+                            color, style: StrokeStyle(lineWidth: isCompact ? 2 : 3, lineCap: .round, lineJoin: .round))
 
                     if showCurrentDot, let last = history.last {
                         let x = w
@@ -75,9 +76,10 @@ struct HistoryGraphView: View {
                     let px = CGFloat(i - 1) * stepX
                     let py = size.height * (1 - history[i - 1])
                     let mx = (px + x) / 2
-                    path.addCurve(to: CGPoint(x: x, y: y),
-                                  control1: CGPoint(x: mx, y: py),
-                                  control2: CGPoint(x: mx, y: y))
+                    path.addCurve(
+                        to: CGPoint(x: x, y: y),
+                        control1: CGPoint(x: mx, y: py),
+                        control2: CGPoint(x: mx, y: y))
                 }
             }
         }
@@ -97,9 +99,10 @@ struct HistoryGraphView: View {
                     let px = CGFloat(i - 1) * stepX
                     let py = size.height * (1 - history[i - 1])
                     let mx = (px + x) / 2
-                    path.addCurve(to: CGPoint(x: x, y: y),
-                                  control1: CGPoint(x: mx, y: py),
-                                  control2: CGPoint(x: mx, y: y))
+                    path.addCurve(
+                        to: CGPoint(x: x, y: y),
+                        control1: CGPoint(x: mx, y: py),
+                        control2: CGPoint(x: mx, y: y))
                 }
             }
             path.addLine(to: CGPoint(x: CGFloat(history.count - 1) * stepX, y: size.height))

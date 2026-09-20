@@ -78,7 +78,8 @@ extension CICDSettings {
     /// unreadable — a corrupt preference should not leave the widget unusable.
     public static func load(from defaults: UserDefaults = .standard) -> CICDSettings {
         guard let data = defaults.data(forKey: defaultsKey),
-              let decoded = try? JSONDecoder().decode(CICDSettings.self, from: data) else {
+            let decoded = try? JSONDecoder().decode(CICDSettings.self, from: data)
+        else {
             return .default
         }
         return decoded

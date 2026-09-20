@@ -14,21 +14,21 @@ struct PluginManifestTests {
     }
 
     private let wellFormed = """
-    {
-      "id": "com.example.demo",
-      "name": "Demo",
-      "version": "1.0.0",
-      "author": "Someone",
-      "permissions": ["system-metrics"],
-      "widgets": [{
-        "id": "demo",
-        "name": "Demo Widget",
-        "htmlFile": "index.html",
-        "supportedSizes": { "min": [2, 2], "max": [6, 4] },
-        "defaultSize": [4, 3]
-      }]
-    }
-    """
+        {
+          "id": "com.example.demo",
+          "name": "Demo",
+          "version": "1.0.0",
+          "author": "Someone",
+          "permissions": ["system-metrics"],
+          "widgets": [{
+            "id": "demo",
+            "name": "Demo Widget",
+            "htmlFile": "index.html",
+            "supportedSizes": { "min": [2, 2], "max": [6, 4] },
+            "defaultSize": [4, 3]
+          }]
+        }
+        """
 
     // MARK: the happy path, so the adversarial cases mean something
 
@@ -59,8 +59,9 @@ struct PluginManifestTests {
         #expect(throws: (any Error).self) { try decode("[]") }
     }
 
-    @Test("each required field is genuinely required",
-          arguments: ["id", "name", "version", "author", "widgets"])
+    @Test(
+        "each required field is genuinely required",
+        arguments: ["id", "name", "version", "author", "widgets"])
     func requiredFieldsAreRequired(field: String) throws {
         var object = try JSONSerialization.jsonObject(with: Data(wellFormed.utf8)) as! [String: Any]
         object.removeValue(forKey: field)
@@ -80,17 +81,19 @@ struct PluginManifestTests {
 
     /// `widgetSize` and `sizeRange` read fixed positions out of arrays the
     /// plugin author supplies. Short or empty arrays must fall back, never trap.
-    @Test("short and empty size arrays fall back instead of trapping",
-          arguments: ["[]", "[7]"])
+    @Test(
+        "short and empty size arrays fall back instead of trapping",
+        arguments: ["[]", "[7]"])
     func shortSizeArraysFallBack(defaultSize: String) throws {
-        let json = wellFormed.replacingOccurrences(of: "\"defaultSize\": [4, 3]",
-                                                   with: "\"defaultSize\": \(defaultSize)")
+        let json = wellFormed.replacingOccurrences(
+            of: "\"defaultSize\": [4, 3]",
+            with: "\"defaultSize\": \(defaultSize)")
         let widget = try decode(json).widgets[0]
         let size = widget.widgetSize
         if defaultSize == "[]" {
-            #expect(size == .size(4, 3))   // both defaults
+            #expect(size == .size(4, 3))  // both defaults
         } else {
-            #expect(size == .size(7, 3))   // width given, height defaulted
+            #expect(size == .size(7, 3))  // width given, height defaulted
         }
     }
 
@@ -109,8 +112,9 @@ struct PluginManifestTests {
     /// ever grows validation, this test is where the change gets noticed.
     @Test("negative and absurd sizes are currently accepted, not validated")
     func extremeSizesAreNotValidated() throws {
-        let json = wellFormed.replacingOccurrences(of: "\"defaultSize\": [4, 3]",
-                                                   with: "\"defaultSize\": [-5, 99999]")
+        let json = wellFormed.replacingOccurrences(
+            of: "\"defaultSize\": [4, 3]",
+            with: "\"defaultSize\": [-5, 99999]")
         #expect(try decode(json).widgets[0].widgetSize == .size(-5, 99999))
     }
 
@@ -120,8 +124,9 @@ struct PluginManifestTests {
     /// a plugin built against a newer app cannot be partially loaded here.
     @Test("an unrecognised permission rejects the entire manifest")
     func unknownPermissionRejectsManifest() {
-        let json = wellFormed.replacingOccurrences(of: "\"system-metrics\"",
-                                                   with: "\"launch-missiles\"")
+        let json = wellFormed.replacingOccurrences(
+            of: "\"system-metrics\"",
+            with: "\"launch-missiles\"")
         #expect(throws: (any Error).self) { try decode(json) }
     }
 
@@ -139,9 +144,9 @@ struct PluginManifestTests {
             let json = wellFormed.replacingOccurrences(
                 of: "\"defaultSize\": [4, 3]",
                 with: """
-                "defaultSize": [4, 3],
-                "configSchema": [{"key": "k", "label": "L", "type": "\(check)", "default": \(literal)}]
-                """)
+                    "defaultSize": [4, 3],
+                    "configSchema": [{"key": "k", "label": "L", "type": "\(check)", "default": \(literal)}]
+                    """)
             let field = try decode(json).widgets[0].configSchema?.first
             #expect(field != nil, "\(literal) did not decode")
         }
@@ -152,9 +157,9 @@ struct PluginManifestTests {
         let json = wellFormed.replacingOccurrences(
             of: "\"defaultSize\": [4, 3]",
             with: """
-            "defaultSize": [4, 3],
-            "configSchema": [{"key": "k", "label": "L", "type": "string", "default": null}]
-            """)
+                "defaultSize": [4, 3],
+                "configSchema": [{"key": "k", "label": "L", "type": "string", "default": null}]
+                """)
         #expect(throws: (any Error).self) { try decode(json) }
     }
 
@@ -163,9 +168,9 @@ struct PluginManifestTests {
         let json = wellFormed.replacingOccurrences(
             of: "\"defaultSize\": [4, 3]",
             with: """
-            "defaultSize": [4, 3],
-            "configSchema": [{"key": "k", "label": "L", "type": "string", "default": {"nested": 1}}]
-            """)
+                "defaultSize": [4, 3],
+                "configSchema": [{"key": "k", "label": "L", "type": "string", "default": {"nested": 1}}]
+                """)
         #expect(throws: (any Error).self) { try decode(json) }
     }
 
@@ -186,8 +191,9 @@ struct PluginManifestTests {
 
     @Test("a traversal path in htmlFile decodes — nothing here rejects it")
     func traversalPathPassesThroughManifest() throws {
-        let json = wellFormed.replacingOccurrences(of: "\"index.html\"",
-                                                   with: "\"../../../../etc/passwd\"")
+        let json = wellFormed.replacingOccurrences(
+            of: "\"index.html\"",
+            with: "\"../../../../etc/passwd\"")
         #expect(try decode(json).widgets[0].htmlFile == "../../../../etc/passwd")
     }
 }

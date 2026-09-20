@@ -40,7 +40,8 @@ public final class AudioService: ObservableObject {
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        AudioObjectRemovePropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &dAddr, DispatchQueue.main, block)
+        AudioObjectRemovePropertyListenerBlock(
+            AudioObjectID(kAudioObjectSystemObject), &dAddr, DispatchQueue.main, block)
         deviceChangeListenerBlock = nil
         deviceListenerInstalled = false
     }
@@ -97,7 +98,8 @@ public final class AudioService: ObservableObject {
                 mScope: kAudioObjectPropertyScopeGlobal,
                 mElement: kAudioObjectPropertyElementMain
             )
-            AudioObjectAddPropertyListenerBlock(AudioObjectID(kAudioObjectSystemObject), &dAddr, DispatchQueue.main, devBlock)
+            AudioObjectAddPropertyListenerBlock(
+                AudioObjectID(kAudioObjectSystemObject), &dAddr, DispatchQueue.main, devBlock)
             deviceListenerInstalled = true
         }
     }
@@ -137,7 +139,8 @@ public final class AudioService: ObservableObject {
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        let result = AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &deviceID)
+        let result = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, &deviceID)
         if result == noErr {
             defaultDeviceID = deviceID
         }
@@ -152,13 +155,19 @@ public final class AudioService: ObservableObject {
     }
 
     private func readVolume() -> Float? {
-        if let vol = getFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 0) {
+        if let vol = getFloat32Property(
+            kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 0)
+        {
             return vol
         }
-        if let vol = getFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 1) {
+        if let vol = getFloat32Property(
+            kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 1)
+        {
             return vol
         }
-        if let vol = getFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 2) {
+        if let vol = getFloat32Property(
+            kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 2)
+        {
             return vol
         }
         return nil
@@ -186,7 +195,8 @@ public final class AudioService: ObservableObject {
             mElement: kAudioObjectPropertyElementMain
         )
         guard AudioObjectGetPropertyData(defaultDeviceID, &address, 0, nil, &size, &name) == noErr,
-              let name else { return "Unknown" }
+            let name
+        else { return "Unknown" }
         return name.takeRetainedValue() as String
     }
 
@@ -195,9 +205,13 @@ public final class AudioService: ObservableObject {
     public func setVolume(_ newVolume: Float) {
         let clamped = max(0, min(1, newVolume))
         guard defaultDeviceID != 0 else { return }
-        if !setFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 0, value: clamped) {
-            setFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 1, value: clamped)
-            setFloat32Property(kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 2, value: clamped)
+        if !setFloat32Property(
+            kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 0, value: clamped)
+        {
+            setFloat32Property(
+                kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 1, value: clamped)
+            setFloat32Property(
+                kAudioDevicePropertyVolumeScalar, scope: kAudioDevicePropertyScopeOutput, channel: 2, value: clamped)
         }
         volume = clamped
     }
@@ -226,7 +240,9 @@ public final class AudioService: ObservableObject {
 
     // MARK: - Helpers
 
-    private func getFloat32Property(_ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32) -> Float? {
+    private func getFloat32Property(
+        _ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32
+    ) -> Float? {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: channel)
         guard AudioObjectHasProperty(defaultDeviceID, &address) else { return nil }
         var value: Float32 = 0
@@ -235,7 +251,9 @@ public final class AudioService: ObservableObject {
         return result == noErr ? value : nil
     }
 
-    private func getUInt32Property(_ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32) -> UInt32? {
+    private func getUInt32Property(
+        _ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32
+    ) -> UInt32? {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: channel)
         guard AudioObjectHasProperty(defaultDeviceID, &address) else { return nil }
         var value: UInt32 = 0
@@ -245,7 +263,9 @@ public final class AudioService: ObservableObject {
     }
 
     @discardableResult
-    private func setFloat32Property(_ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32, value: Float) -> Bool {
+    private func setFloat32Property(
+        _ selector: AudioObjectPropertySelector, scope: AudioObjectPropertyScope, channel: UInt32, value: Float
+    ) -> Bool {
         var address = AudioObjectPropertyAddress(mSelector: selector, mScope: scope, mElement: channel)
         guard AudioObjectHasProperty(defaultDeviceID, &address) else { return false }
         var val = value

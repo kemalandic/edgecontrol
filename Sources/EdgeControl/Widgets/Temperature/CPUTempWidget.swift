@@ -11,7 +11,7 @@ public final class CPUTempWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(85)),
+        ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(85))
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 
@@ -46,7 +46,7 @@ public final class GPUTempWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(90)),
+        ConfigSchemaEntry(key: "warningThreshold", label: "Warning Threshold", type: .stepper, defaultValue: .int(90))
     ]
     public let defaultColors = WidgetColors(primary: .orange)
 

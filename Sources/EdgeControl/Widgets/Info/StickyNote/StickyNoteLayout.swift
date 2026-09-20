@@ -85,7 +85,8 @@ struct StickyNoteLayout {
     /// The other half of the round trip: the level a style was built with.
     func indentLevel(of style: NSParagraphStyle?, isList: Bool) -> Int {
         guard let style else { return 0 }
-        let base = isList
+        let base =
+            isList
             ? (style.tabStops.first?.location ?? listTextIndent) - listTextIndent
             : style.firstLineHeadIndent
         return max(0, min(maxIndentLevel, Int((base / indentStep).rounded())))

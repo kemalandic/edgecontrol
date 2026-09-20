@@ -61,7 +61,8 @@ public enum WindowPlacement {
         // window's screen; at .statusBar (25) the kiosk buries them
         // invisibly. One notch below lets them through, at the cost of the
         // menu bar being able to draw over the dashboard.
-        window.level = allowSystemPanels
+        window.level =
+            allowSystemPanels
             ? NSWindow.Level(NSWindow.Level.mainMenu.rawValue - 1)
             : .statusBar
         window.collectionBehavior = [.canJoinAllSpaces, .stationary]

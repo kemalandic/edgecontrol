@@ -36,7 +36,8 @@ public final class PluginStorageService {
         store[key] = value
         // Enforce size limit
         if let data = try? JSONSerialization.data(withJSONObject: store),
-           data.count > Self.maxStorageBytes {
+            data.count > Self.maxStorageBytes
+        {
             PluginFileLogger.log(pluginId, "STORAGE REJECTED: exceeds 1MB limit")
             return
         }
@@ -71,7 +72,8 @@ public final class PluginStorageService {
 
         let url = storageURL(pluginId: pluginId)
         guard let data = try? Data(contentsOf: url),
-              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
             cache[pluginId] = [:]
             return [:]
         }

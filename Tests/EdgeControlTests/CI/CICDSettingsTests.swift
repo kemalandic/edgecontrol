@@ -33,13 +33,13 @@ final class CICDSettingsTests: XCTestCase {
     func testLegacyUnqualifiedListsAreDroppedWithoutLosingOtherSettings() throws {
         let defaults = suite()
         let legacy = #"""
-        {
-          "pollInterval": 90,
-          "activityWindowDays": 30,
-          "pinnedRepositories": ["acme/old"],
-          "hiddenRepositories": ["acme/noisy"]
-        }
-        """#
+            {
+              "pollInterval": 90,
+              "activityWindowDays": 30,
+              "pinnedRepositories": ["acme/old"],
+              "hiddenRepositories": ["acme/noisy"]
+            }
+            """#
         defaults.set(Data(legacy.utf8), forKey: "cicd.settings")
 
         let loaded = CICDSettings.load(from: defaults)

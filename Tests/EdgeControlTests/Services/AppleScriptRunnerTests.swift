@@ -31,8 +31,9 @@ struct AppleScriptRunnerTests {
     /// the everyday case, not an edge case.
     @Test("Round-trips non-ASCII text")
     func roundTripsUnicode() {
-        #expect(AppleScriptRunner.run(#"return "Saçına Çiçek Taksam — ğüşıöç""#)
-            == .success("Saçına Çiçek Taksam — ğüşıöç"))
+        #expect(
+            AppleScriptRunner.run(#"return "Saçına Çiçek Taksam — ğüşıöç""#)
+                == .success("Saçına Çiçek Taksam — ğüşıöç"))
     }
 
     @Test("A script that raises an error is reported as failed")
@@ -60,12 +61,12 @@ struct AppleScriptRunnerTests {
     func resultLargerThanPipeBuffer() {
         // 10 * 2^14 = 163,840 characters, comfortably past the buffer.
         let script = """
-        set chunk to "0123456789"
-        repeat 14 times
-            set chunk to chunk & chunk
-        end repeat
-        return chunk
-        """
+            set chunk to "0123456789"
+            repeat 14 times
+                set chunk to chunk & chunk
+            end repeat
+            return chunk
+            """
         let result = AppleScriptRunner.run(script, timeout: 10)
 
         switch result {

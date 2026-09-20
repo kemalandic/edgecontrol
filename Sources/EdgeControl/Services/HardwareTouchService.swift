@@ -7,7 +7,8 @@ import IOKit.hid
 
 private enum TouchLogger {
     private static let logURL: URL = {
-        let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first
+        let base =
+            FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library", isDirectory: true)
         let directory = base.appendingPathComponent("Logs/EdgeControl", isDirectory: true)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -19,18 +20,20 @@ private enum TouchLogger {
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
-    private static let maxLogSize = 5_242_880 // 5 MB
+    private static let maxLogSize = 5_242_880  // 5 MB
 
     static func log(_ message: String) {
         // Rotate if exceeds 5 MB
         if let attrs = try? FileManager.default.attributesOfItem(atPath: logURL.path),
-           let size = attrs[.size] as? UInt64, size > maxLogSize {
+            let size = attrs[.size] as? UInt64, size > maxLogSize
+        {
             try? FileManager.default.removeItem(at: logURL)
         }
         let line = "[\(formatter.string(from: Date()))] \(message)\n"
         guard let data = line.data(using: .utf8) else { return }
         if FileManager.default.fileExists(atPath: logURL.path),
-           let handle = try? FileHandle(forWritingTo: logURL) {
+            let handle = try? FileHandle(forWritingTo: logURL)
+        {
             _ = try? handle.seekToEnd()
             try? handle.write(contentsOf: data)
             try? handle.close()
@@ -73,39 +76,45 @@ final class HIDTouchInputSource: NSObject, TouchInputSource {
                 kIOHIDVendorIDKey as String: vendorID,
                 kIOHIDProductIDKey as String: productID,
                 kIOHIDPrimaryUsagePageKey as String: 1,
-                kIOHIDPrimaryUsageKey as String: 2
+                kIOHIDPrimaryUsageKey as String: 2,
             ],
             [
                 kIOHIDVendorIDKey as String: vendorID,
                 kIOHIDProductIDKey as String: productID,
                 kIOHIDPrimaryUsagePageKey as String: 13,
-                kIOHIDPrimaryUsageKey as String: 4
+                kIOHIDPrimaryUsageKey as String: 4,
             ],
             [
                 kIOHIDVendorIDKey as String: vendorID,
                 kIOHIDProductIDKey as String: productID,
                 kIOHIDPrimaryUsagePageKey as String: 65290,
-                kIOHIDPrimaryUsageKey as String: 255
-            ]
+                kIOHIDPrimaryUsageKey as String: 255,
+            ],
         ]
 
         IOHIDManagerSetDeviceMatchingMultiple(manager, matchings as CFArray)
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
 
-        IOHIDManagerRegisterInputValueCallback(manager, { context, _, _, value in
-            guard let context else { return }
-            Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().handle(value: value)
-        }, Unmanaged.passUnretained(self).toOpaque())
+        IOHIDManagerRegisterInputValueCallback(
+            manager,
+            { context, _, _, value in
+                guard let context else { return }
+                Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().handle(value: value)
+            }, Unmanaged.passUnretained(self).toOpaque())
 
-        IOHIDManagerRegisterDeviceMatchingCallback(manager, { context, _, _, _ in
-            guard let context else { return }
-            Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().openMatchedDevicesIfNeeded()
-        }, Unmanaged.passUnretained(self).toOpaque())
+        IOHIDManagerRegisterDeviceMatchingCallback(
+            manager,
+            { context, _, _, _ in
+                guard let context else { return }
+                Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().openMatchedDevicesIfNeeded()
+            }, Unmanaged.passUnretained(self).toOpaque())
 
-        IOHIDManagerRegisterDeviceRemovalCallback(manager, { context, _, _, _ in
-            guard let context else { return }
-            Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().refreshOpenStatus()
-        }, Unmanaged.passUnretained(self).toOpaque())
+        IOHIDManagerRegisterDeviceRemovalCallback(
+            manager,
+            { context, _, _, _ in
+                guard let context else { return }
+                Unmanaged<HIDTouchInputSource>.fromOpaque(context).takeUnretainedValue().refreshOpenStatus()
+            }, Unmanaged.passUnretained(self).toOpaque())
 
         let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
         if result != kIOReturnSuccess {
@@ -311,7 +320,8 @@ public final class HardwareTouchService: ObservableObject {
         if !sample.pressed && wasPressed {
             // Touch release — classify as tap or swipe
             if let startPoint = touchStartPoint,
-               let startTime = touchStartTime {
+                let startTime = touchStartTime
+            {
                 let rawPoint = CGPoint(x: latestSample.x, y: latestSample.y)
                 if let endPoint = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
                     let dx = endPoint.x - startPoint.x

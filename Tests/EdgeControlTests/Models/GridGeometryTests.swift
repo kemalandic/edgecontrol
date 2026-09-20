@@ -97,9 +97,9 @@ struct GridGeometryTests {
     @Test("a size outside either dimension is rejected")
     func outsideEitherDimensionRejected() {
         let range = WidgetSizeRange(min: .size(3, 2), max: .size(6, 4))
-        #expect(!range.contains(.size(2, 3)))   // too narrow
-        #expect(!range.contains(.size(7, 3)))   // too wide
-        #expect(!range.contains(.size(4, 1)))   // too short
-        #expect(!range.contains(.size(4, 5)))   // too tall
+        #expect(!range.contains(.size(2, 3)))  // too narrow
+        #expect(!range.contains(.size(7, 3)))  // too wide
+        #expect(!range.contains(.size(4, 1)))  // too short
+        #expect(!range.contains(.size(4, 5)))  // too tall
     }
 }

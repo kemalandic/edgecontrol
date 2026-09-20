@@ -32,9 +32,9 @@ public enum HostLoad {
             now >= before ? Double(now - before) : nil
         }
         guard let user = delta(current.user, previous.user),
-              let system = delta(current.system, previous.system),
-              let idle = delta(current.idle, previous.idle),
-              let nice = delta(current.nice, previous.nice)
+            let system = delta(current.system, previous.system),
+            let idle = delta(current.idle, previous.idle),
+            let nice = delta(current.nice, previous.nice)
         else { return nil }
 
         let total = user + system + idle + nice

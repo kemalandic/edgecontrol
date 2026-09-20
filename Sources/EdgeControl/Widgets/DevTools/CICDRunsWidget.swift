@@ -40,11 +40,11 @@ extension CIError {
     /// Short, non-technical text for the widget.
     var widgetMessage: String {
         switch self {
-        case .unauthorized:         return "authentication failed"
-        case .rateLimited:          return "rate limited"
-        case .unreachable:          return "unreachable"
+        case .unauthorized: return "authentication failed"
+        case .rateLimited: return "rate limited"
+        case .unreachable: return "unreachable"
         case .httpStatus(let code): return "server error \(code)"
-        case .decoding:             return "unexpected response"
+        case .decoding: return "unexpected response"
         }
     }
 }
@@ -246,22 +246,22 @@ private struct CICDRunsWidgetView: View {
 
     private func statusColor(_ run: CIRun) -> Color {
         switch run.state {
-        case .running, .queued:              return Theme.accentYellow
-        case .success:                       return Theme.accentGreen
-        case .failure:                       return Theme.accentRed
+        case .running, .queued: return Theme.accentYellow
+        case .success: return Theme.accentGreen
+        case .failure: return Theme.accentRed
         case .cancelled, .skipped, .unknown: return Theme.text3(ts)
         }
     }
 
     private func statusLabel(_ run: CIRun) -> String {
         switch run.state {
-        case .running:   return "RUNNING"
-        case .queued:    return "QUEUED"
-        case .success:   return "PASS"
-        case .failure:   return "FAIL"
+        case .running: return "RUNNING"
+        case .queued: return "QUEUED"
+        case .success: return "PASS"
+        case .failure: return "FAIL"
         case .cancelled: return "CANCEL"
-        case .skipped:   return "SKIP"
-        case .unknown:   return "—"
+        case .skipped: return "SKIP"
+        case .unknown: return "—"
         }
     }
 }

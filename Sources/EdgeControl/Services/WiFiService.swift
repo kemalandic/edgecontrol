@@ -4,9 +4,9 @@ import Foundation
 @MainActor
 public final class WiFiService: ObservableObject {
     @Published public var ssid: String?
-    @Published public var signalStrength: Int = 0 // rssi dBm
+    @Published public var signalStrength: Int = 0  // rssi dBm
     @Published public var channel: Int = 0
-    @Published public var txRate: Double = 0 // Mbps
+    @Published public var txRate: Double = 0  // Mbps
     @Published public var security: String = ""
     @Published public var bssid: String?
     @Published public var isConnected: Bool = false

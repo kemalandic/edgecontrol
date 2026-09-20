@@ -56,7 +56,8 @@ final class CICDImportPromptController {
                     // and an unvalidated token would be stored even if dead.
                     var resolved = account
                     do {
-                        let identity = try await CICDSettingsView
+                        let identity =
+                            try await CICDSettingsView
                             .makeProvider(account, token: candidate.token)
                             .validate()
                         resolved.username = identity.login

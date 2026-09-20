@@ -41,7 +41,9 @@ public enum ByteRate {
     /// Monotonic seconds since a previous reading, for callers measuring their
     /// own sample interval. Wall-clock time would let an NTP step turn one
     /// sample into a nonsense rate.
-    public static func elapsedSeconds(since previous: UInt64, now: UInt64 = DispatchTime.now().uptimeNanoseconds) -> TimeInterval {
+    public static func elapsedSeconds(
+        since previous: UInt64, now: UInt64 = DispatchTime.now().uptimeNanoseconds
+    ) -> TimeInterval {
         guard now > previous else { return 0 }
         return Double(now - previous) / 1_000_000_000
     }

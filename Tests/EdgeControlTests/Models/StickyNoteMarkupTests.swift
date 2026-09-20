@@ -69,9 +69,11 @@ struct StickyNoteMarkupTests {
 
     /// Storage keeps checkboxes as characters and the view draws them, so both
     /// spellings turn up depending on whether the note has been normalised yet.
-    @Test("a checkbox reads the same drawn or stored", arguments: [
-        "\u{FFFC}", "☐", "☑",
-    ])
+    @Test(
+        "a checkbox reads the same drawn or stored",
+        arguments: [
+            "\u{FFFC}", "☐", "☑",
+        ])
     func storedAndDrawnCheckboxes(head: String) {
         #expect(StickyNoteMarkup.marker(of: head + "\t x") == .checkbox)
         #expect(StickyNoteMarkup.marker(of: head + "\u{00A0}x") == .checkbox)
@@ -89,26 +91,32 @@ struct StickyNoteMarkupTests {
     /// removes it rather than leaving an orphan bullet, so every spelling of
     /// "nothing but a marker" has to be recognised — the editor used to carry a
     /// hand-written list of ten of them.
-    @Test("every empty marker form is recognised", arguments: [
-        "•", "•\t", "•\u{00A0}",
-        "☐", "☐\u{00A0}", "☑", "☑\u{00A0}",
-        "\u{FFFC}", "\u{FFFC}\t", "\u{FFFC}\u{00A0}",
-        "1.", "1.\t", "12.\u{00A0}",
-    ])
+    @Test(
+        "every empty marker form is recognised",
+        arguments: [
+            "•", "•\t", "•\u{00A0}",
+            "☐", "☐\u{00A0}", "☑", "☑\u{00A0}",
+            "\u{FFFC}", "\u{FFFC}\t", "\u{FFFC}\u{00A0}",
+            "1.", "1.\t", "12.\u{00A0}",
+        ])
     func bareMarkers(line: String) {
         #expect(StickyNoteMarkup.isBareMarker(line), "not recognised as bare: \(line.debugDescription)")
     }
 
-    @Test("a marker with text after it is not bare", arguments: [
-        "•\tmilk", "\u{FFFC}\ttodo", "1.\tfirst", "☑\u{00A0}done",
-    ])
+    @Test(
+        "a marker with text after it is not bare",
+        arguments: [
+            "•\tmilk", "\u{FFFC}\ttodo", "1.\tfirst", "☑\u{00A0}done",
+        ])
     func filledMarkersAreNotBare(line: String) {
         #expect(StickyNoteMarkup.isBareMarker(line) == false)
     }
 
-    @Test("ordinary text is not a bare marker", arguments: [
-        "", "hello", "a.", ".", "1998", "-",
-    ])
+    @Test(
+        "ordinary text is not a bare marker",
+        arguments: [
+            "", "hello", "a.", ".", "1998", "-",
+        ])
     func textIsNotBare(line: String) {
         #expect(StickyNoteMarkup.isBareMarker(line) == false)
     }
@@ -130,16 +138,20 @@ struct StickyNoteMarkupTests {
 
     /// Return on an empty item ends the list instead of making another empty
     /// one, so this is the check behind that behaviour.
-    @Test("an item with only its marker counts as empty", arguments: [
-        "•\t", "\u{FFFC}\t", "3.\t", "•\t   ",
-    ])
+    @Test(
+        "an item with only its marker counts as empty",
+        arguments: [
+            "•\t", "\u{FFFC}\t", "3.\t", "•\t   ",
+        ])
     func emptyItems(line: String) {
         #expect(StickyNoteMarkup.hasContentAfterMarker(line) == false)
     }
 
-    @Test("an item with text counts as filled", arguments: [
-        "•\tmilk", "\u{FFFC}\tcall the bank", "3.\tthird",
-    ])
+    @Test(
+        "an item with text counts as filled",
+        arguments: [
+            "•\tmilk", "\u{FFFC}\tcall the bank", "3.\tthird",
+        ])
     func filledItems(line: String) {
         #expect(StickyNoteMarkup.hasContentAfterMarker(line))
     }
@@ -185,11 +197,11 @@ struct StickyNoteMarkupTests {
     @Test("nesting keeps a count per level")
     func nestedList() {
         let numbers = StickyNoteMarkup.renumber([
-            (0, 1),   // 1
-            (1, 1),   //   1
-            (1, 1),   //   2
-            (0, 1),   // 2
-            (0, 1),   // 3
+            (0, 1),  // 1
+            (1, 1),  //   1
+            (1, 1),  //   2
+            (0, 1),  // 2
+            (0, 1),  // 3
         ])
         #expect(numbers == [1, 1, 2, 2, 3])
     }
@@ -212,9 +224,11 @@ struct StickyNoteMarkupTests {
     /// The bug this rule exists for. Typing "1998. " while writing about a year
     /// is ordinary prose, and it used to become item 1998 of a list — the
     /// conversion fires on the space, so there was nothing deliberate about it.
-    @Test("a year in prose does not start a list", arguments: [
-        "1998.", "2026.", "1066.", "42.",
-    ])
+    @Test(
+        "a year in prose does not start a list",
+        arguments: [
+            "1998.", "2026.", "1066.", "42.",
+        ])
     func proseNumbersDoNotStartLists(typed: String) {
         #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: false) == false)
     }
@@ -232,28 +246,34 @@ struct StickyNoteMarkupTests {
         #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: true))
     }
 
-    @Test("what is not a number does not start a list", arguments: [
-        "", ".", "a.", "1", "1.5.", "123456.",
-    ])
+    @Test(
+        "what is not a number does not start a list",
+        arguments: [
+            "", ".", "a.", "1", "1.5.", "123456.",
+        ])
     func nonNumbersDoNotStart(typed: String) {
         #expect(StickyNoteMarkup.startsOrderedList(typed, continuingExistingItem: true) == false)
     }
 
     // MARK: links
 
-    @Test("http and https with a host are links", arguments: [
-        "https://example.com", "http://example.com/path?q=1", "https://example.com:8443/x",
-    ])
+    @Test(
+        "http and https with a host are links",
+        arguments: [
+            "https://example.com", "http://example.com/path?q=1", "https://example.com:8443/x",
+        ])
     func validLinks(text: String) {
         #expect(StickyNoteMarkup.isWebLink(text))
     }
 
     /// Narrow on purpose. A file: or javascript: URL pasted into a note is not
     /// something this editor should turn into something clickable.
-    @Test("anything else is text", arguments: [
-        "example.com", "ftp://example.com", "file:///etc/passwd",
-        "javascript:alert(1)", "https://", "two words", "", "mailto:a@b.c",
-    ])
+    @Test(
+        "anything else is text",
+        arguments: [
+            "example.com", "ftp://example.com", "file:///etc/passwd",
+            "javascript:alert(1)", "https://", "two words", "", "mailto:a@b.c",
+        ])
     func nonLinks(text: String) {
         #expect(StickyNoteMarkup.isWebLink(text) == false)
     }

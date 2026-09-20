@@ -52,7 +52,8 @@ struct PageManagerView: View {
 
             // Right: selected page widget list
             if let pageId = selectedPageId,
-               let page = layoutEngine.document.pages.first(where: { $0.id == pageId }) {
+                let page = layoutEngine.document.pages.first(where: { $0.id == pageId })
+            {
                 pageWidgetList(page)
             } else {
                 VStack {
@@ -279,146 +280,162 @@ struct PageManagerView: View {
         let rows = layoutEngine.document.grid.rows
 
         return VStack(spacing: 0) {
-        HStack(spacing: 10) {
-            // Widget icon + name
-            Image(systemName: meta?.iconName ?? "square")
-                .font(.system(size: 14))
-                .foregroundStyle(accent)
-                .frame(width: 20)
+            HStack(spacing: 10) {
+                // Widget icon + name
+                Image(systemName: meta?.iconName ?? "square")
+                    .font(.system(size: 14))
+                    .foregroundStyle(accent)
+                    .frame(width: 20)
 
-            Text(meta?.displayName ?? placement.widgetId)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
-                .lineLimit(1)
+                Text(meta?.displayName ?? placement.widgetId)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
 
-            Spacer()
+                Spacer()
 
-            // Position controls
-            HStack(spacing: 3) {
-                Text("Col")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                stepperButton(systemName: "minus", size: 10) {
-                    if placement.col > 0 {
-                        layoutEngine.moveWidget(pageId: pageId, instanceId: placement.instanceId, toCol: placement.col - 1, toRow: placement.row)
-                    }
-                }
-                Text("\(placement.col)")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Theme.accentYellow)
-                    .frame(width: 18)
-                stepperButton(systemName: "plus", size: 10) {
-                    if placement.col + placement.width < cols {
-                        layoutEngine.moveWidget(pageId: pageId, instanceId: placement.instanceId, toCol: placement.col + 1, toRow: placement.row)
-                    }
-                }
-
-                Rectangle().fill(Theme.borderSubtle).frame(width: 1, height: 14).padding(.horizontal, 2)
-
-                Text("Row")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-                stepperButton(systemName: "minus", size: 10) {
-                    if placement.row > 0 {
-                        layoutEngine.moveWidget(pageId: pageId, instanceId: placement.instanceId, toCol: placement.col, toRow: placement.row - 1)
-                    }
-                }
-                Text("\(placement.row)")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Theme.accentYellow)
-                    .frame(width: 18)
-                stepperButton(systemName: "plus", size: 10) {
-                    if placement.row + placement.height < rows {
-                        layoutEngine.moveWidget(pageId: pageId, instanceId: placement.instanceId, toCol: placement.col, toRow: placement.row + 1)
-                    }
-                }
-            }
-
-            Rectangle().fill(Theme.borderSubtle).frame(width: 1, height: 20).padding(.horizontal, 2)
-
-            // Resize picker
-            if let meta {
-                Menu {
-                    let minW = meta.supportedSizes.min.width
-                    let maxW = meta.supportedSizes.max.width
-                    let minH = meta.supportedSizes.min.height
-                    let maxH = meta.supportedSizes.max.height
-                    ForEach(minW...maxW, id: \.self) { w in
-                        ForEach(minH...maxH, id: \.self) { h in
-                            Button("\(w)x\(h)") {
-                                layoutEngine.resizeWidget(pageId: pageId, instanceId: placement.instanceId, newWidth: w, newHeight: h)
-                            }
+                // Position controls
+                HStack(spacing: 3) {
+                    Text("Col")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                    stepperButton(systemName: "minus", size: 10) {
+                        if placement.col > 0 {
+                            layoutEngine.moveWidget(
+                                pageId: pageId, instanceId: placement.instanceId, toCol: placement.col - 1,
+                                toRow: placement.row)
                         }
                     }
-                } label: {
-                    Text("\(placement.width)x\(placement.height)")
+                    Text("\(placement.col)")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Theme.accentPurple)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Theme.accentPurple.opacity(0.1), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                }
-            }
-
-            // Remove button
-            Button {
-                layoutEngine.removeWidget(pageId: pageId, instanceId: placement.instanceId)
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.accentRed.opacity(0.6))
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-
-        // Widget config editor. Every widget without its own tap behavior
-        // also gets the universal "Opens on Tap" launcher field.
-        if let widget = registry.widget(for: placement.widgetId) {
-            let schema: [ConfigSchemaEntry] = {
-                var base = widget.configSchema
-                // Reminders: once the service has discovered the real lists,
-                // the free-text list field becomes a picker of them.
-                if widget.widgetId == "reminders", !model.remindersService.listNames.isEmpty,
-                   let idx = base.firstIndex(where: { $0.key == "list" }) {
-                    base[idx] = ConfigSchemaEntry(
-                        key: "list", label: "List", type: .picker,
-                        defaultValue: .string("default"),
-                        options: ["default"] + model.remindersService.listNames)
-                }
-                guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return base }
-                var extra = [ConfigSchemaEntry(
-                    key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
-                    type: .text,
-                    defaultValue: .string(WidgetLaunch.defaultApp(for: widget.widgetId)))]
-                // Tab choice appears only when the launch target is Activity
-                // Monitor (its tab set is fixed, indexed by SelectedTab).
-                let target = placement.config.string(
-                    WidgetLaunch.configKey,
-                    default: WidgetLaunch.defaultApp(for: widget.widgetId))
-                if WidgetLaunch.isActivityMonitor(target) {
-                    extra.append(ConfigSchemaEntry(
-                        key: WidgetLaunch.tabConfigKey, label: "Activity Monitor Tab",
-                        type: .picker,
-                        defaultValue: .string("CPU"),
-                        options: WidgetLaunch.activityMonitorTabs))
-                }
-                return base + extra
-            }()
-            WidgetConfigEditor(
-                schema: schema,
-                config: Binding(
-                    get: { placement.config },
-                    set: { newConfig in
-                        layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: placement.instanceId, config: newConfig)
+                        .foregroundStyle(Theme.accentYellow)
+                        .frame(width: 18)
+                    stepperButton(systemName: "plus", size: 10) {
+                        if placement.col + placement.width < cols {
+                            layoutEngine.moveWidget(
+                                pageId: pageId, instanceId: placement.instanceId, toCol: placement.col + 1,
+                                toRow: placement.row)
+                        }
                     }
+
+                    Rectangle().fill(Theme.borderSubtle).frame(width: 1, height: 14).padding(.horizontal, 2)
+
+                    Text("Row")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                    stepperButton(systemName: "minus", size: 10) {
+                        if placement.row > 0 {
+                            layoutEngine.moveWidget(
+                                pageId: pageId, instanceId: placement.instanceId, toCol: placement.col,
+                                toRow: placement.row - 1)
+                        }
+                    }
+                    Text("\(placement.row)")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Theme.accentYellow)
+                        .frame(width: 18)
+                    stepperButton(systemName: "plus", size: 10) {
+                        if placement.row + placement.height < rows {
+                            layoutEngine.moveWidget(
+                                pageId: pageId, instanceId: placement.instanceId, toCol: placement.col,
+                                toRow: placement.row + 1)
+                        }
+                    }
+                }
+
+                Rectangle().fill(Theme.borderSubtle).frame(width: 1, height: 20).padding(.horizontal, 2)
+
+                // Resize picker
+                if let meta {
+                    Menu {
+                        let minW = meta.supportedSizes.min.width
+                        let maxW = meta.supportedSizes.max.width
+                        let minH = meta.supportedSizes.min.height
+                        let maxH = meta.supportedSizes.max.height
+                        ForEach(minW...maxW, id: \.self) { w in
+                            ForEach(minH...maxH, id: \.self) { h in
+                                Button("\(w)x\(h)") {
+                                    layoutEngine.resizeWidget(
+                                        pageId: pageId, instanceId: placement.instanceId, newWidth: w, newHeight: h)
+                                }
+                            }
+                        }
+                    } label: {
+                        Text("\(placement.width)x\(placement.height)")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Theme.accentPurple)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Theme.accentPurple.opacity(0.1),
+                                in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    }
+                }
+
+                // Remove button
+                Button {
+                    layoutEngine.removeWidget(pageId: pageId, instanceId: placement.instanceId)
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.accentRed.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+
+            // Widget config editor. Every widget without its own tap behavior
+            // also gets the universal "Opens on Tap" launcher field.
+            if let widget = registry.widget(for: placement.widgetId) {
+                let schema: [ConfigSchemaEntry] = {
+                    var base = widget.configSchema
+                    // Reminders: once the service has discovered the real lists,
+                    // the free-text list field becomes a picker of them.
+                    if widget.widgetId == "reminders", !model.remindersService.listNames.isEmpty,
+                        let idx = base.firstIndex(where: { $0.key == "list" })
+                    {
+                        base[idx] = ConfigSchemaEntry(
+                            key: "list", label: "List", type: .picker,
+                            defaultValue: .string("default"),
+                            options: ["default"] + model.remindersService.listNames)
+                    }
+                    guard !WidgetLaunch.excluded.contains(widget.widgetId) else { return base }
+                    var extra = [
+                        ConfigSchemaEntry(
+                            key: WidgetLaunch.configKey, label: "Opens on Tap (app)",
+                            type: .text,
+                            defaultValue: .string(WidgetLaunch.defaultApp(for: widget.widgetId)))
+                    ]
+                    // Tab choice appears only when the launch target is Activity
+                    // Monitor (its tab set is fixed, indexed by SelectedTab).
+                    let target = placement.config.string(
+                        WidgetLaunch.configKey,
+                        default: WidgetLaunch.defaultApp(for: widget.widgetId))
+                    if WidgetLaunch.isActivityMonitor(target) {
+                        extra.append(
+                            ConfigSchemaEntry(
+                                key: WidgetLaunch.tabConfigKey, label: "Activity Monitor Tab",
+                                type: .picker,
+                                defaultValue: .string("CPU"),
+                                options: WidgetLaunch.activityMonitorTabs))
+                    }
+                    return base + extra
+                }()
+                WidgetConfigEditor(
+                    schema: schema,
+                    config: Binding(
+                        get: { placement.config },
+                        set: { newConfig in
+                            layoutEngine.updateWidgetConfig(
+                                pageId: pageId, instanceId: placement.instanceId, config: newConfig)
+                        }
+                    )
                 )
-            )
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-        }
-        } // VStack end
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+            }
+        }  // VStack end
         .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)

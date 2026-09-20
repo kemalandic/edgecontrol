@@ -49,7 +49,9 @@ private struct PerCoreTempWidgetView: View {
     }
 
     private var primary: Color { Theme.widgetPrimary("per-core-temp", ts: ts, default: .cyan) }
-    private var secondary: Color { Theme.widgetSecondary("per-core-temp", ts: ts, default: .green) ?? Theme.accentGreen }
+    private var secondary: Color {
+        Theme.widgetSecondary("per-core-temp", ts: ts, default: .green) ?? Theme.accentGreen
+    }
 
     private func tempColor(_ temp: Double) -> Color {
         if temp < 55 { return Theme.accentGreen }

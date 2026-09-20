@@ -23,12 +23,14 @@ final class ForgejoProviderTests: XCTestCase {
 
     func testMapsAllEightStatusValues() async throws {
         let runs = try await fetchAll()
-        XCTAssertEqual(runs.map(\.state), [
-            .success, .failure, .cancelled, .running,
-            .queued,   // waiting
-            .queued,   // blocked
-            .skipped, .unknown,
-        ])
+        XCTAssertEqual(
+            runs.map(\.state),
+            [
+                .success, .failure, .cancelled, .running,
+                .queued,  // waiting
+                .queued,  // blocked
+                .skipped, .unknown,
+            ])
     }
 
     func testMapsFieldsFromForgejoNames() async throws {

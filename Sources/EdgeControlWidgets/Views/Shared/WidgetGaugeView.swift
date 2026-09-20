@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WidgetGaugeView: View {
-    let value: Double     // 0-100
+    let value: Double  // 0-100
     let label: String
     let displayValue: String
     let accentColor: Color
@@ -24,9 +24,11 @@ struct WidgetGaugeView: View {
                         .stroke(Color.white.opacity(0.08), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
 
                     // Value arc
-                    Arc(startAngle: .degrees(startAngle),
-                        endAngle: .degrees(startAngle + (endAngle - startAngle) * progress))
-                        .stroke(accentColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                    Arc(
+                        startAngle: .degrees(startAngle),
+                        endAngle: .degrees(startAngle + (endAngle - startAngle) * progress)
+                    )
+                    .stroke(accentColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
 
                     // Center text
                     Text(displayValue)

@@ -51,7 +51,8 @@ struct GridPageView: View {
                         if !editing { selectedInstanceId = nil }
                     }
                     .onReceive(modifierTick) { _ in
-                        let held = hoveredInstanceId != nil
+                        let held =
+                            hoveredInstanceId != nil
                             && NSEvent.modifierFlags.contains(.command)
                         if commandHeld != held { commandHeld = held }
                     }
@@ -127,9 +128,11 @@ struct GridPageView: View {
                                     let isOverlapped = overlappedIds.contains(placement.instanceId)
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                                         .strokeBorder(
-                                            isSelected ? accent
-                                                : isOverlapped ? Theme.accentOrange.opacity(0.9)
-                                                : accent.opacity(0.4),
+                                            isSelected
+                                                ? accent
+                                                : isOverlapped
+                                                    ? Theme.accentOrange.opacity(0.9)
+                                                    : accent.opacity(0.4),
                                             lineWidth: isSelected ? 2.5 : isOverlapped ? 2.5 : 1.5
                                         )
                                         .allowsHitTesting(false)
@@ -180,7 +183,8 @@ struct GridPageView: View {
                                                 .padding(.trailing, 6)
                                             }
                                             Button {
-                                                layoutEngine.removeWidget(pageId: page.id, instanceId: placement.instanceId)
+                                                layoutEngine.removeWidget(
+                                                    pageId: page.id, instanceId: placement.instanceId)
                                             } label: {
                                                 Image(systemName: "xmark.circle.fill")
                                                     .font(.system(size: 18))
@@ -242,7 +246,9 @@ struct GridPageView: View {
                         // page-sized container, and a contentShape added after
                         // it would make every widget swallow the whole page's
                         // clicks.
-                        .touchTappable(id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry) {
+                        .touchTappable(
+                            id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry
+                        ) {
                             Task { @MainActor in
                                 if editMode {
                                     selectedInstanceId = placement.instanceId
@@ -269,11 +275,13 @@ struct GridPageView: View {
                         Text("EDIT MODE")
                             .font(.system(size: 11, weight: .heavy, design: .rounded))
                             .foregroundStyle(overlappedIds.isEmpty ? accent : Theme.accentOrange)
-                        Text(overlappedIds.isEmpty
-                            ? "— drag widgets to reposition"
-                            : "— separate overlapping widgets to finish")
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(Theme.textTertiary)
+                        Text(
+                            overlappedIds.isEmpty
+                                ? "— drag widgets to reposition"
+                                : "— separate overlapping widgets to finish"
+                        )
+                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -298,7 +306,8 @@ struct GridPageView: View {
 
     private func launchTarget(for placement: WidgetPlacement) -> String {
         guard !WidgetLaunch.excluded.contains(placement.widgetId) else { return "" }
-        return placement.config.string(WidgetLaunch.configKey, default: WidgetLaunch.defaultApp(for: placement.widgetId))
+        return placement.config.string(
+            WidgetLaunch.configKey, default: WidgetLaunch.defaultApp(for: placement.widgetId))
     }
 
     // MARK: - Drag Gesture
@@ -317,18 +326,19 @@ struct GridPageView: View {
                 let clampedCol = max(0, min(newCol, gridColumns - placement.width))
                 let clampedRow = max(0, min(newRow, gridRows - placement.height))
 
-                targets.setDrag(EditTargets.Target(
-                    col: clampedCol, row: clampedRow,
-                    width: placement.width, height: placement.height,
-                    isValid: layoutEngine.isValidPlacement(
-                        pageId: page.id,
-                        col: clampedCol,
-                        row: clampedRow,
-                        width: placement.width,
-                        height: placement.height,
-                        excludeInstanceId: placement.instanceId
-                    )
-                ))
+                targets.setDrag(
+                    EditTargets.Target(
+                        col: clampedCol, row: clampedRow,
+                        width: placement.width, height: placement.height,
+                        isValid: layoutEngine.isValidPlacement(
+                            pageId: page.id,
+                            col: clampedCol,
+                            row: clampedRow,
+                            width: placement.width,
+                            height: placement.height,
+                            excludeInstanceId: placement.instanceId
+                        )
+                    ))
             }
             .onEnded { value in
                 // Apply move if valid
@@ -370,7 +380,9 @@ struct GridPageView: View {
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(Theme.accentPurple)
                     .frame(width: 22, height: 22)
-                    .background(Theme.accentPurple.opacity(0.2), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+                    .background(
+                        Theme.accentPurple.opacity(0.2), in: RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    )
                     .overlay(
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
                             .strokeBorder(Theme.accentPurple.opacity(0.4), lineWidth: 1)
@@ -378,7 +390,9 @@ struct GridPageView: View {
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                if resizingInstanceId != placement.instanceId { resizingInstanceId = placement.instanceId }
+                                if resizingInstanceId != placement.instanceId {
+                                    resizingInstanceId = placement.instanceId
+                                }
                                 let deltaW = Int(round(value.translation.width / cellW))
                                 let deltaH = Int(round(value.translation.height / cellH))
                                 let newW = max(1, placement.width + deltaW)
@@ -390,7 +404,8 @@ struct GridPageView: View {
                                 // also stays on the grid.
                                 var isValid = false
                                 if let meta = registry.metadata(for: placement.widgetId) {
-                                    let sizeOk = meta.supportedSizes.contains(WidgetSize(width: clampedW, height: clampedH))
+                                    let sizeOk = meta.supportedSizes.contains(
+                                        WidgetSize(width: clampedW, height: clampedH))
                                     let noCollision = layoutEngine.isValidPlacement(
                                         pageId: page.id,
                                         col: placement.col,
@@ -401,10 +416,11 @@ struct GridPageView: View {
                                     )
                                     isValid = sizeOk && noCollision
                                 }
-                                targets.setResize(EditTargets.Target(
-                                    col: placement.col, row: placement.row,
-                                    width: clampedW, height: clampedH, isValid: isValid
-                                ))
+                                targets.setResize(
+                                    EditTargets.Target(
+                                        col: placement.col, row: placement.row,
+                                        width: clampedW, height: clampedH, isValid: isValid
+                                    ))
                             }
                             .onEnded { _ in
                                 if let target = targets.resize, target.isValid {
@@ -457,7 +473,6 @@ struct GridPageView: View {
     }
 }
 
-
 /// Where an in-flight drag or resize would land. Deliberately not @State on
 /// the page: a gesture publishes ~60 ticks a second, and each one written to
 /// page state re-evaluated the whole page body — every card's gestures,
@@ -493,7 +508,6 @@ final class EditTargets: ObservableObject {
     }
 }
 
-
 /// The dashed cell outline that follows a drag or resize. Green/purple =
 /// free, orange = staged overlap, red = off-grid or an unsupported size.
 private struct TargetHighlight: View {
@@ -510,7 +524,9 @@ private struct TargetHighlight: View {
     var body: some View {
         if let target = kind == .drag ? targets.drag : targets.resize {
             let free: Color = kind == .drag ? Theme.accentGreen : Theme.accentPurple
-            let tint: Color = !target.isValid ? Theme.accentRed
+            let tint: Color =
+                !target.isValid
+                ? Theme.accentRed
                 : layoutEngine.wouldOverlap(pageId: pageId, rect: target.rect, excludeInstanceId: placement.instanceId)
                     ? Theme.accentOrange : free
             RoundedRectangle(cornerRadius: 6, style: .continuous)
@@ -531,7 +547,6 @@ private struct TargetHighlight: View {
         }
     }
 }
-
 
 /// The widget's rendered body behind an explicit Equatable gate: SwiftUI
 /// skips re-evaluating it unless the placement's own inputs change, which
@@ -555,15 +570,16 @@ private struct WidgetContentView: View, Equatable {
 
     var body: some View {
         if let widget = registry.widget(for: widgetId) {
-            AnyView(widget.body(
-                size: WidgetSize(width: width, height: height),
-                config: config
-            ))
+            AnyView(
+                widget.body(
+                    size: WidgetSize(width: width, height: height),
+                    config: config
+                )
+            )
             .padding(gap)
         }
     }
 }
-
 
 /// Edit-session keyboard: Esc cancels back to the last saved layout,
 /// Cmd+Z / Shift+Cmd+Z step through the session's changes. A local event
@@ -595,7 +611,8 @@ private struct EditKeyCatcher: NSViewRepresentable {
             } else if monitor == nil {
                 monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                     guard let self, let engine = self.engine, engine.isEditing,
-                          event.window === self.window else { return event }
+                        event.window === self.window
+                    else { return event }
 
                     // A focused text view owns these keys. Inside a sticky note
                     // Cmd+Z is text undo and Esc cancels the field, not the edit
@@ -605,12 +622,13 @@ private struct EditKeyCatcher: NSViewRepresentable {
                     // NSText, as is the field editor a text field hands focus to.
                     if self.window?.firstResponder is NSText { return event }
 
-                    if event.keyCode == 53 { // Esc
+                    if event.keyCode == 53 {  // Esc
                         engine.cancelEditing()
                         return nil
                     }
                     if event.modifierFlags.contains(.command),
-                       event.charactersIgnoringModifiers?.lowercased() == "z" {
+                        event.charactersIgnoringModifiers?.lowercased() == "z"
+                    {
                         if event.modifierFlags.contains(.shift) {
                             engine.redoLayout()
                         } else {

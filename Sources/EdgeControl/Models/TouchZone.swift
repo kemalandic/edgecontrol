@@ -38,7 +38,8 @@ public final class TouchZoneRegistry: ObservableObject {
     /// Returns true if a zone was hit.
     public func handleTap(at point: CGPoint) -> Bool {
         // Smallest zone wins (most specific target)
-        let hit = zones
+        let hit =
+            zones
             .filter { $0.contains(point) }
             .min { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
 

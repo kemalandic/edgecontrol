@@ -11,7 +11,7 @@ public final class SSDTempWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "showLabel", label: "Show Label", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "showLabel", label: "Show Label", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .green)
 

@@ -93,9 +93,11 @@ public struct WidgetData: Codable, Sendable {
 
     /// Reads WidgetData from the shared App Group container.
     public static func read() -> WidgetData? {
-        guard let url = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
-        )?.appendingPathComponent("EdgeControlWidgets.json") else { return nil }
+        guard
+            let url = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
+            )?.appendingPathComponent("EdgeControlWidgets.json")
+        else { return nil }
         guard let data = try? Data(contentsOf: url) else { return nil }
         return decode(from: data)
     }
@@ -105,15 +107,18 @@ public struct WidgetData: Codable, Sendable {
     /// stale or wrong data.
     public static func decode(from data: Data) -> WidgetData? {
         guard let decoded = try? JSONDecoder.widgetDecoder.decode(WidgetData.self, from: data),
-              decoded.schemaVersion == currentSchemaVersion else { return nil }
+            decoded.schemaVersion == currentSchemaVersion
+        else { return nil }
         return decoded
     }
 
     /// Writes WidgetData to the shared App Group container.
     public func write() {
-        guard let url = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
-        )?.appendingPathComponent("EdgeControlWidgets.json") else { return }
+        guard
+            let url = FileManager.default.containerURL(
+                forSecurityApplicationGroupIdentifier: "group.ai.pakslab.edgecontrol"
+            )?.appendingPathComponent("EdgeControlWidgets.json")
+        else { return }
         let data: Data
         do {
             data = try JSONEncoder.widgetEncoder.encode(self)
@@ -245,10 +250,10 @@ public struct PluginWidgetManifest: Codable, Sendable {
 }
 
 public struct PluginWidgetInfo: Codable, Sendable, Identifiable, Hashable {
-    public let id: String           // plugin ID
-    public let name: String         // display name
-    public let icon: String?        // SF Symbol
-    public let sizes: [String]      // ["small", "medium", "large"]
+    public let id: String  // plugin ID
+    public let name: String  // display name
+    public let icon: String?  // SF Symbol
+    public let sizes: [String]  // ["small", "medium", "large"]
 
     public init(id: String, name: String, icon: String?, sizes: [String]) {
         self.id = id

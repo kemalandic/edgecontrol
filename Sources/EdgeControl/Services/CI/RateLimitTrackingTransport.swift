@@ -29,7 +29,8 @@ extension CIRateLimit {
             response.value(forHTTPHeaderField: name).flatMap(Int.init)
         }
         guard let limit = intValue("x-ratelimit-limit"),
-              let remaining = intValue("x-ratelimit-remaining") else { return nil }
+            let remaining = intValue("x-ratelimit-remaining")
+        else { return nil }
         let reset = response.value(forHTTPHeaderField: "x-ratelimit-reset")
             .flatMap(Double.init)
             .map { Date(timeIntervalSince1970: $0) }

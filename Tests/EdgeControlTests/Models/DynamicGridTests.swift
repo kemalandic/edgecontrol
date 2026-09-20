@@ -20,18 +20,24 @@ struct DynamicGridTests {
     }
 
     static let cases: [Case] = [
-        Case(display: "XENEON EDGE 2560x720", width: 2560, height: 720,
-             columns: 21, rows: 6, cellWidth: 2560.0 / 21.0, cellHeight: 120),
-        Case(display: "1920x1080", width: 1920, height: 1080,
-             columns: 16, rows: 9, cellWidth: 120, cellHeight: 120),
-        Case(display: "4K 3840x2160, clamped on both axes", width: 3840, height: 2160,
-             columns: 24, rows: 12, cellWidth: 160, cellHeight: 180),
-        Case(display: "iPad Sidecar 1366x1024", width: 1366, height: 1024,
-             columns: 11, rows: 8, cellWidth: 1366.0 / 11.0, cellHeight: 128),
-        Case(display: "exact minimum 600x400", width: 600, height: 400,
-             columns: 6, rows: 4, cellWidth: 100, cellHeight: 100),
-        Case(display: "below minimum 320x240", width: 320, height: 240,
-             columns: 6, rows: 4, cellWidth: 320.0 / 6.0, cellHeight: 60),
+        Case(
+            display: "XENEON EDGE 2560x720", width: 2560, height: 720,
+            columns: 21, rows: 6, cellWidth: 2560.0 / 21.0, cellHeight: 120),
+        Case(
+            display: "1920x1080", width: 1920, height: 1080,
+            columns: 16, rows: 9, cellWidth: 120, cellHeight: 120),
+        Case(
+            display: "4K 3840x2160, clamped on both axes", width: 3840, height: 2160,
+            columns: 24, rows: 12, cellWidth: 160, cellHeight: 180),
+        Case(
+            display: "iPad Sidecar 1366x1024", width: 1366, height: 1024,
+            columns: 11, rows: 8, cellWidth: 1366.0 / 11.0, cellHeight: 128),
+        Case(
+            display: "exact minimum 600x400", width: 600, height: 400,
+            columns: 6, rows: 4, cellWidth: 100, cellHeight: 100),
+        Case(
+            display: "below minimum 320x240", width: 320, height: 240,
+            columns: 6, rows: 4, cellWidth: 320.0 / 6.0, cellHeight: 60),
     ]
 
     @Test("grid dimensions match the display", arguments: Self.cases)

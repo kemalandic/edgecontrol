@@ -47,17 +47,20 @@ struct LayoutDocumentTests {
     /// adding one resets every dashboard in the field. The store quarantines an
     /// unreadable file rather than overwriting it, so the arrangement is
     /// recoverable either way — but it should not come to that.
-    @Test("a document missing top-level keys still decodes", arguments: [
-        "version", "grid", "pages", "globalSettings",
-    ])
+    @Test(
+        "a document missing top-level keys still decodes",
+        arguments: [
+            "version", "grid", "pages", "globalSettings",
+        ])
     func missingKeysFallBackToDefaults(dropped: String) throws {
         let full = LayoutDocument(
             version: 1,
             grid: GridDimensions(columns: 21, rows: 6),
             pages: [page("Main", order: 0)]
         )
-        var object = try JSONSerialization.jsonObject(
-            with: JSONEncoder().encode(full)) as! [String: Any]
+        var object =
+            try JSONSerialization.jsonObject(
+                with: JSONEncoder().encode(full)) as! [String: Any]
         object.removeValue(forKey: dropped)
 
         let restored = try JSONDecoder().decode(
@@ -85,8 +88,9 @@ struct LayoutDocumentTests {
         var values: [String: ConfigValue] = [:]
         values["showLabel"] = .bool(false)
         values["style"] = .string("analog")
-        let placement = WidgetPlacement(widgetId: "clock", col: 0, row: 0, width: 2, height: 2,
-                                        config: WidgetConfig(values))
+        let placement = WidgetPlacement(
+            widgetId: "clock", col: 0, row: 0, width: 2, height: 2,
+            config: WidgetConfig(values))
         let doc = LayoutDocument(pages: [page("Main", order: 0, widgets: [placement])])
 
         let restored = try JSONDecoder().decode(

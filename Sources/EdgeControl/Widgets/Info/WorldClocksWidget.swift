@@ -11,7 +11,7 @@ public final class WorldClocksWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(6, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "use24h", label: "24-Hour Format", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "use24h", label: "24-Hour Format", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 

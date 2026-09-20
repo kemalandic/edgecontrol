@@ -86,8 +86,9 @@ final class LayoutEngineTests: XCTestCase {
         let kept = try widget(dropped)
         XCTAssertEqual(kept.col, 2)
         XCTAssertEqual(kept.row, 1)
-        XCTAssertNotEqual(try widget(settled).gridRect, GridRect(col: 0, row: 0, width: 4, height: 3),
-                          "the covered widget should have been displaced")
+        XCTAssertNotEqual(
+            try widget(settled).gridRect, GridRect(col: 0, row: 0, width: 4, height: 3),
+            "the covered widget should have been displaced")
     }
 
     /// After a drop the page is clean again: nothing overlaps anything.
@@ -156,8 +157,9 @@ final class LayoutEngineTests: XCTestCase {
         let columns = engine.currentGrid.columns
         let rows = engine.currentGrid.rows
         let filler = try XCTUnwrap(
-            engine.placeWidget(pageId: pageId, widgetId: "memory-gauge",
-                               col: 0, row: 0, width: columns, height: rows)
+            engine.placeWidget(
+                pageId: pageId, widgetId: "memory-gauge",
+                col: 0, row: 0, width: columns, height: rows)
         )
         engine.isEditing = true
         let dropped = try XCTUnwrap(
@@ -166,8 +168,9 @@ final class LayoutEngineTests: XCTestCase {
 
         engine.resolveOverlaps(pageId: pageId, keeping: dropped)
 
-        XCTAssertEqual(try widget(filler).gridRect,
-                       GridRect(col: 0, row: 0, width: columns, height: rows))
+        XCTAssertEqual(
+            try widget(filler).gridRect,
+            GridRect(col: 0, row: 0, width: columns, height: rows))
         XCTAssertTrue(engine.hasOverlaps, "nowhere to go, so the overlap stays staged")
     }
 
@@ -193,8 +196,9 @@ final class LayoutEngineTests: XCTestCase {
         let shrunk = try widget(big)
         XCTAssertLessThan(shrunk.width, 4, "no full-size spot existed, so it had to shrink")
         XCTAssertFalse(engine.hasOverlaps)
-        XCTAssertEqual(try widget(dropped).gridRect, GridRect(col: 0, row: 0, width: 4, height: 2),
-                       "the dropped widget still must not move")
+        XCTAssertEqual(
+            try widget(dropped).gridRect, GridRect(col: 0, row: 0, width: 4, height: 2),
+            "the dropped widget still must not move")
     }
 
     // MARK: - Edit sessions and persistence

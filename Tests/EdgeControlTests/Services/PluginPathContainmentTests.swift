@@ -22,21 +22,21 @@ struct PluginPathContainmentTests {
         try FileManager.default.createDirectory(at: bundle, withIntermediateDirectories: true)
 
         let manifest = """
-        {
-          "id": "\(pluginId)",
-          "name": "Demo",
-          "version": "1.0.0",
-          "author": "Someone",
-          "permissions": [],
-          "widgets": [{
-            "id": "demo",
-            "name": "Demo Widget",
-            "htmlFile": "\(htmlFile)",
-            "supportedSizes": { "min": [2, 2], "max": [6, 4] },
-            "defaultSize": [4, 3]
-          }]
-        }
-        """
+            {
+              "id": "\(pluginId)",
+              "name": "Demo",
+              "version": "1.0.0",
+              "author": "Someone",
+              "permissions": [],
+              "widgets": [{
+                "id": "demo",
+                "name": "Demo Widget",
+                "htmlFile": "\(htmlFile)",
+                "supportedSizes": { "min": [2, 2], "max": [6, 4] },
+                "defaultSize": [4, 3]
+              }]
+            }
+            """
         try Data(manifest.utf8).write(to: bundle.appendingPathComponent("manifest.json"))
 
         if createHTMLInsideBundle {
@@ -56,8 +56,9 @@ struct PluginPathContainmentTests {
     @Test("a plugin whose html sits inside its bundle loads")
     func wellFormedBundleLoads() throws {
         try withTemporaryRoot { root in
-            let bundle = try makeBundle(root: root, directoryName: "demo.ecplugin",
-                                        pluginId: "com.example.demo", htmlFile: "index.html")
+            let bundle = try makeBundle(
+                root: root, directoryName: "demo.ecplugin",
+                pluginId: "com.example.demo", htmlFile: "index.html")
             let manager = PluginManager()
             manager.loadPlugin(at: bundle)
             #expect(manager.errors.isEmpty, "unexpected errors: \(manager.errors)")
@@ -68,14 +69,16 @@ struct PluginPathContainmentTests {
     @Test("an html path climbing out of the bundle is refused")
     func plainTraversalRefused() throws {
         try withTemporaryRoot { root in
-            let bundle = try makeBundle(root: root, directoryName: "demo.ecplugin",
-                                        pluginId: "com.example.demo",
-                                        htmlFile: "../../../../etc/passwd")
+            let bundle = try makeBundle(
+                root: root, directoryName: "demo.ecplugin",
+                pluginId: "com.example.demo",
+                htmlFile: "../../../../etc/passwd")
             let manager = PluginManager()
             manager.loadPlugin(at: bundle)
             #expect(manager.plugins.isEmpty)
-            #expect(manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
-                    "errors: \(manager.errors)")
+            #expect(
+                manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
+                "errors: \(manager.errors)")
         }
     }
 
@@ -101,10 +104,12 @@ struct PluginPathContainmentTests {
             let manager = PluginManager()
             manager.loadPlugin(at: bundle)
 
-            #expect(manager.plugins.isEmpty,
-                    "a plugin pointing outside its bundle was loaded")
-            #expect(manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
-                    "errors: \(manager.errors)")
+            #expect(
+                manager.plugins.isEmpty,
+                "a plugin pointing outside its bundle was loaded")
+            #expect(
+                manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
+                "errors: \(manager.errors)")
         }
     }
 
@@ -119,9 +124,10 @@ struct PluginPathContainmentTests {
             try Data("<html>outside the bundle</html>".utf8)
                 .write(to: outside.appendingPathComponent("steal.html"))
 
-            let bundle = try makeBundle(root: root, directoryName: "demo.ecplugin",
-                                        pluginId: "com.example.demo",
-                                        htmlFile: "out/steal.html")
+            let bundle = try makeBundle(
+                root: root, directoryName: "demo.ecplugin",
+                pluginId: "com.example.demo",
+                htmlFile: "out/steal.html")
             try FileManager.default.createSymbolicLink(
                 at: bundle.appendingPathComponent("out"), withDestinationURL: outside)
 
@@ -129,8 +135,9 @@ struct PluginPathContainmentTests {
             manager.loadPlugin(at: bundle)
 
             #expect(manager.plugins.isEmpty, "a plugin reaching through a symlink was loaded")
-            #expect(manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
-                    "errors: \(manager.errors)")
+            #expect(
+                manager.errors["com.example.demo"]?.contains("Invalid widget HTML path") == true,
+                "errors: \(manager.errors)")
         }
     }
 
@@ -143,15 +150,18 @@ struct PluginPathContainmentTests {
         #expect(PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: "pages/index.html") != nil)
     }
 
-    @Test("containedHTMLURL refuses escapes", arguments: [
-        "../elsewhere/x.html",
-        "../demo.ecplugin-evil/x.html",
-        "",                              // resolves to the bundle directory itself
-    ])
+    @Test(
+        "containedHTMLURL refuses escapes",
+        arguments: [
+            "../elsewhere/x.html",
+            "../demo.ecplugin-evil/x.html",
+            "",  // resolves to the bundle directory itself
+        ])
     func helperRefusesEscapes(htmlFile: String) {
         let bundle = URL(fileURLWithPath: "/tmp/demo.ecplugin", isDirectory: true)
-        #expect(PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: htmlFile) == nil,
-                "accepted \(htmlFile)")
+        #expect(
+            PluginBundle.containedHTMLURL(bundlePath: bundle, htmlFile: htmlFile) == nil,
+            "accepted \(htmlFile)")
     }
 
     /// Worth pinning because it reads like a hole and is not one:
@@ -168,13 +178,15 @@ struct PluginPathContainmentTests {
     @Test("a plugin id containing path separators is refused")
     func unsafePluginIdRefused() throws {
         try withTemporaryRoot { root in
-            let bundle = try makeBundle(root: root, directoryName: "demo.ecplugin",
-                                        pluginId: "../../escape", htmlFile: "index.html")
+            let bundle = try makeBundle(
+                root: root, directoryName: "demo.ecplugin",
+                pluginId: "../../escape", htmlFile: "index.html")
             let manager = PluginManager()
             manager.loadPlugin(at: bundle)
             #expect(manager.plugins.isEmpty)
-            #expect(manager.errors.values.contains { $0.contains("Invalid plugin ID") },
-                    "errors: \(manager.errors)")
+            #expect(
+                manager.errors.values.contains { $0.contains("Invalid plugin ID") },
+                "errors: \(manager.errors)")
         }
     }
 }

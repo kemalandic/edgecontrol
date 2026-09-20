@@ -21,7 +21,9 @@ public final class DiskIOWidget: DashboardWidget {
 
     @MainActor
     public func body(size: WidgetSize, config: WidgetConfig) -> any View {
-        DiskIOWidgetView(service: service, isCompact: size.height <= 2, showTitle: true, isBar: size.height <= 1, isNarrow: size.width <= 1)
+        DiskIOWidgetView(
+            service: service, isCompact: size.height <= 2, showTitle: true, isBar: size.height <= 1,
+            isNarrow: size.width <= 1)
     }
 }
 

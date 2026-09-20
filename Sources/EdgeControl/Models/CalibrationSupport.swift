@@ -49,9 +49,10 @@ public struct CalibrationModel: Equatable, Codable, Sendable {
 
     public func validationError() -> String? {
         guard let topLeft = points[.topLeft],
-              let topRight = points[.topRight],
-              let bottomLeft = points[.bottomLeft],
-              let bottomRight = points[.bottomRight] else {
+            let topRight = points[.topRight],
+            let bottomLeft = points[.bottomLeft],
+            let bottomRight = points[.bottomRight]
+        else {
             return "Calibration incomplete"
         }
 
@@ -75,14 +76,16 @@ public struct CalibrationModel: Equatable, Codable, Sendable {
 
     public func mappedPoint(for rawPoint: CGPoint, in bounds: CGRect) -> CGPoint? {
         guard validationError() == nil,
-              let topLeft = points[.topLeft],
-              let topRight = points[.topRight],
-              let bottomLeft = points[.bottomLeft],
-              let bottomRight = points[.bottomRight] else {
+            let topLeft = points[.topLeft],
+            let topRight = points[.topRight],
+            let bottomLeft = points[.bottomLeft],
+            let bottomRight = points[.bottomRight]
+        else {
             return nil
         }
 
-        guard let uv = invertBilinear(point: rawPoint, tl: topLeft, tr: topRight, bl: bottomLeft, br: bottomRight) else {
+        guard let uv = invertBilinear(point: rawPoint, tl: topLeft, tr: topRight, bl: bottomLeft, br: bottomRight)
+        else {
             return nil
         }
 
@@ -106,10 +109,12 @@ public struct CalibrationModel: Equatable, Codable, Sendable {
 
             if abs(fx) + abs(fy) < 0.5 { return CGPoint(x: u, y: v) }
 
-            let du = CGPoint(x: (1 - v) * (tr.x - tl.x) + v * (br.x - bl.x),
-                             y: (1 - v) * (tr.y - tl.y) + v * (br.y - bl.y))
-            let dv = CGPoint(x: (1 - u) * (bl.x - tl.x) + u * (br.x - tr.x),
-                             y: (1 - u) * (bl.y - tl.y) + u * (br.y - tr.y))
+            let du = CGPoint(
+                x: (1 - v) * (tr.x - tl.x) + v * (br.x - bl.x),
+                y: (1 - v) * (tr.y - tl.y) + v * (br.y - bl.y))
+            let dv = CGPoint(
+                x: (1 - u) * (bl.x - tl.x) + u * (br.x - tr.x),
+                y: (1 - u) * (bl.y - tl.y) + u * (br.y - tr.y))
             let det = du.x * dv.y - du.y * dv.x
             if abs(det) < 0.0001 { return nil }
 
@@ -222,9 +227,11 @@ public enum CalibrationPersistence {
     }
 
     private static func calibrationURL() -> URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let base =
+            FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSTemporaryDirectory())
-        return base
+        return
+            base
             .appendingPathComponent("EdgeControl", isDirectory: true)
             .appendingPathComponent("calibration.json")
     }

@@ -50,7 +50,8 @@ struct WidgetCatalogView: View {
             // Widget grid
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    let widgets = selectedCategory == nil ? registry.allWidgets : registry.widgets(in: selectedCategory!)
+                    let widgets =
+                        selectedCategory == nil ? registry.allWidgets : registry.widgets(in: selectedCategory!)
                     ForEach(widgets, id: \.widgetId) { widget in
                         widgetCard(widget)
                     }
@@ -188,7 +189,8 @@ struct WidgetCatalogView: View {
     /// The checkmark removes one instance per click, most recent first.
     private func removeOneFromCurrentPage(widgetId: String) {
         guard let page = currentPage,
-              let victim = page.widgets.last(where: { $0.widgetId == widgetId }) else { return }
+            let victim = page.widgets.last(where: { $0.widgetId == widgetId })
+        else { return }
         layoutEngine.removeWidget(pageId: page.id, instanceId: victim.instanceId)
     }
 
@@ -264,10 +266,12 @@ private struct WidgetSizePreviewSheet: View {
                                 Text("\(w)x\(h)")
                                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                                     .foregroundStyle(Theme.textTertiary)
-                                AnyView(widget.body(
-                                    size: WidgetSize(width: w, height: h),
-                                    config: widget.defaultConfig()
-                                ))
+                                AnyView(
+                                    widget.body(
+                                        size: WidgetSize(width: w, height: h),
+                                        config: widget.defaultConfig()
+                                    )
+                                )
                                 .frame(width: CGFloat(w) * cell, height: CGFloat(h) * cell)
                                 .clipped()
                                 .scaleEffect(s, anchor: .topLeading)

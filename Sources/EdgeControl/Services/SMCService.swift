@@ -4,11 +4,13 @@ import IOKit
 // MARK: - SMC Data Structures (matching Stats/SMC layout exactly)
 
 private struct SMCKeyData_t {
-    typealias SMCBytes_t = (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
-                            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
-                            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
-                            UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
-                            UInt8, UInt8, UInt8, UInt8)
+    typealias SMCBytes_t = (
+        UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+        UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+        UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+        UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
+        UInt8, UInt8, UInt8, UInt8
+    )
 
     struct vers_t {
         var major: CUnsignedChar = 0
@@ -41,7 +43,9 @@ private struct SMCKeyData_t {
     var status: UInt8 = 0
     var data8: UInt8 = 0
     var data32: UInt32 = 0
-    var bytes: SMCBytes_t = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+    var bytes: SMCBytes_t = (
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    )
 }
 
 private let KERNEL_INDEX_SMC: UInt8 = 2
@@ -120,8 +124,8 @@ private func fourCharCode(_ str: String) -> UInt32 {
 // MARK: - Core Temperature Data
 
 public struct CoreTemp: Identifiable, Equatable {
-    public let id: String      // "P0", "E3", etc.
-    public let label: String   // "P0", "E3"
+    public let id: String  // "P0", "E3", etc.
+    public let label: String  // "P0", "E3"
     public let temperature: Double
     public let isPerformance: Bool
 
@@ -165,14 +169,16 @@ public final class SMCService: ObservableObject {
         // Fallback Intel keys
         "TC0D", "TC0E", "TC0F", "TC0P", "TCAD",
         "TC1c", "TC2c", "TC3c", "TC4c", "TC5c", "TC6c", "TC7c", "TC8c",
-        "TC1C", "TC2C", "TC3C", "TC4C", "TC5C", "TC6C", "TC7C", "TC8C"
+        "TC1C", "TC2C", "TC3C", "TC4C", "TC5C", "TC6C", "TC7C", "TC8C",
     ]
     private let gpuKeys = [
         "Tg05", "Tg0D", "Tg0L", "Tg0T",
-        "TG0D", "TG0H", "TG0P", "TCGC"
+        "TG0D", "TG0H", "TG0P", "TCGC",
     ]
     private let ssdKeys = ["TH0a", "TH0b", "TH0x", "TH0A", "TH0B", "TH0C", "TH1A", "TPSD"]
-    private let memKeys = ["Th00", "Th04", "Th08", "Th0C", "Th50", "Th54", "Th58", "Th5C", "TMVR", "Tm02", "Tm06", "Tm08", "Tm09", "Tm0P"]
+    private let memKeys = [
+        "Th00", "Th04", "Th08", "Th0C", "Th50", "Th54", "Th58", "Th5C", "TMVR", "Tm02", "Tm06", "Tm08", "Tm09", "Tm0P",
+    ]
 
     // M3 Ultra per-core keys (from SMC scan)
     // P-cores: Tp04-Tp3X series (high values ~60-80°C)

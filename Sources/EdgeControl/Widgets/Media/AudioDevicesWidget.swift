@@ -11,7 +11,7 @@ public final class AudioDevicesWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "showVolume", label: "Show Volume", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "showVolume", label: "Show Volume", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 
@@ -42,7 +42,9 @@ private struct AudioDevicesWidgetView: View {
             HStack(spacing: 8) {
                 Image(systemName: service.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                     .font(.system(size: (isCompact ? 16 : 22) * ts.fontScale))
-                    .foregroundStyle(service.isMuted ? Theme.accentRed : Theme.widgetPrimary("audio-devices", ts: ts, default: .cyan))
+                    .foregroundStyle(
+                        service.isMuted ? Theme.accentRed : Theme.widgetPrimary("audio-devices", ts: ts, default: .cyan)
+                    )
 
                 if !isCompact {
                     Text("Audio")
@@ -64,7 +66,10 @@ private struct AudioDevicesWidgetView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color.white.opacity(0.08))
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(service.isMuted ? Theme.accentRed : Theme.widgetPrimary("audio-devices", ts: ts, default: .cyan))
+                            .fill(
+                                service.isMuted
+                                    ? Theme.accentRed : Theme.widgetPrimary("audio-devices", ts: ts, default: .cyan)
+                            )
                             .frame(width: geo.size.width * CGFloat(service.volume))
                     }
                 }

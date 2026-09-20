@@ -28,9 +28,10 @@ final class CheckboxAttachment: NSTextAttachment {
                 path.fill()
                 // Checkmark in whichever of black/white reads against the accent.
                 let rgb = accent.usingColorSpace(.deviceRGB)
-                let luminance = rgb.map {
-                    0.299 * $0.redComponent + 0.587 * $0.greenComponent + 0.114 * $0.blueComponent
-                } ?? 1
+                let luminance =
+                    rgb.map {
+                        0.299 * $0.redComponent + 0.587 * $0.greenComponent + 0.114 * $0.blueComponent
+                    } ?? 1
                 let mark = NSBezierPath()
                 mark.move(to: NSPoint(x: side * 0.26, y: side * 0.52))
                 mark.line(to: NSPoint(x: side * 0.44, y: side * 0.32))

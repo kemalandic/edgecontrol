@@ -8,7 +8,7 @@ import os.log
 public final class PluginWidgetRenderer {
     private let pluginManager: PluginManager
     private let model: AppModel
-    private var renderers: [String: PluginSnapshotRenderer] = [:] // pluginId → renderer
+    private var renderers: [String: PluginSnapshotRenderer] = [:]  // pluginId → renderer
     private var timer: Timer?
     private let logger = Logger(subsystem: "ai.pakslab.edgecontrol", category: "PluginWidgetRenderer")
 
@@ -73,10 +73,12 @@ public final class PluginWidgetRenderer {
 
             // This path had no containment check at all — it is handed straight
             // to loadFileURL(_:allowingReadAccessTo:).
-            guard let htmlURL = PluginBundle.containedHTMLURL(
-                      bundlePath: plugin.bundlePath, htmlFile: firstWidget.htmlFile
-                  ),
-                  FileManager.default.fileExists(atPath: htmlURL.path) else {
+            guard
+                let htmlURL = PluginBundle.containedHTMLURL(
+                    bundlePath: plugin.bundlePath, htmlFile: firstWidget.htmlFile
+                ),
+                FileManager.default.fileExists(atPath: htmlURL.path)
+            else {
                 logger.warning("Plugin \(plugin.id): HTML file missing or outside the bundle: \(firstWidget.htmlFile)")
                 continue
             }
@@ -146,10 +148,12 @@ public final class PluginWidgetRenderer {
     private func saveSnapshot(image: NSImage, pluginId: String, size: String) {
         guard let url = PluginWidgetManifest.snapshotURL(pluginId: pluginId, size: size) else { return }
         guard let tiff = image.tiffRepresentation,
-              let bitmap = NSBitmapImageRep(data: tiff),
-              let png = bitmap.representation(using: .png, properties: [:]) else { return }
+            let bitmap = NSBitmapImageRep(data: tiff),
+            let png = bitmap.representation(using: .png, properties: [:])
+        else { return }
         do {
-            try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? FileManager.default.createDirectory(
+                at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try png.write(to: url, options: .atomic)
             logger.info("Snapshot saved: \(pluginId)_\(size).png")
         } catch {
@@ -171,7 +175,10 @@ private final class PluginSnapshotRenderer {
     private let model: AppModel
     private var webView: WKWebView?
 
-    init(pluginId: String, htmlURL: URL, bundlePath: URL, size: CGSize, sizeLabel: String, model: AppModel, permissions: [PluginPermission]) {
+    init(
+        pluginId: String, htmlURL: URL, bundlePath: URL, size: CGSize, sizeLabel: String, model: AppModel,
+        permissions: [PluginPermission]
+    ) {
         self.pluginId = pluginId
         self.htmlURL = htmlURL
         self.bundlePath = bundlePath
@@ -188,32 +195,32 @@ private final class PluginSnapshotRenderer {
         // Inject minimal EdgeControl JS SDK for data reception
         let sdkScript = WKUserScript(
             source: """
-            window.edgecontrol = {
-                _listeners: {},
-                _data: {},
-                get: function(key) { return key ? this._data[key] : this._data; },
-                on: function(event, cb) {
-                    if (!this._listeners[event]) this._listeners[event] = [];
-                    this._listeners[event].push(cb);
-                },
-                _emit: function(event, data) {
-                    var ls = this._listeners[event] || [];
-                    for (var i = 0; i < ls.length; i++) { try { ls[i](data); } catch(e) {} }
-                },
-                _receive: function(data) {
-                    this._data = data;
-                    this._emit('update', data);
-                },
-                _onResize: function(size) { this._emit('resize', size); },
-                _onThemeChange: function(theme) { this._data.theme = theme; this._emit('themeChange', theme); },
-                _onVisibilityChange: function(v) { this._emit('visibilityChange', v); },
-                send: function() {},
-                notify: function() {},
-                openURL: function() {},
-                copyToClipboard: function() {},
-                storage: { get: function() { return Promise.resolve(null); }, set: function() { return Promise.resolve(); }, remove: function() { return Promise.resolve(); } }
-            };
-            """,
+                window.edgecontrol = {
+                    _listeners: {},
+                    _data: {},
+                    get: function(key) { return key ? this._data[key] : this._data; },
+                    on: function(event, cb) {
+                        if (!this._listeners[event]) this._listeners[event] = [];
+                        this._listeners[event].push(cb);
+                    },
+                    _emit: function(event, data) {
+                        var ls = this._listeners[event] || [];
+                        for (var i = 0; i < ls.length; i++) { try { ls[i](data); } catch(e) {} }
+                    },
+                    _receive: function(data) {
+                        this._data = data;
+                        this._emit('update', data);
+                    },
+                    _onResize: function(size) { this._emit('resize', size); },
+                    _onThemeChange: function(theme) { this._data.theme = theme; this._emit('themeChange', theme); },
+                    _onVisibilityChange: function(v) { this._emit('visibilityChange', v); },
+                    send: function() {},
+                    notify: function() {},
+                    openURL: function() {},
+                    copyToClipboard: function() {},
+                    storage: { get: function() { return Promise.resolve(null); }, set: function() { return Promise.resolve(); }, remove: function() { return Promise.resolve(); } }
+                };
+                """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         )
@@ -221,21 +228,21 @@ private final class PluginSnapshotRenderer {
 
         // Inject minimal theme CSS
         let css = """
-        :root {
-            --ec-bg1: #141414; --ec-bg2: #1c1c1c;
-            --ec-text1: #ffffff; --ec-text2: #b3b3b3; --ec-text3: #737373;
-            --ec-border: #2e2e2e; --ec-accent: #00ccdd;
-            color-scheme: dark;
-        }
-        body { margin: 0; padding: 8px; background: var(--ec-bg1); color: var(--ec-text1);
-               font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
-        """
+            :root {
+                --ec-bg1: #141414; --ec-bg2: #1c1c1c;
+                --ec-text1: #ffffff; --ec-text2: #b3b3b3; --ec-text3: #737373;
+                --ec-border: #2e2e2e; --ec-accent: #00ccdd;
+                color-scheme: dark;
+            }
+            body { margin: 0; padding: 8px; background: var(--ec-bg1); color: var(--ec-text1);
+                   font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
+            """
         let cssScript = WKUserScript(
             source: """
-            const s = document.createElement('style');
-            s.textContent = `\(css)`;
-            document.documentElement.appendChild(s);
-            """,
+                const s = document.createElement('style');
+                s.textContent = `\(css)`;
+                document.documentElement.appendChild(s);
+                """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         )
@@ -264,13 +271,13 @@ private final class PluginSnapshotRenderer {
 
         // Set widget size info
         let sizeJS = """
-        if(window.edgecontrol) {
-            edgecontrol._widgetSize = {width: \(Int(size.width)), height: \(Int(size.height))};
-            edgecontrol.getWidgetSize = function() { return this._widgetSize; };
-            edgecontrol.config = {};
-            edgecontrol._emit('ready', {});
-        }
-        """
+            if(window.edgecontrol) {
+                edgecontrol._widgetSize = {width: \(Int(size.width)), height: \(Int(size.height))};
+                edgecontrol.getWidgetSize = function() { return this._widgetSize; };
+                edgecontrol.config = {};
+                edgecontrol._emit('ready', {});
+            }
+            """
         wv.evaluateJavaScript(sizeJS, completionHandler: nil)
     }
 
@@ -279,7 +286,8 @@ private final class PluginSnapshotRenderer {
     func pushData(_ payload: [String: Any]) {
         guard let wv = webView else { return }
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload),
-              let jsonString = String(data: jsonData, encoding: .utf8) else { return }
+            let jsonString = String(data: jsonData, encoding: .utf8)
+        else { return }
         // Push data via the same JS bridge the dashboard plugin uses
         let js = "if(window.edgecontrol && window.edgecontrol._receive) { window.edgecontrol._receive(\(jsonString)); }"
         wv.evaluateJavaScript(js, completionHandler: nil)

@@ -53,7 +53,8 @@ public final class ConditionalGETTransport: CITransport, @unchecked Sendable {
         }
 
         if (200..<300).contains(response.statusCode),
-           let etag = response.value(forHTTPHeaderField: "ETag") {
+            let etag = response.value(forHTTPHeaderField: "ETag")
+        {
             store(key: key, entry: Entry(etag: etag, data: data))
         }
 

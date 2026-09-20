@@ -37,11 +37,13 @@ struct CICDAccountSheet: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 TextField("Server URL", text: $urlText)
-                Text(kind == .github
-                     ? "github.com, or your GitHub Enterprise address."
-                     : "The address you use in the browser, e.g. https://git.example.dev")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    kind == .github
+                        ? "github.com, or your GitHub Enterprise address."
+                        : "The address you use in the browser, e.g. https://git.example.dev"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             SecureField("Access token", text: $token)

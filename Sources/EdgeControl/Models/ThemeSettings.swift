@@ -3,18 +3,18 @@ import SwiftUI
 // MARK: - Theme Settings (stored in layout.json globalSettings)
 
 public struct ThemeSettings: Codable, Hashable, Sendable {
-    public var fontScale: Double          // 0.7 - 1.5
+    public var fontScale: Double  // 0.7 - 1.5
     public var fontFamily: FontFamily
-    public var fontSizeTitle: Double      // Widget headers
-    public var fontSizeValue: Double      // Large displayed values
-    public var fontSizeLabel: Double      // Medium labels
-    public var fontSizeCaption: Double    // Small labels
-    public var fontSizeBody: Double       // Normal text
-    public var fontSizeMicro: Double      // Smallest text
+    public var fontSizeTitle: Double  // Widget headers
+    public var fontSizeValue: Double  // Large displayed values
+    public var fontSizeLabel: Double  // Medium labels
+    public var fontSizeCaption: Double  // Small labels
+    public var fontSizeBody: Double  // Normal text
+    public var fontSizeMicro: Double  // Smallest text
     public var accentColor: WidgetColor
-    public var widgetOpacity: Double       // 0.0 - 1.0
+    public var widgetOpacity: Double  // 0.0 - 1.0
     public var widgetCornerRadius: Double  // 4 - 20
-    public var widgetGap: Double           // 0 - 12
+    public var widgetGap: Double  // 0 - 12
     public var colorScheme: ColorSchemeName
     public var backgroundStyle: BackgroundStyle
     public var widgetColorOverrides: [String: WidgetColors]
@@ -152,7 +152,7 @@ public enum ColorSchemeName: String, Codable, CaseIterable, Sendable {
                 backgroundColors: [
                     Color(red: 0.03, green: 0.03, blue: 0.05),
                     Color(red: 0.05, green: 0.05, blue: 0.08),
-                    Color(red: 0.03, green: 0.04, blue: 0.06)
+                    Color(red: 0.03, green: 0.04, blue: 0.06),
                 ],
                 cardBackground: Color.white.opacity(0.04),
                 textPrimary: Color.white.opacity(0.92),
@@ -174,7 +174,7 @@ public enum ColorSchemeName: String, Codable, CaseIterable, Sendable {
                 backgroundColors: [
                     Color(red: 0.02, green: 0.03, blue: 0.10),
                     Color(red: 0.04, green: 0.05, blue: 0.14),
-                    Color(red: 0.02, green: 0.04, blue: 0.12)
+                    Color(red: 0.02, green: 0.04, blue: 0.12),
                 ],
                 cardBackground: Color(red: 0.10, green: 0.12, blue: 0.22).opacity(0.5),
                 textPrimary: Color.white.opacity(0.90),
@@ -187,7 +187,7 @@ public enum ColorSchemeName: String, Codable, CaseIterable, Sendable {
                 backgroundColors: [
                     Color(red: 0.02, green: 0.01, blue: 0.05),
                     Color(red: 0.04, green: 0.02, blue: 0.08),
-                    Color(red: 0.02, green: 0.01, blue: 0.06)
+                    Color(red: 0.02, green: 0.01, blue: 0.06),
                 ],
                 cardBackground: Color(red: 0.00, green: 0.90, blue: 1.00).opacity(0.04),
                 textPrimary: Color.white,
@@ -200,7 +200,7 @@ public enum ColorSchemeName: String, Codable, CaseIterable, Sendable {
                 backgroundColors: [
                     Color(red: 0.06, green: 0.08, blue: 0.12),
                     Color(red: 0.08, green: 0.10, blue: 0.16),
-                    Color(red: 0.06, green: 0.09, blue: 0.14)
+                    Color(red: 0.06, green: 0.09, blue: 0.14),
                 ],
                 cardBackground: Color(red: 0.70, green: 0.85, blue: 1.00).opacity(0.05),
                 textPrimary: Color.white.opacity(0.95),
@@ -213,7 +213,7 @@ public enum ColorSchemeName: String, Codable, CaseIterable, Sendable {
                 backgroundColors: [
                     Color(red: 0.06, green: 0.02, blue: 0.02),
                     Color(red: 0.10, green: 0.03, blue: 0.03),
-                    Color(red: 0.07, green: 0.02, blue: 0.02)
+                    Color(red: 0.07, green: 0.02, blue: 0.02),
                 ],
                 cardBackground: Color(red: 1.00, green: 0.30, blue: 0.10).opacity(0.05),
                 textPrimary: Color.white.opacity(0.92),
@@ -333,9 +333,13 @@ public enum PredefinedTheme: String, CaseIterable {
         case .arctic:
             ThemeSettings(accentColor: WidgetColor(ThemeColor.cyan), widgetOpacity: 0.05, colorScheme: .arctic)
         case .ember:
-            ThemeSettings(accentColor: WidgetColor(ThemeColor.orange), widgetOpacity: 0.05, widgetCornerRadius: 8, colorScheme: .ember)
+            ThemeSettings(
+                accentColor: WidgetColor(ThemeColor.orange), widgetOpacity: 0.05, widgetCornerRadius: 8,
+                colorScheme: .ember)
         case .terminal:
-            ThemeSettings(fontFamily: .monospaced, accentColor: WidgetColor(ThemeColor.green), widgetOpacity: 0.03, widgetCornerRadius: 4, colorScheme: .oledBlack)
+            ThemeSettings(
+                fontFamily: .monospaced, accentColor: WidgetColor(ThemeColor.green), widgetOpacity: 0.03,
+                widgetCornerRadius: 4, colorScheme: .oledBlack)
         }
     }
 }

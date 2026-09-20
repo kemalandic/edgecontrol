@@ -11,7 +11,7 @@ public final class BluetoothWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(4, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "showBattery", label: "Show Battery", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "showBattery", label: "Show Battery", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .blue)
 
@@ -42,7 +42,9 @@ private struct BluetoothWidgetView: View {
             HStack(spacing: 8) {
                 Image(systemName: "bluetooth")
                     .font(.system(size: (isCompact ? 16 : 22) * ts.fontScale))
-                    .foregroundStyle(service.isAvailable ? Theme.widgetPrimary("bluetooth", ts: ts, default: .blue) : Theme.text3(ts))
+                    .foregroundStyle(
+                        service.isAvailable ? Theme.widgetPrimary("bluetooth", ts: ts, default: .blue) : Theme.text3(ts)
+                    )
                 if !isCompact {
                     Text("Bluetooth")
                         .font(Theme.title(ts))
@@ -56,7 +58,8 @@ private struct BluetoothWidgetView: View {
                         .foregroundStyle(Theme.widgetPrimary("bluetooth", ts: ts, default: .blue))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(Theme.widgetPrimary("bluetooth", ts: ts, default: .blue).opacity(0.15), in: Capsule())
+                        .background(
+                            Theme.widgetPrimary("bluetooth", ts: ts, default: .blue).opacity(0.15), in: Capsule())
                 }
             }
 

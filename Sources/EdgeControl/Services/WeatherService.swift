@@ -41,18 +41,18 @@ public struct OpenMeteoDaily: Codable {
 // MARK: - App-facing Weather Models
 
 public struct CurrentWeatherData: Equatable, Sendable {
-    public let temperature: Double      // Celsius
-    public let humidity: Int            // 0-100
-    public let windSpeed: Double        // km/h
+    public let temperature: Double  // Celsius
+    public let humidity: Int  // 0-100
+    public let windSpeed: Double  // km/h
     public let weatherCode: Int
     public let isDay: Bool
     public let conditionText: String
-    public let symbolName: String       // SF Symbol
+    public let symbolName: String  // SF Symbol
 }
 
 public struct DayForecast: Identifiable, Equatable, Sendable {
     public var id: String { date }
-    public let date: String             // "2026-04-04"
+    public let date: String  // "2026-04-04"
     public let weatherCode: Int
     public let highTemp: Double
     public let lowTemp: Double
@@ -104,7 +104,8 @@ public final class WeatherDataService: ObservableObject {
 
                 let lat = location.coordinate.latitude
                 let lon = location.coordinate.longitude
-                let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5"
+                let urlString =
+                    "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5"
 
                 guard let url = URL(string: urlString) else {
                     self.error = "Invalid URL"
@@ -193,7 +194,8 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate, @unchecked Se
 
     func currentLocation() async throws -> CLLocation {
         if let location = manager.location,
-           location.timestamp.timeIntervalSinceNow > -300 {
+            location.timestamp.timeIntervalSinceNow > -300
+        {
             return location
         }
         // Cancel any pending continuation before creating a new one

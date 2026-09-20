@@ -5,10 +5,10 @@ import Foundation
 public enum MediaSourceType: Equatable, Sendable {
     case safari(tabLocation: String)  // W1T2 format — JS inject via Safari AppleScript
     case chrome(tabLocation: String)  // W1T2 format — JS inject via Google Chrome AppleScript
-    case edge(tabLocation: String)    // W1T2 format — JS inject via Microsoft Edge AppleScript
-    case spotify                       // AppleScript tell application "Spotify"
-    case appleMusic                    // AppleScript tell application "Music"
-    case webApp                        // Safari Web App — limited controls
+    case edge(tabLocation: String)  // W1T2 format — JS inject via Microsoft Edge AppleScript
+    case spotify  // AppleScript tell application "Spotify"
+    case appleMusic  // AppleScript tell application "Music"
+    case webApp  // Safari Web App — limited controls
 }
 
 public struct NowPlayingInfo: Equatable, Sendable {
@@ -108,7 +108,9 @@ public final class NowPlayingService: ObservableObject {
                             self.selectedSourceIndex = playingIndex
                         }
                     }
-                    self.nowPlaying = sources.indices.contains(self.selectedSourceIndex) ? sources[self.selectedSourceIndex] : sources.first
+                    self.nowPlaying =
+                        sources.indices.contains(self.selectedSourceIndex)
+                        ? sources[self.selectedSourceIndex] : sources.first
                 }
 
                 if let url = self.nowPlaying?.artworkURL, !url.isEmpty, url != self.lastArtworkURL {
@@ -131,8 +133,12 @@ public final class NowPlayingService: ObservableObject {
         sources.append(contentsOf: querySafariSources(runningApps: runningApps))
         sources.append(contentsOf: querySpotify(runningApps: runningApps))
         sources.append(contentsOf: queryAppleMusic(runningApps: runningApps))
-        sources.append(contentsOf: queryChromiumSources(app: "Google Chrome", bundleId: "com.google.Chrome", runningApps: runningApps))
-        sources.append(contentsOf: queryChromiumSources(app: "Microsoft Edge", bundleId: "com.microsoft.edgemac", runningApps: runningApps))
+        sources.append(
+            contentsOf: queryChromiumSources(
+                app: "Google Chrome", bundleId: "com.google.Chrome", runningApps: runningApps))
+        sources.append(
+            contentsOf: queryChromiumSources(
+                app: "Microsoft Edge", bundleId: "com.microsoft.edgemac", runningApps: runningApps))
         sources.append(contentsOf: queryWebApps(runningApps: runningApps))
         return sources
     }
@@ -151,8 +157,9 @@ public final class NowPlayingService: ObservableObject {
     private func loadArtwork(_ urlString: String) {
         Task.detached {
             guard let url = URL(string: urlString),
-                  let (data, _) = try? await URLSession.shared.data(from: url),
-                  let image = NSImage(data: data) else { return }
+                let (data, _) = try? await URLSession.shared.data(from: url),
+                let image = NSImage(data: data)
+            else { return }
             await MainActor.run {
                 self.artworkImage = image
             }
@@ -176,11 +183,17 @@ public final class NowPlayingService: ObservableObject {
 
         switch np.sourceType {
         case .safari(let loc):
-            executeBrowserJS(app: "Safari", location: loc, js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
+            executeBrowserJS(
+                app: "Safari", location: loc,
+                js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
         case .chrome(let loc):
-            executeBrowserJS(app: "Google Chrome", location: loc, js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
+            executeBrowserJS(
+                app: "Google Chrome", location: loc,
+                js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
         case .edge(let loc):
-            executeBrowserJS(app: "Microsoft Edge", location: loc, js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
+            executeBrowserJS(
+                app: "Microsoft Edge", location: loc,
+                js: "var v=document.querySelector('video');if(v){v.paused?v.play():v.pause();}")
         case .spotify:
             executeAppleScript("tell application \"Spotify\" to playpause")
         case .appleMusic:
@@ -192,7 +205,8 @@ public final class NowPlayingService: ObservableObject {
 
     public func nextTrack() {
         guard let np = nowPlaying else { return }
-        let nextJS = "var b=document.querySelector('.next-button,.ytp-next-button,.skipControl__next,.playControls__next,button[aria-label=Next],button[aria-label=Sonraki]');if(b){b.click();}else{var v=document.querySelector('video');if(v){v.currentTime=v.duration;}}"
+        let nextJS =
+            "var b=document.querySelector('.next-button,.ytp-next-button,.skipControl__next,.playControls__next,button[aria-label=Next],button[aria-label=Sonraki]');if(b){b.click();}else{var v=document.querySelector('video');if(v){v.currentTime=v.duration;}}"
         switch np.sourceType {
         case .safari(let loc):
             executeBrowserJS(app: "Safari", location: loc, js: nextJS)
@@ -211,7 +225,8 @@ public final class NowPlayingService: ObservableObject {
 
     public func previousTrack() {
         guard let np = nowPlaying else { return }
-        let prevJS = "var b=document.querySelector('.previous-button,.ytp-prev-button,.skipControl__previous,.playControls__previous,button[aria-label=Previous]');if(b){b.click();}else{var v=document.querySelector('video');if(v){v.currentTime=0;}}"
+        let prevJS =
+            "var b=document.querySelector('.previous-button,.ytp-prev-button,.skipControl__previous,.playControls__previous,button[aria-label=Previous]');if(b){b.click();}else{var v=document.querySelector('video');if(v){v.currentTime=0;}}"
         switch np.sourceType {
         case .safari(let loc):
             executeBrowserJS(app: "Safari", location: loc, js: prevJS)
@@ -238,7 +253,8 @@ public final class NowPlayingService: ObservableObject {
         )
         nowPlaying = updated
 
-        let seekJS = "var v=document.querySelector('video');if(v){v.currentTime=Math.min(v.currentTime+\(seconds),v.duration);}"
+        let seekJS =
+            "var v=document.querySelector('video');if(v){v.currentTime=Math.min(v.currentTime+\(seconds),v.duration);}"
         switch np.sourceType {
         case .safari(let loc):
             executeBrowserJS(app: "Safari", location: loc, js: seekJS)
@@ -290,8 +306,8 @@ public final class NowPlayingService: ObservableObject {
         guard parts.count == 2, let w = Int(parts[0]), let t = Int(parts[1]) else { return }
 
         let escapedJS = js.replacingOccurrences(of: "\\", with: "\\\\")
-                          .replacingOccurrences(of: "\"", with: "\\\"")
-                          .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+            .replacingOccurrences(of: "\n", with: " ")
 
         let script: String
         if app == "Safari" {
@@ -320,97 +336,14 @@ public final class NowPlayingService: ObservableObject {
         guard runningApps.contains(where: { $0.bundleIdentifier == "com.apple.Safari" }) else { return [] }
 
         let script = """
-        tell application "Safari"
-            set results to ""
-            set winCount to count of windows
-            repeat with w from 1 to winCount
-                set tabCount to count of tabs of window w
-                repeat with t from 1 to tabCount
-                    try
-                        set jsResult to do JavaScript "\\
-                            (function() {\\
-                                try {\\
-                                    var m = navigator.mediaSession;\\
-                                    if (!m || !m.metadata || !m.metadata.title) return '';\\
-                                    var title = m.metadata.title || '';\\
-                                    var artist = m.metadata.artist || '';\\
-                                    var album = m.metadata.album || '';\\
-                                    var artwork = '';\\
-                                    if (m.metadata.artwork && m.metadata.artwork.length > 0) {\\
-                                        artwork = m.metadata.artwork[m.metadata.artwork.length - 1].src || '';\\
-                                    }\\
-                                    var video = document.querySelector('video');\\
-                                    var duration = 0;\\
-                                    var currentTime = 0;\\
-                                    var paused = true;\\
-                                    if (video) {\\
-                                        duration = video.duration || 0;\\
-                                        currentTime = video.currentTime || 0;\\
-                                        paused = video.paused;\\
-                                    }\\
-                                    return title + '|' + artist + '|' + album + '|' + duration + '|' + currentTime + '|' + (paused ? '0' : '1') + '|' + artwork;\\
-                                } catch(e) { return ''; }\\
-                            })()" in tab t of window w
-                        if jsResult is not "" then
-                            if results is not "" then set results to results & "###"
-                            set tabName to name of tab t of window w
-                            set results to results & jsResult & "|W" & w & "T" & t & "|" & tabName
-                        end if
-                    end try
-                end repeat
-            end repeat
-            return results
-        end tell
-        """
-
-        let output = runScriptCapture(script)
-        guard !output.isEmpty else { return [] }
-
-        return output.split(separator: "###").compactMap { entry -> NowPlayingInfo? in
-            let parts = entry.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
-            guard parts.count >= 6, !parts[0].isEmpty else { return nil }
-
-            let tabLocation = parts.count > 7 ? parts[7] : nil
-            let tabName = parts.count > 8 ? parts[8] : "Safari"
-            let sourceName = tabName.contains("YouTube Music") ? "YouTube Music" :
-                             tabName.contains("YouTube") ? "YouTube" :
-                             tabName.contains("SoundCloud") ? "SoundCloud" :
-                             tabName.contains("Spotify") ? "Spotify Web" : "Safari"
-
-            return NowPlayingInfo(
-                title: parts[0],
-                artist: parts.count > 1 ? parts[1] : "",
-                album: parts.count > 2 ? parts[2] : "",
-                sourceName: sourceName,
-                isPlaying: parts.count > 5 && parts[5] == "1",
-                duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
-                elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
-                artworkURL: parts.count > 6 ? parts[6] : nil,
-                sourceType: tabLocation.map { .safari(tabLocation: $0) } ?? .webApp
-            )
-        }
-    }
-
-    // MARK: - Query: Chrome / Edge (Chromium-based)
-
-    nonisolated private static func queryChromiumSources(app: String, bundleId: String, runningApps: [NSRunningApplication]) -> [NowPlayingInfo] {
-        guard runningApps.contains(where: { $0.bundleIdentifier == bundleId }) else { return [] }
-
-        // Chromium: first check tab titles, only inject JS into media-likely tabs
-        // This avoids injecting JS into 18+ tabs which causes timeout
-        let script = """
-        tell application "\(app)"
-            set results to ""
-            set winCount to count of windows
-            repeat with w from 1 to winCount
-                set tabCount to count of tabs of window w
-                repeat with t from 1 to tabCount
-                    try
-                        set tabTitle to title of tab t of window w
-                        set tabURL to URL of tab t of window w
-                        -- Only inject JS into tabs likely to have media
-                        if tabTitle contains "YouTube" or tabTitle contains "Spotify" or tabTitle contains "SoundCloud" or tabTitle contains "Music" or tabTitle contains "Deezer" or tabTitle contains "Tidal" or tabURL contains "youtube.com" or tabURL contains "music.apple.com" or tabURL contains "spotify.com" or tabURL contains "soundcloud.com" then
-                            set jsResult to execute tab t of window w javascript "\\
+            tell application "Safari"
+                set results to ""
+                set winCount to count of windows
+                repeat with w from 1 to winCount
+                    set tabCount to count of tabs of window w
+                    repeat with t from 1 to tabCount
+                        try
+                            set jsResult to do JavaScript "\\
                                 (function() {\\
                                     try {\\
                                         var m = navigator.mediaSession;\\
@@ -433,18 +366,106 @@ public final class NowPlayingService: ObservableObject {
                                         }\\
                                         return title + '|' + artist + '|' + album + '|' + duration + '|' + currentTime + '|' + (paused ? '0' : '1') + '|' + artwork;\\
                                     } catch(e) { return ''; }\\
-                                })()"
+                                })()" in tab t of window w
                             if jsResult is not "" then
                                 if results is not "" then set results to results & "###"
-                                set results to results & jsResult & "|W" & w & "T" & t & "|" & tabTitle
+                                set tabName to name of tab t of window w
+                                set results to results & jsResult & "|W" & w & "T" & t & "|" & tabName
                             end if
-                        end if
-                    end try
+                        end try
+                    end repeat
                 end repeat
-            end repeat
-            return results
-        end tell
-        """
+                return results
+            end tell
+            """
+
+        let output = runScriptCapture(script)
+        guard !output.isEmpty else { return [] }
+
+        return output.split(separator: "###").compactMap { entry -> NowPlayingInfo? in
+            let parts = entry.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            guard parts.count >= 6, !parts[0].isEmpty else { return nil }
+
+            let tabLocation = parts.count > 7 ? parts[7] : nil
+            let tabName = parts.count > 8 ? parts[8] : "Safari"
+            let sourceName =
+                tabName.contains("YouTube Music")
+                ? "YouTube Music"
+                : tabName.contains("YouTube")
+                    ? "YouTube"
+                    : tabName.contains("SoundCloud")
+                        ? "SoundCloud" : tabName.contains("Spotify") ? "Spotify Web" : "Safari"
+
+            return NowPlayingInfo(
+                title: parts[0],
+                artist: parts.count > 1 ? parts[1] : "",
+                album: parts.count > 2 ? parts[2] : "",
+                sourceName: sourceName,
+                isPlaying: parts.count > 5 && parts[5] == "1",
+                duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
+                elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
+                artworkURL: parts.count > 6 ? parts[6] : nil,
+                sourceType: tabLocation.map { .safari(tabLocation: $0) } ?? .webApp
+            )
+        }
+    }
+
+    // MARK: - Query: Chrome / Edge (Chromium-based)
+
+    nonisolated private static func queryChromiumSources(
+        app: String, bundleId: String, runningApps: [NSRunningApplication]
+    ) -> [NowPlayingInfo] {
+        guard runningApps.contains(where: { $0.bundleIdentifier == bundleId }) else { return [] }
+
+        // Chromium: first check tab titles, only inject JS into media-likely tabs
+        // This avoids injecting JS into 18+ tabs which causes timeout
+        let script = """
+            tell application "\(app)"
+                set results to ""
+                set winCount to count of windows
+                repeat with w from 1 to winCount
+                    set tabCount to count of tabs of window w
+                    repeat with t from 1 to tabCount
+                        try
+                            set tabTitle to title of tab t of window w
+                            set tabURL to URL of tab t of window w
+                            -- Only inject JS into tabs likely to have media
+                            if tabTitle contains "YouTube" or tabTitle contains "Spotify" or tabTitle contains "SoundCloud" or tabTitle contains "Music" or tabTitle contains "Deezer" or tabTitle contains "Tidal" or tabURL contains "youtube.com" or tabURL contains "music.apple.com" or tabURL contains "spotify.com" or tabURL contains "soundcloud.com" then
+                                set jsResult to execute tab t of window w javascript "\\
+                                    (function() {\\
+                                        try {\\
+                                            var m = navigator.mediaSession;\\
+                                            if (!m || !m.metadata || !m.metadata.title) return '';\\
+                                            var title = m.metadata.title || '';\\
+                                            var artist = m.metadata.artist || '';\\
+                                            var album = m.metadata.album || '';\\
+                                            var artwork = '';\\
+                                            if (m.metadata.artwork && m.metadata.artwork.length > 0) {\\
+                                                artwork = m.metadata.artwork[m.metadata.artwork.length - 1].src || '';\\
+                                            }\\
+                                            var video = document.querySelector('video');\\
+                                            var duration = 0;\\
+                                            var currentTime = 0;\\
+                                            var paused = true;\\
+                                            if (video) {\\
+                                                duration = video.duration || 0;\\
+                                                currentTime = video.currentTime || 0;\\
+                                                paused = video.paused;\\
+                                            }\\
+                                            return title + '|' + artist + '|' + album + '|' + duration + '|' + currentTime + '|' + (paused ? '0' : '1') + '|' + artwork;\\
+                                        } catch(e) { return ''; }\\
+                                    })()"
+                                if jsResult is not "" then
+                                    if results is not "" then set results to results & "###"
+                                    set results to results & jsResult & "|W" & w & "T" & t & "|" & tabTitle
+                                end if
+                            end if
+                        end try
+                    end repeat
+                end repeat
+                return results
+            end tell
+            """
 
         let output = runScriptCapture(script)
         guard !output.isEmpty else { return [] }
@@ -460,11 +481,14 @@ public final class NowPlayingService: ObservableObject {
 
             let tabLocation = parts.count > 7 ? parts[7] : nil
             let tabName = parts.count > 8 ? parts[8] : app
-            let sourceName = tabName.contains("YouTube Music") ? "YouTube Music" :
-                             tabName.contains("YouTube") ? "YouTube" :
-                             tabName.contains("SoundCloud") ? "SoundCloud" :
-                             tabName.contains("Spotify") ? "Spotify Web" :
-                             app.contains("Edge") ? "Edge" : "Chrome"
+            let sourceName =
+                tabName.contains("YouTube Music")
+                ? "YouTube Music"
+                : tabName.contains("YouTube")
+                    ? "YouTube"
+                    : tabName.contains("SoundCloud")
+                        ? "SoundCloud"
+                        : tabName.contains("Spotify") ? "Spotify Web" : app.contains("Edge") ? "Edge" : "Chrome"
 
             return NowPlayingInfo(
                 title: parts[0],
@@ -486,18 +510,18 @@ public final class NowPlayingService: ObservableObject {
         guard runningApps.contains(where: { $0.bundleIdentifier == "com.spotify.client" }) else { return [] }
 
         let script = """
-        tell application "Spotify"
-            if player state is stopped then return ""
-            set trackName to name of current track
-            set trackArtist to artist of current track
-            set trackAlbum to album of current track
-            set trackDuration to (duration of current track) / 1000
-            set trackPosition to player position
-            set trackPlaying to (player state is playing)
-            set trackArtwork to artwork url of current track
-            return trackName & "|" & trackArtist & "|" & trackAlbum & "|" & trackDuration & "|" & trackPosition & "|" & trackPlaying & "|" & trackArtwork
-        end tell
-        """
+            tell application "Spotify"
+                if player state is stopped then return ""
+                set trackName to name of current track
+                set trackArtist to artist of current track
+                set trackAlbum to album of current track
+                set trackDuration to (duration of current track) / 1000
+                set trackPosition to player position
+                set trackPlaying to (player state is playing)
+                set trackArtwork to artwork url of current track
+                return trackName & "|" & trackArtist & "|" & trackAlbum & "|" & trackDuration & "|" & trackPosition & "|" & trackPlaying & "|" & trackArtwork
+            end tell
+            """
 
         let output = runScriptCapture(script)
         guard !output.isEmpty else { return [] }
@@ -505,17 +529,19 @@ public final class NowPlayingService: ObservableObject {
         let parts = output.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
         guard parts.count >= 6, !parts[0].isEmpty else { return [] }
 
-        return [NowPlayingInfo(
-            title: parts[0],
-            artist: parts.count > 1 ? parts[1] : "",
-            album: parts.count > 2 ? parts[2] : "",
-            sourceName: "Spotify",
-            isPlaying: parts.count > 5 && parts[5] == "true",
-            duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
-            elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
-            artworkURL: parts.count > 6 ? parts[6] : nil,
-            sourceType: .spotify
-        )]
+        return [
+            NowPlayingInfo(
+                title: parts[0],
+                artist: parts.count > 1 ? parts[1] : "",
+                album: parts.count > 2 ? parts[2] : "",
+                sourceName: "Spotify",
+                isPlaying: parts.count > 5 && parts[5] == "true",
+                duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
+                elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
+                artworkURL: parts.count > 6 ? parts[6] : nil,
+                sourceType: .spotify
+            )
+        ]
     }
 
     // MARK: - Query: Apple Music
@@ -524,20 +550,20 @@ public final class NowPlayingService: ObservableObject {
         guard runningApps.contains(where: { $0.bundleIdentifier == "com.apple.Music" }) else { return [] }
 
         let script = """
-        tell application "Music"
-            if player state is stopped then return ""
-            set trackName to name of current track
-            set trackArtist to artist of current track
-            set trackAlbum to album of current track
-            set trackDuration to duration of current track
-            set trackPosition to player position
-            set trackPlaying to (player state is playing)
-            try
-                set artData to raw data of artwork 1 of current track
-            end try
-            return trackName & "|" & trackArtist & "|" & trackAlbum & "|" & trackDuration & "|" & trackPosition & "|" & trackPlaying
-        end tell
-        """
+            tell application "Music"
+                if player state is stopped then return ""
+                set trackName to name of current track
+                set trackArtist to artist of current track
+                set trackAlbum to album of current track
+                set trackDuration to duration of current track
+                set trackPosition to player position
+                set trackPlaying to (player state is playing)
+                try
+                    set artData to raw data of artwork 1 of current track
+                end try
+                return trackName & "|" & trackArtist & "|" & trackAlbum & "|" & trackDuration & "|" & trackPosition & "|" & trackPlaying
+            end tell
+            """
 
         let output = runScriptCapture(script)
         guard !output.isEmpty else { return [] }
@@ -545,41 +571,43 @@ public final class NowPlayingService: ObservableObject {
         let parts = output.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
         guard parts.count >= 6, !parts[0].isEmpty else { return [] }
 
-        return [NowPlayingInfo(
-            title: parts[0],
-            artist: parts.count > 1 ? parts[1] : "",
-            album: parts.count > 2 ? parts[2] : "",
-            sourceName: "Apple Music",
-            isPlaying: parts.count > 5 && parts[5] == "true",
-            duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
-            elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
-            artworkURL: nil, // Apple Music artwork loaded separately via AppleScript binary data
-            sourceType: .appleMusic
-        )]
+        return [
+            NowPlayingInfo(
+                title: parts[0],
+                artist: parts.count > 1 ? parts[1] : "",
+                album: parts.count > 2 ? parts[2] : "",
+                sourceName: "Apple Music",
+                isPlaying: parts.count > 5 && parts[5] == "true",
+                duration: parts.count > 3 ? (Double(parts[3]) ?? 0) : 0,
+                elapsed: parts.count > 4 ? (Double(parts[4]) ?? 0) : 0,
+                artworkURL: nil,  // Apple Music artwork loaded separately via AppleScript binary data
+                sourceType: .appleMusic
+            )
+        ]
     }
 
     // MARK: - Query: Safari Web Apps
 
     nonisolated private static func queryWebApps(runningApps: [NSRunningApplication]) -> [NowPlayingInfo] {
         let script = """
-        tell application "System Events"
-            set results to ""
-            set allProcs to every process whose background only is false
-            repeat with proc in allProcs
-                set procName to name of proc
-                if procName is "Web App" then
-                    try
-                        set winTitle to name of front window of proc
-                        if winTitle contains "YouTube Music" or winTitle contains "SoundCloud" or winTitle contains "Spotify" then
-                            if results is not "" then set results to results & "###"
-                            set results to results & winTitle
-                        end if
-                    end try
-                end if
-            end repeat
-            return results
-        end tell
-        """
+            tell application "System Events"
+                set results to ""
+                set allProcs to every process whose background only is false
+                repeat with proc in allProcs
+                    set procName to name of proc
+                    if procName is "Web App" then
+                        try
+                            set winTitle to name of front window of proc
+                            if winTitle contains "YouTube Music" or winTitle contains "SoundCloud" or winTitle contains "Spotify" then
+                                if results is not "" then set results to results & "###"
+                                set results to results & winTitle
+                            end if
+                        end try
+                    end if
+                end repeat
+                return results
+            end tell
+            """
 
         let output = runScriptCapture(script)
         guard !output.isEmpty else { return [] }

@@ -66,8 +66,8 @@ struct WeatherMappingTests {
         let response = daily(
             times: ["2026-09-20", "2026-09-21", "2026-09-22"],
             codes: [0, 1, 2],
-            highs: [20, 21],          // one short
-            lows: [10]                // two short
+            highs: [20, 21],  // one short
+            lows: [10]  // two short
         )
         let forecast = WeatherMapping.forecast(from: response)
         #expect(forecast.count == 1)
@@ -102,7 +102,8 @@ struct WeatherMappingTests {
         }
         #expect(WeatherMapping.current(from: json(1)).isDay)
         #expect(WeatherMapping.current(from: json(0)).isDay == false)
-        #expect(WeatherMapping.current(from: json(1)).symbolName
+        #expect(
+            WeatherMapping.current(from: json(1)).symbolName
                 != WeatherMapping.current(from: json(0)).symbolName)
     }
 }

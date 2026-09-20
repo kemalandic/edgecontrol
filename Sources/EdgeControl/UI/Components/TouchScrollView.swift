@@ -40,14 +40,16 @@ public struct TouchScrollView<Content: View>: View {
                 // Subtle scrollbar — fades in during interaction, out at rest.
                 if maxScroll > 0 {
                     let clampedForBar = min(0, max(-maxScroll, offset))
-                    scrollIndicator(viewportHeight: geo.size.height,
-                                    contentHeight: contentHeight,
-                                    offset: clampedForBar)
-                        .padding(.trailing, 2)
-                        .padding(.vertical, 4)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                        .opacity(scrollbarOpacity)
-                        .allowsHitTesting(false)
+                    scrollIndicator(
+                        viewportHeight: geo.size.height,
+                        contentHeight: contentHeight,
+                        offset: clampedForBar
+                    )
+                    .padding(.trailing, 2)
+                    .padding(.vertical, 4)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .opacity(scrollbarOpacity)
+                    .allowsHitTesting(false)
                 }
             }
             // The viewport, stated exactly. Two things are load-bearing here.
@@ -170,7 +172,8 @@ public struct TouchScrollView<Content: View>: View {
         let trackHeight = max(0, viewportHeight - 8)
         let thumbHeight = max(20, trackHeight * thumbRatio)
         let scrollableTrack = max(0, trackHeight - thumbHeight)
-        let progress = contentHeight > viewportHeight
+        let progress =
+            contentHeight > viewportHeight
             ? min(1, max(0, -offset / max(1, contentHeight - viewportHeight)))
             : 0
         let thumbY = scrollableTrack * progress
@@ -189,7 +192,6 @@ private struct ContentHeightKey: PreferenceKey {
         value = max(value, nextValue())
     }
 }
-
 
 /// Feeds scroll-wheel / two-finger-trackpad deltas to the touch scroller.
 /// A hit-test-transparent overlay would never receive scrollWheel (delivery
@@ -224,7 +226,8 @@ private struct ScrollWheelCatcher: NSViewRepresentable {
                     guard self.bounds.contains(point) else { return event }
                     // Trackpads report precise pixel deltas; wheels report
                     // lines and need scaling to feel comparable.
-                    let delta = event.hasPreciseScrollingDeltas
+                    let delta =
+                        event.hasPreciseScrollingDeltas
                         ? event.scrollingDeltaY
                         : event.scrollingDeltaY * 12
                     self.onScroll?(delta)

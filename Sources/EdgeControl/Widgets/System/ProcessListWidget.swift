@@ -12,10 +12,13 @@ public final class ProcessListWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(6, 4)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu"), options: ["cpu", "memory"]),
+        ConfigSchemaEntry(
+            key: "sortBy", label: "Sort By", type: .picker, defaultValue: .string("cpu"), options: ["cpu", "memory"]),
         // "auto" fills whatever height the widget has; a number pins the row
         // count and scrolls past it.
-        ConfigSchemaEntry(key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"), options: ["auto", "4", "6", "8", "10", "12", "16"]),
+        ConfigSchemaEntry(
+            key: "rows", label: "Rows", type: .picker, defaultValue: .string("auto"),
+            options: ["auto", "4", "6", "8", "10", "12", "16"]),
     ]
     public let defaultColors = WidgetColors(primary: .purple, secondary: .cyan)
 
@@ -52,8 +55,8 @@ private struct ProcessListWidgetView: View {
     var body: some View {
         VStack(spacing: 0) {
             WidgetHeader(title: "TOP PROCESSES", color: Theme.widgetPrimary("process-list", ts: ts, default: .purple))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
 
             HStack {
                 Text("APP")
@@ -141,7 +144,11 @@ private struct ProcessListWidgetView: View {
 
             Text(String(format: "%.1f%%", proc.cpuPercent))
                 .font(Theme.body(ts))
-                .foregroundStyle(proc.cpuPercent > 50 ? Theme.accentOrange : Theme.widgetSecondary("process-list", ts: ts, default: .cyan) ?? Theme.accentCyan)
+                .foregroundStyle(
+                    proc.cpuPercent > 50
+                        ? Theme.accentOrange
+                        : Theme.widgetSecondary("process-list", ts: ts, default: .cyan) ?? Theme.accentCyan
+                )
                 .monospacedDigit()
                 .frame(width: 70, alignment: .trailing)
 

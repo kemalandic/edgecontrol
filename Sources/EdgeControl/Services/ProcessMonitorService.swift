@@ -2,7 +2,7 @@ import AppKit
 import Foundation
 
 public struct ProcessInfo_EC: Identifiable, Equatable {
-    public let id: Int32          // pid
+    public let id: Int32  // pid
     public let name: String
     public let cpuPercent: Double
     public let memoryMB: Double
@@ -86,13 +86,14 @@ public final class ProcessMonitorService: ObservableObject {
                 elapsedNanos: elapsedNs
             )
 
-            results.append(ProcessInfo_EC(
-                id: snap.pid,
-                name: snap.name,
-                cpuPercent: cpuPercent,
-                memoryMB: snap.memoryMB,
-                icon: nil
-            ))
+            results.append(
+                ProcessInfo_EC(
+                    id: snap.pid,
+                    name: snap.name,
+                    cpuPercent: cpuPercent,
+                    memoryMB: snap.memoryMB,
+                    icon: nil
+                ))
         }
 
         // Update stored state for next delta
@@ -145,18 +146,20 @@ public final class ProcessMonitorService: ObservableObject {
             proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
             // proc_name fills a fixed buffer and null-terminates; decode up to that
             // terminator rather than through the trailing zeros.
-            let name = String(decoding: nameBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) },
-                              as: UTF8.self)
+            let name = String(
+                decoding: nameBuffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) },
+                as: UTF8.self)
             if name.isEmpty { continue }
             if name.hasPrefix("(") || name == "EdgeControl" { continue }
 
-            snapshots.append(RawProcessSnapshot(
-                pid: pid,
-                name: name,
-                totalCPUTime: taskInfo.pti_total_user + taskInfo.pti_total_system,
-                memoryMB: Double(taskInfo.pti_resident_size) / (1024.0 * 1024.0),
-                sampleTime: now
-            ))
+            snapshots.append(
+                RawProcessSnapshot(
+                    pid: pid,
+                    name: name,
+                    totalCPUTime: taskInfo.pti_total_user + taskInfo.pti_total_system,
+                    memoryMB: Double(taskInfo.pti_resident_size) / (1024.0 * 1024.0),
+                    sampleTime: now
+                ))
         }
 
         return snapshots

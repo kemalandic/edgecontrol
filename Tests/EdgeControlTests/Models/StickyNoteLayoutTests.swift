@@ -35,9 +35,11 @@ struct StickyNoteLayoutTests {
         }
     }
 
-    @Test("the round trip survives any note font", arguments: [
-        "Helvetica", "Menlo", "Marker Felt", "Noteworthy",
-    ])
+    @Test(
+        "the round trip survives any note font",
+        arguments: [
+            "Helvetica", "Menlo", "Marker Felt", "Noteworthy",
+        ])
     func roundTripAcrossFonts(fontName: String) throws {
         let font = try #require(NSFont(name: fontName, size: 15) ?? NSFont(name: fontName, size: 15))
         let other = StickyNoteLayout(font: font)

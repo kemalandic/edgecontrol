@@ -60,10 +60,12 @@ public struct GitHubProvider: CIProvider {
     // MARK: - Request helper
 
     private func decode<T: Decodable>(_ type: T.Type, from url: URL) async throws -> T {
-        let (data, response) = try await transport.get(url, headers: [
-            "Authorization": "Bearer \(token)",
-            "Accept": "application/vnd.github+json",
-        ])
+        let (data, response) = try await transport.get(
+            url,
+            headers: [
+                "Authorization": "Bearer \(token)",
+                "Accept": "application/vnd.github+json",
+            ])
         if let error = CIError.from(response: response) { throw error }
         do {
             return try JSONDecoder().decode(T.self, from: data)
@@ -94,16 +96,19 @@ public struct GitHubProvider: CIProvider {
                 // widget with history.
                 guard repo.archived != true else { continue }
                 guard let raw = repo.pushed_at,
-                      let pushed = formatter.date(from: raw),
-                      pushed >= activeSince else { continue }
+                    let pushed = formatter.date(from: raw),
+                    pushed >= activeSince
+                else { continue }
                 seen.insert(repo.full_name)
-                result.append(CIRepository(
-                    fullName: repo.full_name, shortName: repo.name, lastActivity: pushed
-                ))
+                result.append(
+                    CIRepository(
+                        fullName: repo.full_name, shortName: repo.name, lastActivity: pushed
+                    ))
             }
         }
 
-        let userRepos = apiBaseURL
+        let userRepos =
+            apiBaseURL
             .appendingPathComponent("user/repos")
             .appending(queryItems: [
                 URLQueryItem(name: "sort", value: "pushed"),
@@ -120,7 +125,8 @@ public struct GitHubProvider: CIProvider {
                 .appending(queryItems: [URLQueryItem(name: "per_page", value: "100")])
         )
         for org in orgs {
-            let url = apiBaseURL
+            let url =
+                apiBaseURL
                 .appendingPathComponent("orgs/\(org.login)/repos")
                 .appending(queryItems: [
                     URLQueryItem(name: "sort", value: "pushed"),
@@ -133,7 +139,8 @@ public struct GitHubProvider: CIProvider {
     }
 
     public func fetchRuns(repository: CIRepository, limit: Int) async throws -> [CIRun] {
-        let url = apiBaseURL
+        let url =
+            apiBaseURL
             .appendingPathComponent("repos/\(repository.fullName)/actions/runs")
             .appending(queryItems: [URLQueryItem(name: "per_page", value: String(limit))])
 
@@ -169,11 +176,11 @@ public struct GitHubProvider: CIProvider {
             break
         }
         switch conclusion {
-        case "success":              return .success
+        case "success": return .success
         case "failure", "timed_out": return .failure
-        case "cancelled":            return .cancelled
-        case "skipped", "neutral":   return .skipped
-        default:                     return .unknown
+        case "cancelled": return .cancelled
+        case "skipped", "neutral": return .skipped
+        default: return .unknown
         }
     }
 }

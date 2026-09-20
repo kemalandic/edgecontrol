@@ -53,9 +53,10 @@ struct ProcessUsageTests {
 
     @Test("the list is ordered by CPU, busiest first")
     func orderedByCPU() {
-        let top = ProcessUsage.busiest([
-            proc(1, "idle", cpu: 0), proc(2, "busy", cpu: 80), proc(3, "some", cpu: 12),
-        ], limit: 10)
+        let top = ProcessUsage.busiest(
+            [
+                proc(1, "idle", cpu: 0), proc(2, "busy", cpu: 80), proc(3, "some", cpu: 12),
+            ], limit: 10)
         #expect(top.map(\.name) == ["busy", "some", "idle"])
     }
 
@@ -83,9 +84,10 @@ struct ProcessUsageTests {
 
     @Test("two processes with the same name are separated by pid")
     func sameNameSeparatedByPid() {
-        let top = ProcessUsage.busiest([
-            proc(42, "helper", cpu: 0), proc(7, "helper", cpu: 0),
-        ], limit: 10)
+        let top = ProcessUsage.busiest(
+            [
+                proc(42, "helper", cpu: 0), proc(7, "helper", cpu: 0),
+            ], limit: 10)
         #expect(top.map(\.id) == [7, 42])
     }
 

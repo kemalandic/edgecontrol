@@ -74,10 +74,12 @@ final class CICDServiceTests: XCTestCase {
     /// workflows, not one.
     func testSameWorkflowNameInTwoReposStaysSeparate() {
         let account = UUID().uuidString
-        let merged = CICDService.merge([[
-            run("\(account)/acme/app/1", .success, 10, workflow: "ci"),
-            run("\(account)/other/app/1", .success, 20, workflow: "ci"),
-        ]])
+        let merged = CICDService.merge([
+            [
+                run("\(account)/acme/app/1", .success, 10, workflow: "ci"),
+                run("\(account)/other/app/1", .success, 20, workflow: "ci"),
+            ]
+        ])
         XCTAssertEqual(merged.count, 2)
     }
 

@@ -64,8 +64,8 @@ private struct NowPlayingWidgetView: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
                                     .background(
-                                        index == service.selectedSourceIndex ?
-                                        primary.opacity(0.3) : Color.white.opacity(0.05),
+                                        index == service.selectedSourceIndex
+                                            ? primary.opacity(0.3) : Color.white.opacity(0.05),
                                         in: Capsule()
                                     )
                                     .touchTappable(id: "np-source-\(index)", registry: touchRegistry) {
@@ -178,10 +178,11 @@ private struct NowPlayingWidgetView: View {
         } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: [primary.opacity(0.3), secondary.opacity(0.15)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ))
+                    .fill(
+                        LinearGradient(
+                            colors: [primary.opacity(0.3), secondary.opacity(0.15)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ))
                 Image(systemName: "music.note")
                     .font(.system(size: 32 * ts.fontScale))
                     .foregroundStyle(Theme.text3(ts))
@@ -197,10 +198,12 @@ private struct NowPlayingWidgetView: View {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(Color.white.opacity(0.10))
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(LinearGradient(
-                            colors: [secondary, primary],
-                            startPoint: .leading, endPoint: .trailing
-                        ))
+                        .fill(
+                            LinearGradient(
+                                colors: [secondary, primary],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                        )
                         .frame(width: geo.size.width * np.progress)
                 }
             }

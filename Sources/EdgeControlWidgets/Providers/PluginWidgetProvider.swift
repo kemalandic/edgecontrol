@@ -107,8 +107,9 @@ struct PluginWidgetProvider: AppIntentTimelineProvider {
 
     private func loadSnapshot(pluginId: String, size: String) -> NSImage? {
         guard let url = PluginWidgetManifest.snapshotURL(pluginId: pluginId, size: size),
-              let data = try? Data(contentsOf: url),
-              let image = NSImage(data: data) else {
+            let data = try? Data(contentsOf: url),
+            let image = NSImage(data: data)
+        else {
             return nil
         }
         return image

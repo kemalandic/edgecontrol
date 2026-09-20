@@ -50,8 +50,10 @@ final class LinkPasteTextView: NSTextView {
     private func headingFont(_ level: Int) -> NSFont { layout.headingFont(level) }
 
     private var bodyAttributes: [NSAttributedString.Key: Any] {
-        [.font: defaultFont, .foregroundColor: defaultColor,
-         .paragraphStyle: bodyParagraph, .kern: noteKern]
+        [
+            .font: defaultFont, .foregroundColor: defaultColor,
+            .paragraphStyle: bodyParagraph, .kern: noteKern,
+        ]
     }
 
     /// Shared rhythm for body, bullet and checkbox lines.
@@ -129,9 +131,10 @@ final class LinkPasteTextView: NSTextView {
     private func checkboxMarker(checked: Bool, level: Int = 0) -> NSAttributedString {
         let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
         s.append(NSAttributedString(string: "\t", attributes: listAttributes(level: level)))
-        s.addAttribute(.paragraphStyle,
-                       value: paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: level),
-                       range: NSRange(location: 0, length: s.length))
+        s.addAttribute(
+            .paragraphStyle,
+            value: paragraphStyle(isHeading: false, isList: true, markerInset: 0, level: level),
+            range: NSRange(location: 0, length: s.length))
         return s
     }
 
@@ -215,7 +218,8 @@ final class LinkPasteTextView: NSTextView {
 
             let isList = markerLength(of: line) > 0
             let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
-            let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+            let existing =
+                storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
             let style = paragraphStyle(
                 isHeading: !isList && (firstFont?.pointSize ?? 0) > headingThreshold,
                 isList: isList,
@@ -249,8 +253,10 @@ final class LinkPasteTextView: NSTextView {
                 continue
             }
             if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
-               let n = Int(line[..<tab].dropLast()) {
-                let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+                let n = Int(line[..<tab].dropLast())
+            {
+                let existing =
+                    storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
                 let level = indentLevel(of: existing, isList: true)
                 counters = counters.filter { $0.key <= level }
                 let expected = counters[level].map { $0 + 1 } ?? n
@@ -271,12 +277,11 @@ final class LinkPasteTextView: NSTextView {
         }
     }
 
-
-
     // MARK: Typing conversions
 
     override func insertText(_ insertString: Any, replacementRange: NSRange) {
-        let str = (insertString as? String)
+        let str =
+            (insertString as? String)
             ?? (insertString as? NSAttributedString)?.string ?? ""
 
         if str == " ", convertLinePrefix() { return }
@@ -323,7 +328,8 @@ final class LinkPasteTextView: NSTextView {
         guard lines.length > 0 else {
             let existing = typingAttributes[.paragraphStyle] as? NSParagraphStyle
             let level = max(0, min(maxIndentLevel, indentLevel(of: existing, isList: false) + delta))
-            typingAttributes[.paragraphStyle] = paragraphStyle(isHeading: false, isList: false, markerInset: 0, level: level)
+            typingAttributes[.paragraphStyle] = paragraphStyle(
+                isHeading: false, isList: false, markerInset: 0, level: level)
             return
         }
         guard shouldChangeText(in: lines, replacementString: nil) else { return }
@@ -334,14 +340,17 @@ final class LinkPasteTextView: NSTextView {
             if line.hasSuffix("\n") { line.removeLast() }
             let isList = markerLength(of: line) > 0
             let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
-            let existing = storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
+            let existing =
+                storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
             let level = max(0, min(maxIndentLevel, indentLevel(of: existing, isList: isList) + delta))
-            storage.addAttribute(.paragraphStyle, value: paragraphStyle(
-                isHeading: !isList && (firstFont?.pointSize ?? 0) > defaultFont.pointSize * 1.1,
-                isList: isList,
-                markerInset: markerInset(for: line),
-                level: level
-            ), range: paragraph)
+            storage.addAttribute(
+                .paragraphStyle,
+                value: paragraphStyle(
+                    isHeading: !isList && (firstFont?.pointSize ?? 0) > defaultFont.pointSize * 1.1,
+                    isList: isList,
+                    markerInset: markerInset(for: line),
+                    level: level
+                ), range: paragraph)
             location = paragraph.location + paragraph.length
         }
         didChangeText()
@@ -360,20 +369,24 @@ final class LinkPasteTextView: NSTextView {
         if fullLine.hasSuffix("\n") { fullLine.removeLast() }
         let markerLen = markerLength(of: fullLine)
         guard loc - lineRange.location >= markerLen else { return false }
-        let typed = ns.substring(with: NSRange(
-            location: lineRange.location + markerLen,
-            length: loc - lineRange.location - markerLen
-        ))
+        let typed = ns.substring(
+            with: NSRange(
+                location: lineRange.location + markerLen,
+                length: loc - lineRange.location - markerLen
+            ))
         // Replacements swallow the existing marker along with the trigger.
         let fullRange = NSRange(location: lineRange.location, length: loc - lineRange.location)
-        let existing = textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let existing =
+            textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
         let level = indentLevel(of: existing, isList: markerLen > 0)
 
         // Checkbox conversion waits for the CLOSING bracket — converting at
         // "[" would make "[x]" untypeable. Bare bracket forms need an
         // existing marker; on plain text the leading "- " is required.
-        let boxForms: [String: Bool] = ["[ ]": false, "[]": false,
-                                        "[x]": true, "[X]": true, "[ x]": true, "[ X]": true]
+        let boxForms: [String: Bool] = [
+            "[ ]": false, "[]": false,
+            "[x]": true, "[X]": true, "[ x]": true, "[ X]": true,
+        ]
         let boxTyped = typed.hasPrefix("- ") ? String(typed.dropFirst(2)) : typed
         if let checked = boxForms[boxTyped], typed.hasPrefix("- ") || markerLen > 0 {
             replace(fullRange, with: checkboxMarker(checked: checked, level: level))
@@ -409,8 +422,8 @@ final class LinkPasteTextView: NSTextView {
         guard selectedRange().length == 0, let storage = textStorage else { return false }
         let loc = selectedRange().location
         guard loc > 0, loc < storage.length,
-              let before = storage.attribute(.link, at: loc - 1, effectiveRange: nil),
-              let after = storage.attribute(.link, at: loc, effectiveRange: nil)
+            let before = storage.attribute(.link, at: loc - 1, effectiveRange: nil),
+            let after = storage.attribute(.link, at: loc, effectiveRange: nil)
         else { return false }
         let a = (after as? URL)?.absoluteString ?? (after as? String ?? "")
         let b = (before as? URL)?.absoluteString ?? (before as? String ?? "")
@@ -430,7 +443,8 @@ final class LinkPasteTextView: NSTextView {
         let prefixRange = NSRange(location: lineRange.location, length: 2)
         let prefix = ns.substring(with: prefixRange)
         guard prefix == "- " || prefix == "* " else { return }
-        let existing = textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let existing =
+            textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
         let level = indentLevel(of: existing, isList: false)
         replace(prefixRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
     }
@@ -442,13 +456,15 @@ final class LinkPasteTextView: NSTextView {
         let ns = string as NSString
         let loc = selectedRange().location
         let lineRange = ns.lineRange(for: NSRange(location: loc, length: 0))
-        let marker = ns.substring(with: NSRange(location: lineRange.location, length: min(2, ns.length - lineRange.location)))
+        let marker = ns.substring(
+            with: NSRange(location: lineRange.location, length: min(2, ns.length - lineRange.location)))
         guard loc - lineRange.location == 2,
-              StickyNoteMarkup.separators.contains(where: { marker == StickyNoteMarkup.checkboxCharacter + $0 }),
-              storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
+            StickyNoteMarkup.separators.contains(where: { marker == StickyNoteMarkup.checkboxCharacter + $0 }),
+            storage.attribute(.attachment, at: lineRange.location, effectiveRange: nil) is CheckboxAttachment
         else { return false }
         let markerRange = NSRange(location: lineRange.location, length: 2)
-        let existing = storage.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
+        let existing =
+            storage.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
         let level = indentLevel(of: existing, isList: true)
         replace(markerRange, with: NSAttributedString(string: "•\t", attributes: listAttributes(level: level)))
         return true
@@ -499,7 +515,8 @@ final class LinkPasteTextView: NSTextView {
             !line.dropFirst(marker.count).trimmingCharacters(in: .whitespaces).isEmpty
         }
         // The new item continues at the same indent level as the current one.
-        let existing = lineRange.length > 0
+        let existing =
+            lineRange.length > 0
             ? textStorage?.attribute(.paragraphStyle, at: lineRange.location, effectiveRange: nil) as? NSParagraphStyle
             : nil
         let level = indentLevel(of: existing, isList: true)
@@ -514,7 +531,8 @@ final class LinkPasteTextView: NSTextView {
         }
         // Numbered: "N.<tab>" continues as "N+1.<tab>".
         if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
-           let n = Int(line[..<tab].dropLast()) {
+            let n = Int(line[..<tab].dropLast())
+        {
             return hasContent(after: String(line[...tab]))
                 ? NSAttributedString(string: "\(n + 1).\t", attributes: listAttributes(level: level)) : nil
         }
@@ -533,7 +551,8 @@ final class LinkPasteTextView: NSTextView {
         let point = convert(event.locationInWindow, from: nil)
         let index = characterIndexForInsertion(at: point)
         for candidate in [index, index - 1] where candidate >= 0 && candidate < (textStorage?.length ?? 0) {
-            if let box = textStorage?.attribute(.attachment, at: candidate, effectiveRange: nil) as? CheckboxAttachment {
+            if let box = textStorage?.attribute(.attachment, at: candidate, effectiveRange: nil) as? CheckboxAttachment
+            {
                 let range = NSRange(location: candidate, length: 1)
                 guard shouldChangeText(in: range, replacementString: nil) else { break }
                 textStorage?.replaceCharacters(in: range, with: toggledBox(box, at: candidate))
@@ -555,7 +574,9 @@ final class LinkPasteTextView: NSTextView {
         while location < max(NSMaxRange(lines), lines.location + 1), location < ns.length {
             let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
             if paragraph.length > 0,
-               let box = storage.attribute(.attachment, at: paragraph.location, effectiveRange: nil) as? CheckboxAttachment {
+                let box = storage.attribute(.attachment, at: paragraph.location, effectiveRange: nil)
+                    as? CheckboxAttachment
+            {
                 let range = NSRange(location: paragraph.location, length: 1)
                 if shouldChangeText(in: range, replacementString: nil) {
                     storage.replaceCharacters(in: range, with: toggledBox(box, at: paragraph.location))
@@ -588,8 +609,9 @@ final class LinkPasteTextView: NSTextView {
     // MARK: Link paste
 
     override func paste(_ sender: Any?) {
-        guard let pasted = NSPasteboard.general.string(forType: .string)?
-            .trimmingCharacters(in: .whitespacesAndNewlines),
+        guard
+            let pasted = NSPasteboard.general.string(forType: .string)?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
             isLink(pasted)
         else {
             super.paste(sender)

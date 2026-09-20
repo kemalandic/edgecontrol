@@ -27,10 +27,12 @@ final class CIErrorMappingTests: XCTestCase {
     }
 
     func testForbiddenWithExhaustedQuotaIsRateLimited() {
-        let r = response(403, headers: [
-            "x-ratelimit-remaining": "0",
-            "x-ratelimit-reset": "1785999999",
-        ])
+        let r = response(
+            403,
+            headers: [
+                "x-ratelimit-remaining": "0",
+                "x-ratelimit-reset": "1785999999",
+            ])
         XCTAssertEqual(
             CIError.from(response: r),
             .rateLimited(retryAfter: Date(timeIntervalSince1970: 1_785_999_999))

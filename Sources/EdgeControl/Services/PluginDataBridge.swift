@@ -68,7 +68,7 @@ public final class PluginDataBridge {
                         "gpuName": m.gpuName,
                         "performanceCores": m.performanceCoreCount,
                         "efficiencyCores": m.efficiencyCoreCount,
-                        "thermalState": m.thermalState
+                        "thermalState": m.thermalState,
                     ]
                 }
 
@@ -93,8 +93,8 @@ public final class PluginDataBridge {
                         "ssid": model.wifiService.ssid as Any,
                         "signalStrength": model.wifiService.signalStrength,
                         "channel": model.wifiService.channel,
-                        "txRate": model.wifiService.txRate
-                    ]
+                        "txRate": model.wifiService.txRate,
+                    ],
                 ]
 
             case .processes:
@@ -105,7 +105,7 @@ public final class PluginDataBridge {
                         "pid": proc.id,
                         "name": proc.name,
                         "cpuPercent": proc.cpuPercent,
-                        "memoryMB": proc.memoryMB
+                        "memoryMB": proc.memoryMB,
                     ] as [String: Any]
                 }
 
@@ -119,7 +119,7 @@ public final class PluginDataBridge {
                         "isPlaying": np.isPlaying,
                         "duration": np.duration,
                         "elapsed": np.elapsed,
-                        "progress": np.progress
+                        "progress": np.progress,
                     ]
                 }
 
@@ -132,16 +132,16 @@ public final class PluginDataBridge {
                             "name": dev.name,
                             "connected": dev.isConnected,
                             "type": dev.deviceType,
-                            "battery": dev.batteryLevel as Any
+                            "battery": dev.batteryLevel as Any,
                         ] as [String: Any]
-                    }
+                    },
                 ]
 
             case .audio:
                 data["audio"] = [
                     "volume": model.audioService.volume,
                     "muted": model.audioService.isMuted,
-                    "outputDevice": model.audioService.outputDeviceName
+                    "outputDevice": model.audioService.outputDeviceName,
                 ]
 
             case .weather:
@@ -151,14 +151,14 @@ public final class PluginDataBridge {
                         "condition": w.conditionText,
                         "humidity": w.humidity,
                         "windSpeed": w.windSpeed,
-                        "isDay": w.isDay
+                        "isDay": w.isDay,
                     ]
                 }
 
             case .diskIO:
                 data["diskIO"] = [
                     "readBytesPerSec": model.diskIOService.readBytesPerSec,
-                    "writeBytesPerSec": model.diskIOService.writeBytesPerSec
+                    "writeBytesPerSec": model.diskIOService.writeBytesPerSec,
                 ]
 
             // v2 action permissions — no data payload, handled via JS→native actions

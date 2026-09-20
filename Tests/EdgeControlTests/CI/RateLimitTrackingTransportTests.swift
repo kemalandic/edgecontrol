@@ -34,8 +34,9 @@ final class RateLimitTrackingTransportTests: XCTestCase {
         let limit = try XCTUnwrap(transport.rateLimit(forHost: "api.github.com"))
         XCTAssertEqual(limit.limit, 5000)
         XCTAssertEqual(limit.remaining, 4831)
-        XCTAssertEqual(limit.resetsAt?.timeIntervalSince1970 ?? 0,
-                       reset.timeIntervalSince1970, accuracy: 1)
+        XCTAssertEqual(
+            limit.resetsAt?.timeIntervalSince1970 ?? 0,
+            reset.timeIntervalSince1970, accuracy: 1)
         XCTAssertFalse(limit.isLow)
     }
 
@@ -64,9 +65,10 @@ final class RateLimitTrackingTransportTests: XCTestCase {
     }
 
     func testQuotaIsTrackedPerHost() async throws {
-        let a = RateLimitTrackingTransport(wrapping: HeaderTransport(headers: [
-            "x-ratelimit-limit": "5000", "x-ratelimit-remaining": "10",
-        ]))
+        let a = RateLimitTrackingTransport(
+            wrapping: HeaderTransport(headers: [
+                "x-ratelimit-limit": "5000", "x-ratelimit-remaining": "10",
+            ]))
         _ = try await a.get(url, headers: [:])
         XCTAssertNotNil(a.rateLimit(forHost: "api.github.com"))
         XCTAssertNil(a.rateLimit(forHost: "git.example.dev"))

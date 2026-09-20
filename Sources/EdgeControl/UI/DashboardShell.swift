@@ -45,9 +45,11 @@ struct DashboardShell: View {
                         Text("Display too small")
                             .font(.title2)
                             .foregroundStyle(.secondary)
-                        Text("Minimum \(Int(DynamicGrid.minimumWidth))×\(Int(DynamicGrid.minimumHeight)) points required")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
+                        Text(
+                            "Minimum \(Int(DynamicGrid.minimumWidth))×\(Int(DynamicGrid.minimumHeight)) points required"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                     }
                 } else if model.systemMetrics != nil {
                     // Current page content
@@ -87,14 +89,16 @@ struct DashboardShell: View {
                     // TouchTappable, TouchButton and TouchScrollView all set it.
                     .contentShape(Rectangle())
                     .gesture(
-                        editMode ? nil : DragGesture(minimumDistance: 10)
-                            .onChanged { value in
-                                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                                pageDragOffset = rubberBand(value.translation.width, pageCount: pages.count)
-                            }
-                            .onEnded { value in
-                                settlePages(dx: value.translation.width, pageCount: pages.count)
-                            }
+                        editMode
+                            ? nil
+                            : DragGesture(minimumDistance: 10)
+                                .onChanged { value in
+                                    guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                                    pageDragOffset = rubberBand(value.translation.width, pageCount: pages.count)
+                                }
+                                .onEnded { value in
+                                    settlePages(dx: value.translation.width, pageCount: pages.count)
+                                }
                     )
                     // Hardware finger: track while down, settle on release.
                     .onReceive(model.touchService.$liveSwipeDX) { dx in
@@ -136,15 +140,17 @@ struct DashboardShell: View {
                 history.record(cpu: m.cpuLoadPercent, memory: m.memoryUsedPercent)
             }
         }
-        .background(WindowAccessor { window in
-            WindowPlacement.configure(
-                window,
-                display: model.selectedDisplay,
-                kioskMode: layoutEngine.document.globalSettings.kioskMode,
-                strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity,
-                allowSystemPanels: layoutEngine.document.globalSettings.allowSystemPanels
-            )
-        })
+        .background(
+            WindowAccessor { window in
+                WindowPlacement.configure(
+                    window,
+                    display: model.selectedDisplay,
+                    kioskMode: layoutEngine.document.globalSettings.kioskMode,
+                    strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity,
+                    allowSystemPanels: layoutEngine.document.globalSettings.allowSystemPanels
+                )
+            }
+        )
         .onAppear {
             model.startIfNeeded()
             // Sync initial page
@@ -227,7 +233,6 @@ struct DashboardShell: View {
     }
 
     // MARK: - Gear Button
-
 
     private func gearButton() -> some View {
         return HStack(spacing: 6) {

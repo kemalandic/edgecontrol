@@ -26,9 +26,11 @@ final class GitHubProviderTests: XCTestCase {
 
     func testMapsEveryStatusAndConclusionPair() async throws {
         let runs = try await fetchAll()
-        XCTAssertEqual(runs.map(\.state), [
-            .success, .failure, .failure, .cancelled, .skipped, .running, .queued,
-        ])
+        XCTAssertEqual(
+            runs.map(\.state),
+            [
+                .success, .failure, .failure, .cancelled, .skipped, .running, .queued,
+            ])
     }
 
     func testMapsFieldsFromGitHubNames() async throws {

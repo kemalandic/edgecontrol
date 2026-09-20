@@ -5,7 +5,8 @@ struct PluginDesktopWidget: Widget {
     let kind = "PluginWidget"
 
     var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: PluginSelectionIntent.self, provider: PluginWidgetProvider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: PluginSelectionIntent.self, provider: PluginWidgetProvider()) {
+            entry in
             PluginWidgetView(entry: entry)
                 .containerBackground(WidgetColors.background, for: .widget)
         }

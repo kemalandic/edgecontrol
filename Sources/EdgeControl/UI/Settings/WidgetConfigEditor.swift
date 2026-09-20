@@ -55,10 +55,19 @@ struct WidgetConfigEditor: View {
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
-            Toggle("", isOn: Binding(
-                get: { config.bool(entry.key, default: { if case .bool(let v) = entry.defaultValue { return v }; return false }()) },
-                set: { config[entry.key] = .bool($0) }
-            ))
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: {
+                        config.bool(
+                            entry.key,
+                            default: {
+                                if case .bool(let v) = entry.defaultValue { return v }; return false
+                            }())
+                    },
+                    set: { config[entry.key] = .bool($0) }
+                )
+            )
             .toggleStyle(.switch)
             .tint(accent)
             .labelsHidden()
@@ -68,7 +77,11 @@ struct WidgetConfigEditor: View {
     // MARK: - Picker
 
     private func pickerRow(_ entry: ConfigSchemaEntry) -> some View {
-        let currentValue = config.string(entry.key, default: { if case .string(let v) = entry.defaultValue { return v }; return "" }())
+        let currentValue = config.string(
+            entry.key,
+            default: {
+                if case .string(let v) = entry.defaultValue { return v }; return ""
+            }())
         let options = entry.options ?? []
 
         return HStack {
@@ -76,13 +89,20 @@ struct WidgetConfigEditor: View {
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
-            Picker("", selection: Binding(
-                get: { currentValue },
-                set: { config[entry.key] = .string($0) }
-            )) {
+            Picker(
+                "",
+                selection: Binding(
+                    get: { currentValue },
+                    set: { config[entry.key] = .string($0) }
+                )
+            ) {
                 ForEach(options, id: \.self) { option in
-                    Text(option.capitalized.replacingOccurrences(of: "Daybar", with: "Day Bar").replacingOccurrences(of: "Dotmatrix", with: "Dot Matrix").replacingOccurrences(of: "Cpu", with: "CPU"))
-                        .tag(option)
+                    Text(
+                        option.capitalized.replacingOccurrences(of: "Daybar", with: "Day Bar").replacingOccurrences(
+                            of: "Dotmatrix", with: "Dot Matrix"
+                        ).replacingOccurrences(of: "Cpu", with: "CPU")
+                    )
+                    .tag(option)
                 }
             }
             .pickerStyle(.menu)
@@ -94,7 +114,11 @@ struct WidgetConfigEditor: View {
     // MARK: - Stepper
 
     private func stepperRow(_ entry: ConfigSchemaEntry) -> some View {
-        let currentValue = config.int(entry.key, default: { if case .int(let v) = entry.defaultValue { return v }; return 0 }())
+        let currentValue = config.int(
+            entry.key,
+            default: {
+                if case .int(let v) = entry.defaultValue { return v }; return 0
+            }())
 
         return HStack {
             Text(entry.label)
@@ -105,10 +129,13 @@ struct WidgetConfigEditor: View {
                 .font(.system(size: 13, weight: .bold, design: .monospaced))
                 .foregroundStyle(accent)
                 .frame(width: 40)
-            Stepper("", value: Binding(
-                get: { currentValue },
-                set: { config[entry.key] = .int($0) }
-            ), in: Int(entry.minValue ?? 0)...Int(entry.maxValue ?? 100), step: Int(entry.step ?? 1))
+            Stepper(
+                "",
+                value: Binding(
+                    get: { currentValue },
+                    set: { config[entry.key] = .int($0) }
+                ), in: Int(entry.minValue ?? 0)...Int(entry.maxValue ?? 100), step: Int(entry.step ?? 1)
+            )
             .labelsHidden()
         }
     }
@@ -116,7 +143,11 @@ struct WidgetConfigEditor: View {
     // MARK: - Slider
 
     private func sliderRow(_ entry: ConfigSchemaEntry) -> some View {
-        let currentValue = config.double(entry.key, default: { if case .double(let v) = entry.defaultValue { return v }; return 0 }())
+        let currentValue = config.double(
+            entry.key,
+            default: {
+                if case .double(let v) = entry.defaultValue { return v }; return 0
+            }())
 
         return HStack {
             Text(entry.label)
@@ -127,10 +158,12 @@ struct WidgetConfigEditor: View {
                 .font(.system(size: 13, weight: .bold, design: .monospaced))
                 .foregroundStyle(accent)
                 .frame(width: 40)
-            Slider(value: Binding(
-                get: { currentValue },
-                set: { config[entry.key] = .double($0) }
-            ), in: (entry.minValue ?? 0)...(entry.maxValue ?? 100), step: entry.step ?? 1)
+            Slider(
+                value: Binding(
+                    get: { currentValue },
+                    set: { config[entry.key] = .double($0) }
+                ), in: (entry.minValue ?? 0)...(entry.maxValue ?? 100), step: entry.step ?? 1
+            )
             .frame(width: 120)
             .tint(accent)
         }
@@ -139,17 +172,24 @@ struct WidgetConfigEditor: View {
     // MARK: - Text
 
     private func textRow(_ entry: ConfigSchemaEntry) -> some View {
-        let currentValue = config.string(entry.key, default: { if case .string(let v) = entry.defaultValue { return v }; return "" }())
+        let currentValue = config.string(
+            entry.key,
+            default: {
+                if case .string(let v) = entry.defaultValue { return v }; return ""
+            }())
 
         return HStack {
             Text(entry.label)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
-            TextField("", text: Binding(
-                get: { currentValue },
-                set: { config[entry.key] = .string($0) }
-            ))
+            TextField(
+                "",
+                text: Binding(
+                    get: { currentValue },
+                    set: { config[entry.key] = .string($0) }
+                )
+            )
             .textFieldStyle(.roundedBorder)
             .frame(width: 160)
 
@@ -165,7 +205,9 @@ struct WidgetConfigEditor: View {
     /// Time-of-day picker persisting as "HH:mm" — the stored form stays a
     /// plain string, so old configs and the text-field era round-trip.
     private func timeRow(_ entry: ConfigSchemaEntry) -> some View {
-        let fallback: String = { if case .string(let v) = entry.defaultValue { return v }; return "18:00" }()
+        let fallback: String = {
+            if case .string(let v) = entry.defaultValue { return v }; return "18:00"
+        }()
         let currentValue = config.string(entry.key, default: fallback)
 
         return HStack {
@@ -173,10 +215,13 @@ struct WidgetConfigEditor: View {
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
-            DatePicker("", selection: Binding(
-                get: { Self.date(fromHHmm: currentValue) },
-                set: { config[entry.key] = .string(Self.hhmm(from: $0)) }
-            ), displayedComponents: .hourAndMinute)
+            DatePicker(
+                "",
+                selection: Binding(
+                    get: { Self.date(fromHHmm: currentValue) },
+                    set: { config[entry.key] = .string(Self.hhmm(from: $0)) }
+                ), displayedComponents: .hourAndMinute
+            )
             .datePickerStyle(.stepperField)
             .labelsHidden()
         }

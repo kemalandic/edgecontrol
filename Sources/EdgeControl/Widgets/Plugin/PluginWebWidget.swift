@@ -15,12 +15,13 @@ enum PluginFileLogger {
     }()
 
     nonisolated(unsafe) static let dateFormatter = ISO8601DateFormatter()
-    private static let maxLogSize = 5_242_880 // 5 MB
+    private static let maxLogSize = 5_242_880  // 5 MB
 
     static func log(_ pluginId: String, _ message: String) {
         // Rotate if log exceeds 5 MB
         if let attrs = try? FileManager.default.attributesOfItem(atPath: logURL.path),
-           let size = attrs[.size] as? UInt64, size > maxLogSize {
+            let size = attrs[.size] as? UInt64, size > maxLogSize
+        {
             try? FileManager.default.removeItem(at: logURL)
         }
         let timestamp = dateFormatter.string(from: Date())
@@ -120,7 +121,8 @@ public final class PluginWebWidget: DashboardWidget {
             case .number(let v): defaultVal = .double(v)
             case .string(let v): defaultVal = .string(v)
             }
-            return ConfigSchemaEntry(key: field.key, label: field.label, type: fieldType, defaultValue: defaultVal, options: field.options)
+            return ConfigSchemaEntry(
+                key: field.key, label: field.label, type: fieldType, defaultValue: defaultVal, options: field.options)
         }
     }
 
@@ -196,7 +198,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
         let themeDict = dataBridge.liveThemeData(ts: themeSettings, widgetId: widget.widgetId)
         let themeJSON: String
         if let data = try? JSONSerialization.data(withJSONObject: themeDict),
-           let str = String(data: data, encoding: .utf8) {
+            let str = String(data: data, encoding: .utf8)
+        {
             themeJSON = str
         } else {
             themeJSON = "{}"
@@ -204,9 +207,9 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
         let initScript = WKUserScript(
             source: """
-            window.edgecontrol._widgetSize = {width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)};
-            window.edgecontrol._data.theme = \(themeJSON);
-            """,
+                window.edgecontrol._widgetSize = {width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)};
+                window.edgecontrol._data.theme = \(themeJSON);
+                """,
             injectionTime: .atDocumentStart,
             forMainFrameOnly: true
         )
@@ -299,24 +302,25 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
         if !hasNetworkPermission {
             // "raw" covers fetch/XMLHttpRequest in WebKit Content Rule Lists
             return """
-            [{"trigger":{"url-filter":".*","resource-type":["raw"]},"action":{"type":"block"}}]
-            """
+                [{"trigger":{"url-filter":".*","resource-type":["raw"]},"action":{"type":"block"}}]
+                """
         } else if !domains.isEmpty {
             var rules: [[String: Any]] = [
                 [
                     "trigger": ["url-filter": ".*", "resource-type": ["raw"]],
-                    "action": ["type": "block"]
+                    "action": ["type": "block"],
                 ]
             ]
             for domain in domains {
                 let escaped = domain.replacingOccurrences(of: ".", with: "\\\\.")
                 rules.append([
                     "trigger": ["url-filter": "https?://([a-z0-9-]+\\\\.)*\(escaped)"],
-                    "action": ["type": "ignore-previous-rules"]
+                    "action": ["type": "ignore-previous-rules"],
                 ])
             }
             guard let data = try? JSONSerialization.data(withJSONObject: rules),
-                  let str = String(data: data, encoding: .utf8) else { return nil }
+                let str = String(data: data, encoding: .utf8)
+            else { return nil }
             return str
         }
         return nil
@@ -344,7 +348,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
                     webConfig.userContentController.add(ruleList)
                 }
                 if let error {
-                    PluginFileLogger.log(widget.pluginId, "NETWORK RULES ERROR: \(error) — code: \((error as NSError).code)")
+                    PluginFileLogger.log(
+                        widget.pluginId, "NETWORK RULES ERROR: \(error) — code: \((error as NSError).code)")
                 }
                 // Load HTML only after rules are applied
                 self.loadPluginHTML(into: webView)
@@ -357,10 +362,12 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
     private func loadPluginHTML(into webView: WKWebView) {
         // Second line of defence: PluginManager refuses such a plugin at load
         // time, but this view must not be the copy that trusts the manifest.
-        guard let htmlURL = PluginBundle.containedHTMLURL(
-                  bundlePath: widget.bundlePath, htmlFile: widget.htmlFile
-              ),
-              FileManager.default.fileExists(atPath: htmlURL.path) else {
+        guard
+            let htmlURL = PluginBundle.containedHTMLURL(
+                bundlePath: widget.bundlePath, htmlFile: widget.htmlFile
+            ),
+            FileManager.default.fileExists(atPath: htmlURL.path)
+        else {
             webView.loadHTMLString(Self.errorHTML("Invalid or missing widget file"), baseURL: nil)
             return
         }
@@ -370,15 +377,16 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
     // MARK: - Error HTML
 
     private static func errorHTML(_ message: String) -> String {
-        let safe = message
+        let safe =
+            message
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
         return """
-        <html><body style="background:#1a1a1a;color:#ff4444;font-family:-apple-system;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;">
-        <div><p style="font-size:14px;font-weight:700;">Plugin Error</p><p style="font-size:11px;color:#888;">\(safe)</p></div></body></html>
-        """
+            <html><body style="background:#1a1a1a;color:#ff4444;font-family:-apple-system;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;">
+            <div><p style="font-size:14px;font-weight:700;">Plugin Error</p><p style="font-size:11px;color:#888;">\(safe)</p></div></body></html>
+            """
     }
 
     private static func crashHTML() -> String {
@@ -396,30 +404,30 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
     private static func themeCSSInjection(ts: ThemeSettings, widgetId: String) -> String {
         let css = buildThemeCSSString(ts: ts, widgetId: widgetId)
         return """
-        (function() {
-            var style = document.createElement('style');
-            style.id = 'ec-theme-vars';
-            style.textContent = ':root { \(css) }';
-            document.documentElement.appendChild(style);
-        })();
-        """
+            (function() {
+                var style = document.createElement('style');
+                style.id = 'ec-theme-vars';
+                style.textContent = ':root { \(css) }';
+                document.documentElement.appendChild(style);
+            })();
+            """
     }
 
     /// Generate JS to update existing CSS custom properties (called on theme change).
     private static func themeCSSUpdate(ts: ThemeSettings, widgetId: String) -> String {
         let css = buildThemeCSSString(ts: ts, widgetId: widgetId)
         return """
-        (function() {
-            var el = document.getElementById('ec-theme-vars');
-            if (el) { el.textContent = ':root { \(css) }'; }
-            else {
-                var s = document.createElement('style');
-                s.id = 'ec-theme-vars';
-                s.textContent = ':root { \(css) }';
-                document.head.appendChild(s);
-            }
-        })();
-        """
+            (function() {
+                var el = document.getElementById('ec-theme-vars');
+                if (el) { el.textContent = ':root { \(css) }'; }
+                else {
+                    var s = document.createElement('style');
+                    s.id = 'ec-theme-vars';
+                    s.textContent = ':root { \(css) }';
+                    document.head.appendChild(s);
+                }
+            })();
+            """
     }
 
     private static func buildThemeCSSString(ts: ThemeSettings, widgetId: String) -> String {
@@ -651,7 +659,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
                 widgetId: widget.widgetId
             )
             guard let jsonData = try? JSONSerialization.data(withJSONObject: payload),
-                  let jsonString = String(data: jsonData, encoding: .utf8) else { return }
+                let jsonString = String(data: jsonData, encoding: .utf8)
+            else { return }
 
             let js = "window.edgecontrol._receive(\(jsonString));"
             webView?.evaluateJavaScript(js)
@@ -663,7 +672,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
             guard !isCrashed else { return }
             let pixelW = size.width * Int(cellWidth)
             let pixelH = size.height * Int(cellHeight)
-            let js = "window.edgecontrol._onResize({width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)});"
+            let js =
+                "window.edgecontrol._onResize({width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)});"
             webView?.evaluateJavaScript(js)
         }
 
@@ -671,7 +681,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
             guard !isCrashed else { return }
             let themeDict = dataBridge.liveThemeData(ts: ts, widgetId: widget.widgetId)
             guard let jsonData = try? JSONSerialization.data(withJSONObject: themeDict),
-                  let jsonString = String(data: jsonData, encoding: .utf8) else { return }
+                let jsonString = String(data: jsonData, encoding: .utf8)
+            else { return }
             let js = "window.edgecontrol._onThemeChange(\(jsonString));"
             webView?.evaluateJavaScript(js)
         }
@@ -687,14 +698,18 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
             guard !isCrashed else { return }
             let pixelW = size.width * Int(cellWidth)
             let pixelH = size.height * Int(cellHeight)
-            let js = "window.edgecontrol._widgetSize = {width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)};"
+            let js =
+                "window.edgecontrol._widgetSize = {width:\(size.width),height:\(size.height),pixelWidth:\(pixelW),pixelHeight:\(pixelH)};"
             webView?.evaluateJavaScript(js)
         }
 
         // MARK: - Navigation Delegate
 
         /// Restrict navigation to file:// URLs within the plugin bundle only.
-        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void) {
+        func webView(
+            _ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping @MainActor (WKNavigationActionPolicy) -> Void
+        ) {
             guard let url = navigationAction.request.url else {
                 decisionHandler(.cancel)
                 return
@@ -712,7 +727,9 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
             showError(in: webView, message: error.localizedDescription)
         }
 
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        func webView(
+            _ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error
+        ) {
             showError(in: webView, message: error.localizedDescription)
         }
 
@@ -731,9 +748,12 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
         // MARK: - Message Handler (JS → Native)
 
-        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        func userContentController(
+            _ userContentController: WKUserContentController, didReceive message: WKScriptMessage
+        ) {
             guard let body = message.body as? [String: Any],
-                  let action = body["action"] as? String else { return }
+                let action = body["action"] as? String
+            else { return }
             let payload = body["payload"] as? [String: Any] ?? [:]
             let callbackId = payload["_callbackId"] as? String
 
@@ -779,9 +799,11 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
             case "storageSet":
                 guard hasPermission(.storage),
-                      let key = payload["key"] as? String,
-                      let value = payload["value"] else {
-                    PluginFileLogger.log(widget.pluginId, "ACTION DENIED: storageSet (no permission or missing key/value)")
+                    let key = payload["key"] as? String,
+                    let value = payload["value"]
+                else {
+                    PluginFileLogger.log(
+                        widget.pluginId, "ACTION DENIED: storageSet (no permission or missing key/value)")
                     resolveCallback(callbackId, result: nil, error: "storage permission denied or missing key/value")
                     return
                 }
@@ -820,7 +842,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
                 // UNNotificationSettings is not Sendable, so extract the one
                 // needed value via the completion-handler API instead of
                 // sending the settings object across isolation.
-                let status = await withCheckedContinuation { (continuation: CheckedContinuation<UNAuthorizationStatus, Never>) in
+                let status = await withCheckedContinuation {
+                    (continuation: CheckedContinuation<UNAuthorizationStatus, Never>) in
                     center.getNotificationSettings { continuation.resume(returning: $0.authorizationStatus) }
                 }
 
@@ -850,9 +873,10 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 
         private func handleOpenURL(payload: [String: Any]) {
             guard let urlString = payload["url"] as? String,
-                  let url = URL(string: urlString),
-                  let scheme = url.scheme?.lowercased(),
-                  scheme == "http" || scheme == "https" else { return }
+                let url = URL(string: urlString),
+                let scheme = url.scheme?.lowercased(),
+                scheme == "http" || scheme == "https"
+            else { return }
             NSWorkspace.shared.open(url)
         }
 
@@ -876,7 +900,8 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
                     resultJSON = "\(num)"
                 } else if let str = result as? String {
                     // Escape for JS string literal
-                    let escaped = str
+                    let escaped =
+                        str
                         .replacingOccurrences(of: "\\", with: "\\\\")
                         .replacingOccurrences(of: "\"", with: "\\\"")
                         .replacingOccurrences(of: "\n", with: "\\n")
@@ -884,8 +909,9 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
                         .replacingOccurrences(of: "\t", with: "\\t")
                     resultJSON = "\"\(escaped)\""
                 } else if JSONSerialization.isValidJSONObject(result),
-                          let data = try? JSONSerialization.data(withJSONObject: result),
-                          let str = String(data: data, encoding: .utf8) {
+                    let data = try? JSONSerialization.data(withJSONObject: result),
+                    let str = String(data: data, encoding: .utf8)
+                {
                     resultJSON = str
                 } else {
                     resultJSON = "null"

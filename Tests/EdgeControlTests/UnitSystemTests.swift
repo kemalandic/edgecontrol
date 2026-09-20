@@ -36,8 +36,8 @@ final class UnitSystemTests: XCTestCase {
     /// keep decoding — a throw here reaches LayoutStore as an unreadable file.
     func testSettingsWithoutAUnitsKeyStillDecode() throws {
         let json = """
-        {"kioskMode": false, "launchAtLogin": true, "debugMode": false}
-        """
+            {"kioskMode": false, "launchAtLogin": true, "debugMode": false}
+            """
         let settings = try JSONDecoder().decode(GlobalSettings.self, from: Data(json.utf8))
 
         XCTAssertFalse(settings.kioskMode)

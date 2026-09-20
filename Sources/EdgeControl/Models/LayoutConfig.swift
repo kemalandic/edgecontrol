@@ -116,8 +116,7 @@ public struct GridRect: Hashable, Sendable {
     public var endRow: Int { row + height }
 
     public func intersects(_ other: GridRect) -> Bool {
-        col < other.endCol && endCol > other.col &&
-        row < other.endRow && endRow > other.row
+        col < other.endCol && endCol > other.col && row < other.endRow && endRow > other.row
     }
 
     public func fitsInGrid(columns: Int, rows: Int) -> Bool {

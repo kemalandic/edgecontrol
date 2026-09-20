@@ -46,7 +46,9 @@ public final class ClockWidget: DashboardWidget {
         ConfigSchemaEntry(key: "showSeconds", label: "Show Seconds", type: .toggle, defaultValue: .bool(true)),
         ConfigSchemaEntry(key: "showDate", label: "Show Date", type: .toggle, defaultValue: .bool(true)),
         ConfigSchemaEntry(key: "use24h", label: "24-Hour Format", type: .toggle, defaultValue: .bool(true)),
-        ConfigSchemaEntry(key: "clockStyle", label: "Style", type: .picker, defaultValue: .string("digital"), options: ClockStyle.allCases.map(\.rawValue)),
+        ConfigSchemaEntry(
+            key: "clockStyle", label: "Style", type: .picker, defaultValue: .string("digital"),
+            options: ClockStyle.allCases.map(\.rawValue)),
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 
@@ -84,7 +86,7 @@ private struct ClockContainer: View {
     var minute: Int { cal.component(.minute, from: now) }
     var second: Int { cal.component(.second, from: now) }
     var hour12: Int { let h = hour % 12; return h == 0 ? 12 : h }
-    var weekday: Int { cal.component(.weekday, from: now) } // 1=Sun
+    var weekday: Int { cal.component(.weekday, from: now) }  // 1=Sun
 
     var hourStr: String { String(format: use24h ? "%02d" : "%d", use24h ? hour : hour12) }
     var minStr: String { String(format: "%02d", minute) }
@@ -171,18 +173,21 @@ private struct ClockContainer: View {
                         hourTick(i, center: center, r: r)
                     }
                     // Hour hand
-                    clockHand(center: center, length: r * 0.5, width: 3,
-                              angle: (Double(hour % 12) + Double(minute) / 60) / 12 * 360,
-                              color: Theme.text1(ts))
+                    clockHand(
+                        center: center, length: r * 0.5, width: 3,
+                        angle: (Double(hour % 12) + Double(minute) / 60) / 12 * 360,
+                        color: Theme.text1(ts))
                     // Minute hand
-                    clockHand(center: center, length: r * 0.7, width: 2,
-                              angle: (Double(minute) + Double(second) / 60) / 60 * 360,
-                              color: Theme.text1(ts))
+                    clockHand(
+                        center: center, length: r * 0.7, width: 2,
+                        angle: (Double(minute) + Double(second) / 60) / 60 * 360,
+                        color: Theme.text1(ts))
                     // Second hand
                     if showSeconds {
-                        clockHand(center: center, length: r * 0.8, width: 1,
-                                  angle: Double(second) / 60 * 360,
-                                  color: primary)
+                        clockHand(
+                            center: center, length: r * 0.8, width: 1,
+                            angle: Double(second) / 60 * 360,
+                            color: primary)
                     }
                     // Center dot
                     Circle().fill(primary).frame(width: 6, height: 6).position(center)
@@ -239,7 +244,11 @@ private struct ClockContainer: View {
             HStack(spacing: 4) {
                 ForEach(Array(dayNames.enumerated()), id: \.offset) { i, name in
                     Text(name)
-                        .font(.system(size: (isCompact ? 8 : 10) * ts.fontScale, weight: weekday == i + 1 ? .black : .medium, design: .monospaced))
+                        .font(
+                            .system(
+                                size: (isCompact ? 8 : 10) * ts.fontScale, weight: weekday == i + 1 ? .black : .medium,
+                                design: .monospaced)
+                        )
                         .foregroundStyle(weekday == i + 1 ? primary : Theme.text3(ts))
                 }
             }
@@ -266,7 +275,10 @@ private struct ClockContainer: View {
                         .foregroundStyle(primary.opacity(0.6))
                 }
             }
-            .font(Theme.font(size: isCompact ? ts.fontSizeValue * 2.0 : ts.fontSizeValue * 2.5, weight: .bold, settings: ts))
+            .font(
+                Theme.font(
+                    size: isCompact ? ts.fontSizeValue * 2.0 : ts.fontSizeValue * 2.5, weight: .bold, settings: ts)
+            )
             .monospacedDigit()
             .minimumScaleFactor(0.3)
             .lineLimit(1)
@@ -288,7 +300,11 @@ private struct ClockContainer: View {
         VStack(spacing: 0) {
             Spacer()
             Text(hourStr + ":" + minStr)
-                .font(Theme.font(size: isCompact ? ts.fontSizeValue * 3.0 : ts.fontSizeValue * 4.0, weight: .ultraLight, settings: ts))
+                .font(
+                    Theme.font(
+                        size: isCompact ? ts.fontSizeValue * 3.0 : ts.fontSizeValue * 4.0, weight: .ultraLight,
+                        settings: ts)
+                )
                 .foregroundStyle(Theme.text1(ts))
                 .monospacedDigit()
                 .minimumScaleFactor(0.2)
@@ -432,7 +448,11 @@ private struct ClockContainer: View {
             HStack(spacing: 0) {
                 ForEach(Array(dayNames.enumerated()), id: \.offset) { i, name in
                     Text(name)
-                        .font(.system(size: (isCompact ? 12 : 15) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design))
+                        .font(
+                            .system(
+                                size: (isCompact ? 12 : 15) * ts.fontScale, weight: .heavy, design: ts.fontFamily.design
+                            )
+                        )
                         .foregroundStyle(weekday == i + 1 ? .white : Theme.text3(ts))
                         .padding(.horizontal, isCompact ? 5 : 7)
                         .padding(.vertical, isCompact ? 3 : 5)
@@ -487,7 +507,8 @@ private struct ClockContainer: View {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     private var binaryStyle: some View {
-        let digits = showSeconds
+        let digits =
+            showSeconds
             ? [hour / 10, hour % 10, minute / 10, minute % 10, second / 10, second % 10]
             : [hour / 10, hour % 10, minute / 10, minute % 10]
         let labels = showSeconds ? ["H", "H", "M", "M", "S", "S"] : ["H", "H", "M", "M"]
@@ -553,7 +574,9 @@ private struct ClockContainer: View {
 
             if showDate {
                 Text(isCompact ? shortDate : fullDate)
-                    .font(Theme.font(size: isCompact ? ts.fontSizeCaption : ts.fontSizeLabel, weight: .bold, settings: ts))
+                    .font(
+                        Theme.font(size: isCompact ? ts.fontSizeCaption : ts.fontSizeLabel, weight: .bold, settings: ts)
+                    )
                     .foregroundStyle(primary.opacity(0.6))
                     .textCase(.uppercase)
             }
@@ -591,20 +614,25 @@ private struct ClockContainer: View {
     /// shrinks to exactly fill its container's width (or height, whichever is
     /// tighter) — no fixed font size involved.
     private func fittedTimeRow(weight: Font.Weight) -> some View {
-        var text = Text(hourStr).foregroundStyle(Theme.text1(ts))
+        var text =
+            Text(hourStr).foregroundStyle(Theme.text1(ts))
             + Text(":").foregroundStyle(primary)
             + Text(minStr).foregroundStyle(Theme.text1(ts))
         if showSeconds {
-            text = text + Text(":").foregroundStyle(primary.opacity(0.4))
+            text =
+                text + Text(":").foregroundStyle(primary.opacity(0.4))
                 + Text(secStr).foregroundStyle(Theme.text3(ts))
         }
         if !use24h {
             // Sized relative to the base so the ratio survives scaling.
-            text = text + Text(" " + ampm)
+            text =
+                text
+                + Text(" " + ampm)
                 .font(Theme.font(size: 160, weight: .semibold, settings: ts))
                 .foregroundStyle(primary.opacity(0.6))
         }
-        return text
+        return
+            text
             .font(Theme.font(size: 400, weight: weight, settings: ts).monospacedDigit())
             .minimumScaleFactor(0.02)
             .lineLimit(1)
@@ -626,8 +654,10 @@ private struct ClockContainer: View {
     private var compactInfoChips: some View {
         VStack(alignment: .trailing, spacing: 6) {
             HStack(spacing: 4) {
-                Image(systemName: "calendar").font(.system(size: 10 * ts.fontScale)).foregroundStyle(primary.opacity(0.5))
-                Text("W\(cal.component(.weekOfYear, from: now))").font(Theme.caption(ts)).foregroundStyle(primary.opacity(0.7))
+                Image(systemName: "calendar").font(.system(size: 10 * ts.fontScale)).foregroundStyle(
+                    primary.opacity(0.5))
+                Text("W\(cal.component(.weekOfYear, from: now))").font(Theme.caption(ts)).foregroundStyle(
+                    primary.opacity(0.7))
             }
             HStack(spacing: 4) {
                 Image(systemName: "globe").font(.system(size: 10 * ts.fontScale)).foregroundStyle(Theme.text3(ts))
@@ -636,4 +666,3 @@ private struct ClockContainer: View {
         }
     }
 }
-

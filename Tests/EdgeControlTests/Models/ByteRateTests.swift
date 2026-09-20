@@ -72,13 +72,15 @@ struct ByteRateTests {
 
     // MARK: formatting
 
-    @Test("each unit gets its own precision", arguments: [
-        (512.0, "512 B/s"),
-        (1_024.0, "1.0 KB/s"),
-        (1_536.0, "1.5 KB/s"),
-        (1_048_576.0, "1.0 MB/s"),
-        (1_073_741_824.0, "1.00 GB/s"),
-    ])
+    @Test(
+        "each unit gets its own precision",
+        arguments: [
+            (512.0, "512 B/s"),
+            (1_024.0, "1.0 KB/s"),
+            (1_536.0, "1.5 KB/s"),
+            (1_048_576.0, "1.0 MB/s"),
+            (1_073_741_824.0, "1.00 GB/s"),
+        ])
     func formatting(value: Double, expected: String) {
         #expect(ByteRate.formatted(value) == expected)
     }

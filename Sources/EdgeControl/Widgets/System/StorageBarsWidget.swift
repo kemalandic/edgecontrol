@@ -80,7 +80,10 @@ private struct StorageBarsWidgetView: View {
                             ZStack {
                                 Circle()
                                     .trim(from: 0, to: 1)
-                                    .stroke(Color.white.opacity(0.08), style: StrokeStyle(lineWidth: ringWidth, lineCap: .round))
+                                    .stroke(
+                                        Color.white.opacity(0.08),
+                                        style: StrokeStyle(lineWidth: ringWidth, lineCap: .round)
+                                    )
                                     .rotationEffect(.degrees(-90))
                                 Circle()
                                     .trim(from: 0, to: m.storageUsedPercent / 100)
@@ -104,8 +107,11 @@ private struct StorageBarsWidgetView: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 storageLabel("USED", value: String(format: "%.0f GB", m.storageUsedGB), color: primary)
-                                storageLabel("FREE", value: String(format: "%.0f GB", m.storageTotalGB - m.storageUsedGB), color: tertiary)
-                                storageLabel("TOTAL", value: String(format: "%.0f GB", m.storageTotalGB), color: Theme.text2(ts))
+                                storageLabel(
+                                    "FREE", value: String(format: "%.0f GB", m.storageTotalGB - m.storageUsedGB),
+                                    color: tertiary)
+                                storageLabel(
+                                    "TOTAL", value: String(format: "%.0f GB", m.storageTotalGB), color: Theme.text2(ts))
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)

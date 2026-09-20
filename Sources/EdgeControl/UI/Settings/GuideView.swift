@@ -18,58 +18,106 @@ struct GuideView: View {
 
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 22) {
-                    section("Dashboard", rows: [
-                        ("Swipe left/right", "Move between pages — pages follow your finger."),
-                        ("Tap a widget", "Launches its configured app (set per widget under Pages)."),
-                        ("⌘ + hover", "A gear appears in the widget's corner; click it to jump straight to that widget's settings."),
-                    ])
-                    section("Edit Mode", rows: [
-                        ("Right-click", "\"Edit This Widget's Settings\" jumps straight to its settings. Edit mode only — outside it, widgets keep the click."),
-                        ("Drag anywhere", "Widgets go inert while editing; any point on the card drags it."),
-                        ("Tap", "Selects a widget (selection floats it above overlaps)."),
-                        ("Corner handle", "Drag the bottom-right handle to resize."),
-                        ("Drop on others", "Widgets you drop onto step aside to the nearest free spot — shrinking toward their minimum size if that's what it takes. Only when nothing fits do they stay overlapped."),
-                        ("⌘Z / ⇧⌘Z", "Undo / redo layout changes within the edit session."),
-                        ("Esc", "Cancels the session — the layout snaps back to how it was when edit mode began."),
-                        ("Layer buttons", "On the selected widget: send to back / bring to front — for reaching widgets stacked on one another."),
-                        ("✕", "Removes the widget from the page."),
-                    ])
-                    section("Sticky Note — typing", rows: [
-                        ("- or *", "Space, then any character → bullet item."),
-                        ("1.", "Any number, a dot, then space → numbered item. Numbers keep themselves in order as you insert, delete and convert; a blank line starts the count fresh."),
-                        ("- [ ]", "Checkbox — converts at the closing bracket, so \"[x]\" can start one checked."),
-                        ("# ## ###", "Headings, three levels."),
-                        ("---", "Return turns it into a horizontal rule."),
-                        ("Switch type", "On an existing item, type another marker after it: \"1. \" on a bullet makes it numbered, \"[ ]\" makes it a checkbox, \"-\" or \"*\" makes it a bullet again."),
-                        ("Return", "Continues the list; on an empty item it ends the list instead."),
-                        ("Tab / ⇧Tab", "Indent / unindent the line, from anywhere in it."),
-                        ("Paste a URL", "Over selected text, that text becomes the link. On its own, you're asked for a title."),
-                        ("Return in a link", "Opens the link instead of breaking the line."),
-                        ("Click a link", "Opens it — a finger tap does too."),
-                        ("Settings", "Each note has its own card color, text color, opacity, font and size — via the ⌘-hover gear or the Pages tab."),
-                    ])
-                    section("Sticky Note — shortcuts", rows: [
-                        ("⌘B / ⌘I / ⌘U", "Bold, italic, underline."),
-                        ("⌘⇧X", "Strikethrough."),
-                        ("⌘Return", "Check / uncheck the todo on the caret's line — or every checkbox line in a selection."),
-                        ("⌘= / ⌘-", "Bigger / smaller text."),
-                        ("⌘0", "Snap back to the configured font size."),
-                        ("⌘⇧0", "Body text — clears heading size, bold/italic, underline and strikethrough."),
-                        ("⌘Z / ⇧⌘Z", "Undo / redo."),
-                        ("⌘A/C/V/X", "Select all, copy, paste, cut — the standard set."),
-                        ("Click a box", "Toggles the checkbox; works by touch too."),
-                    ])
-                    section("Reminders", rows: [
-                        ("Add field", "Type and press Return to create a real reminder in the configured list."),
-                        ("\"in…\" field", "\":30\" = 30 minutes, \"2\" = 2 hours, \"2:15\" = two hours fifteen — sets the due time relative to now."),
-                        ("Due Today", "When on (and no \"in…\" is typed), new reminders come due at the configured Due Time and notify then."),
-                        ("Circle", "Tap to complete the reminder everywhere."),
-                    ])
-                    section("Widget Catalog", rows: [
-                        ("+", "Adds the widget to the current page; a full page stages it as an overlap to resolve in edit mode."),
-                        ("Eye", "Previews the widget at its minimum, default and maximum sizes."),
-                        ("Check", "Shown when placed; click removes the most recent copy. x2/x3 marks multiples."),
-                    ])
+                    section(
+                        "Dashboard",
+                        rows: [
+                            ("Swipe left/right", "Move between pages — pages follow your finger."),
+                            ("Tap a widget", "Launches its configured app (set per widget under Pages)."),
+                            (
+                                "⌘ + hover",
+                                "A gear appears in the widget's corner; click it to jump straight to that widget's settings."
+                            ),
+                        ])
+                    section(
+                        "Edit Mode",
+                        rows: [
+                            (
+                                "Right-click",
+                                "\"Edit This Widget's Settings\" jumps straight to its settings. Edit mode only — outside it, widgets keep the click."
+                            ),
+                            ("Drag anywhere", "Widgets go inert while editing; any point on the card drags it."),
+                            ("Tap", "Selects a widget (selection floats it above overlaps)."),
+                            ("Corner handle", "Drag the bottom-right handle to resize."),
+                            (
+                                "Drop on others",
+                                "Widgets you drop onto step aside to the nearest free spot — shrinking toward their minimum size if that's what it takes. Only when nothing fits do they stay overlapped."
+                            ),
+                            ("⌘Z / ⇧⌘Z", "Undo / redo layout changes within the edit session."),
+                            ("Esc", "Cancels the session — the layout snaps back to how it was when edit mode began."),
+                            (
+                                "Layer buttons",
+                                "On the selected widget: send to back / bring to front — for reaching widgets stacked on one another."
+                            ),
+                            ("✕", "Removes the widget from the page."),
+                        ])
+                    section(
+                        "Sticky Note — typing",
+                        rows: [
+                            ("- or *", "Space, then any character → bullet item."),
+                            (
+                                "1.",
+                                "Any number, a dot, then space → numbered item. Numbers keep themselves in order as you insert, delete and convert; a blank line starts the count fresh."
+                            ),
+                            ("- [ ]", "Checkbox — converts at the closing bracket, so \"[x]\" can start one checked."),
+                            ("# ## ###", "Headings, three levels."),
+                            ("---", "Return turns it into a horizontal rule."),
+                            (
+                                "Switch type",
+                                "On an existing item, type another marker after it: \"1. \" on a bullet makes it numbered, \"[ ]\" makes it a checkbox, \"-\" or \"*\" makes it a bullet again."
+                            ),
+                            ("Return", "Continues the list; on an empty item it ends the list instead."),
+                            ("Tab / ⇧Tab", "Indent / unindent the line, from anywhere in it."),
+                            (
+                                "Paste a URL",
+                                "Over selected text, that text becomes the link. On its own, you're asked for a title."
+                            ),
+                            ("Return in a link", "Opens the link instead of breaking the line."),
+                            ("Click a link", "Opens it — a finger tap does too."),
+                            (
+                                "Settings",
+                                "Each note has its own card color, text color, opacity, font and size — via the ⌘-hover gear or the Pages tab."
+                            ),
+                        ])
+                    section(
+                        "Sticky Note — shortcuts",
+                        rows: [
+                            ("⌘B / ⌘I / ⌘U", "Bold, italic, underline."),
+                            ("⌘⇧X", "Strikethrough."),
+                            (
+                                "⌘Return",
+                                "Check / uncheck the todo on the caret's line — or every checkbox line in a selection."
+                            ),
+                            ("⌘= / ⌘-", "Bigger / smaller text."),
+                            ("⌘0", "Snap back to the configured font size."),
+                            ("⌘⇧0", "Body text — clears heading size, bold/italic, underline and strikethrough."),
+                            ("⌘Z / ⇧⌘Z", "Undo / redo."),
+                            ("⌘A/C/V/X", "Select all, copy, paste, cut — the standard set."),
+                            ("Click a box", "Toggles the checkbox; works by touch too."),
+                        ])
+                    section(
+                        "Reminders",
+                        rows: [
+                            ("Add field", "Type and press Return to create a real reminder in the configured list."),
+                            (
+                                "\"in…\" field",
+                                "\":30\" = 30 minutes, \"2\" = 2 hours, \"2:15\" = two hours fifteen — sets the due time relative to now."
+                            ),
+                            (
+                                "Due Today",
+                                "When on (and no \"in…\" is typed), new reminders come due at the configured Due Time and notify then."
+                            ),
+                            ("Circle", "Tap to complete the reminder everywhere."),
+                        ])
+                    section(
+                        "Widget Catalog",
+                        rows: [
+                            (
+                                "+",
+                                "Adds the widget to the current page; a full page stages it as an overlap to resolve in edit mode."
+                            ),
+                            ("Eye", "Previews the widget at its minimum, default and maximum sizes."),
+                            ("Check", "Shown when placed; click removes the most recent copy. x2/x3 marks multiples."),
+                        ])
                 }
                 .padding(.bottom, 16)
             }

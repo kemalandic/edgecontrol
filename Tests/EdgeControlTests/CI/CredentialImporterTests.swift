@@ -34,16 +34,16 @@ final class CredentialImporterTests: XCTestCase {
 
     func testImportsForgejoLoginsFromTea() {
         let list = """
-        [
-          {"name":"work","url":"https://git.example.dev","ssh_host":"git.example.dev","user":"someone","default":"true"}
-        ]
-        """
+            [
+              {"name":"work","url":"https://git.example.dev","ssh_host":"git.example.dev","user":"someone","default":"true"}
+            ]
+            """
         let helper = """
-        protocol=https
-        host=git.example.dev
-        username=someone
-        password=tea_token_value
-        """
+            protocol=https
+            host=git.example.dev
+            username=someone
+            password=tea_token_value
+            """
         let runner = FakeRunner(
             outputs: [
                 "tea login list --output json": list,

@@ -11,7 +11,7 @@ public final class WeatherWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(6, 6)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "showForecast", label: "Show Forecast", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "showForecast", label: "Show Forecast", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 

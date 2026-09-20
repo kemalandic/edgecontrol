@@ -18,8 +18,8 @@ final class WidgetDataSchemaTests: XCTestCase {
     /// values — it must be rejected so the widget can say "open the app".
     func testSnapshotFromOlderSchemaIsRejected() {
         let legacy = """
-        {"timestamp":"2026-08-01T00:00:00Z","cpuUsage":10,"cicdRuns":[]}
-        """
+            {"timestamp":"2026-08-01T00:00:00Z","cpuUsage":10,"cicdRuns":[]}
+            """
         XCTAssertNil(
             WidgetData.decode(from: Data(legacy.utf8)),
             "a snapshot without schemaVersion must not decode"

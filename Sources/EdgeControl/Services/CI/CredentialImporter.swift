@@ -50,15 +50,18 @@ public struct CredentialImporter {
 
     private func gitHubCredentials() -> [DiscoveredCredential] {
         guard let token = try? runner.run("gh", ["auth", "token"], stdin: nil),
-              !token.isEmpty else { return [] }
-        return [DiscoveredCredential(
-            kind: .github,
-            host: "github.com",
-            webURL: URL(string: "https://github.com")!,
-            username: "",           // resolved by validate() before saving
-            token: token,
-            source: "gh"
-        )]
+            !token.isEmpty
+        else { return [] }
+        return [
+            DiscoveredCredential(
+                kind: .github,
+                host: "github.com",
+                webURL: URL(string: "https://github.com")!,
+                username: "",  // resolved by validate() before saving
+                token: token,
+                source: "gh"
+            )
+        ]
     }
 
     // MARK: - tea
@@ -70,7 +73,7 @@ public struct CredentialImporter {
 
     private func forgejoCredentials() -> [DiscoveredCredential] {
         guard let json = try? runner.run("tea", ["login", "list", "--output", "json"], stdin: nil),
-              let logins = try? JSONDecoder().decode([TeaLogin].self, from: Data(json.utf8))
+            let logins = try? JSONDecoder().decode([TeaLogin].self, from: Data(json.utf8))
         else { return [] }
 
         return logins.compactMap { login -> DiscoveredCredential? in
@@ -79,8 +82,8 @@ public struct CredentialImporter {
             // terminates the request.
             let request = "protocol=https\nhost=\(host)\n\n"
             guard let response = try? runner.run("tea", ["login", "helper", "get"], stdin: request),
-                  let token = Self.credentialField("password", in: response),
-                  !token.isEmpty
+                let token = Self.credentialField("password", in: response),
+                !token.isEmpty
             else { return nil }
 
             return DiscoveredCredential(

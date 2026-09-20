@@ -5,7 +5,7 @@ public enum CIProviderKind: String, Codable, Sendable, CaseIterable {
 
     public var displayName: String {
         switch self {
-        case .github:  return "GitHub"
+        case .github: return "GitHub"
         case .forgejo: return "Forgejo / Gitea"
         }
     }

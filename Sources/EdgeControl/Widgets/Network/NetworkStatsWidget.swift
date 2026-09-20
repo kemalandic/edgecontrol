@@ -94,8 +94,6 @@ private struct NetworkStatsWidgetView: View {
         .widgetCard()
     }
 
-
-
     private func totalChip(_ label: String, value: String, color: Color) -> some View {
         HStack(spacing: 6) {
             Text(label)

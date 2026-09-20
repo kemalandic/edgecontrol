@@ -41,7 +41,9 @@ private struct WiFiInfoWidgetView: View {
             HStack(spacing: 8) {
                 Image(systemName: service.isConnected ? "wifi" : "wifi.slash")
                     .font(.system(size: (isCompact ? 18 : 24) * ts.fontScale))
-                    .foregroundStyle(service.isConnected ? Theme.widgetPrimary("wifi-info", ts: ts, default: .green) : Theme.accentRed)
+                    .foregroundStyle(
+                        service.isConnected
+                            ? Theme.widgetPrimary("wifi-info", ts: ts, default: .green) : Theme.accentRed)
 
                 if !isCompact {
                     Text("WiFi")
@@ -107,10 +109,15 @@ private struct WiFiInfoWidgetView: View {
 
     private func barColor(for index: Int, rssi: Int) -> Color {
         let strength: Int
-        if rssi > -50 { strength = 4 }
-        else if rssi > -60 { strength = 3 }
-        else if rssi > -70 { strength = 2 }
-        else { strength = 1 }
+        if rssi > -50 {
+            strength = 4
+        } else if rssi > -60 {
+            strength = 3
+        } else if rssi > -70 {
+            strength = 2
+        } else {
+            strength = 1
+        }
         return index < strength ? Theme.widgetPrimary("wifi-info", ts: ts, default: .green) : Color.white.opacity(0.1)
     }
 

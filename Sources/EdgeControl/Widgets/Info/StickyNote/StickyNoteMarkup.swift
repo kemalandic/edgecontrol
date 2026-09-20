@@ -48,7 +48,7 @@ public enum StickyNoteMarkup {
         else { return nil }
         let head = line[..<separatorIndex]
         guard head.hasSuffix("."), head.count <= 6,
-              !head.dropLast().isEmpty, let number = Int(head.dropLast())
+            !head.dropLast().isEmpty, let number = Int(head.dropLast())
         else { return nil }
         return .ordered(number)
     }
@@ -151,7 +151,8 @@ public enum StickyNoteMarkup {
     /// Anything else is text the user meant to paste as text.
     public static func isWebLink(_ text: String) -> Bool {
         guard !text.contains(" "), let url = URL(string: text),
-              let scheme = url.scheme?.lowercased() else { return false }
+            let scheme = url.scheme?.lowercased()
+        else { return false }
         return (scheme == "http" || scheme == "https") && url.host != nil
     }
 }

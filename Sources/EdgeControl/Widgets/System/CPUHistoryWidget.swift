@@ -41,11 +41,17 @@ private struct CPUHistoryWidgetView: View {
         VStack(alignment: .leading, spacing: isCompact ? 2 : 6) {
             HStack {
                 Text("CPU USAGE")
-                    .font(isCompact ? Theme.font(size: ts.fontSizeCaption * 1.5, weight: .heavy, settings: ts) : Theme.title(ts))
+                    .font(
+                        isCompact
+                            ? Theme.font(size: ts.fontSizeCaption * 1.5, weight: .heavy, settings: ts) : Theme.title(ts)
+                    )
                     .foregroundStyle(Theme.text3(ts))
                 Spacer()
                 Text(String(format: "%.1f%%", metricsService.latest?.cpuLoadPercent ?? 0))
-                    .font(isCompact ? Theme.font(size: ts.fontSizeLabel * 1.5, weight: .heavy, settings: ts) : Theme.value(ts))
+                    .font(
+                        isCompact
+                            ? Theme.font(size: ts.fontSizeLabel * 1.5, weight: .heavy, settings: ts) : Theme.value(ts)
+                    )
                     .foregroundStyle(Theme.widgetPrimary("cpu-history", ts: ts, default: .cyan))
                     .monospacedDigit()
             }

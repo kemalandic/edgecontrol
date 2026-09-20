@@ -38,7 +38,8 @@ public final class CICDService: ObservableObject {
             settings.save(to: defaults)
             if settings.activityWindowDays != oldValue.activityWindowDays
                 || settings.pinnedRepositories != oldValue.pinnedRepositories
-                || settings.hiddenRepositories != oldValue.hiddenRepositories {
+                || settings.hiddenRepositories != oldValue.hiddenRepositories
+            {
                 repositoryCache.removeAll()
             }
         }
@@ -176,7 +177,8 @@ public final class CICDService: ObservableObject {
         provider: CIProvider
     ) async throws -> [CIRepository] {
         if let cached = repositoryCache[account.id],
-           Date().timeIntervalSince(cached.fetched) < 3600 {
+            Date().timeIntervalSince(cached.fetched) < 3600
+        {
             return cached.repos
         }
         let cutoff = Date().addingTimeInterval(-Double(settings.activityWindowDays) * 86_400)
@@ -218,7 +220,8 @@ public final class CICDService: ObservableObject {
         // poll rather than after the next hourly discovery.
         for pinned in pinnedHere
         where !active.contains(where: { $0.fullName == pinned })
-            && !hiddenHere.contains(pinned) {
+            && !hiddenHere.contains(pinned)
+        {
             let short = pinned.split(separator: "/").last.map(String.init) ?? pinned
             active.append(
                 CIRepository(fullName: pinned, shortName: short, lastActivity: .distantPast)
@@ -258,7 +261,8 @@ public final class CICDService: ObservableObject {
     /// Copies the tracker's latest reading for this account's API host.
     private func refreshRateLimit(for account: CIAccount) {
         guard let tracker = transport as? RateLimitTrackingTransport,
-              let host = account.apiBaseURL.host else { return }
+            let host = account.apiBaseURL.host
+        else { return }
         if let limit = tracker.rateLimit(forHost: host) {
             rateLimits[account.id] = limit
         }

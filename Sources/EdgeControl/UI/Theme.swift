@@ -157,7 +157,7 @@ enum Theme {
             .init(color: accentGreen, location: 0.25),
             .init(color: accentYellow, location: 0.55),
             .init(color: accentOrange, location: 0.75),
-            .init(color: accentRed, location: 1.0)
+            .init(color: accentRed, location: 1.0),
         ],
         center: .center,
         startAngle: .degrees(135),
@@ -169,7 +169,7 @@ enum Theme {
         colors: [
             Color.white.opacity(0.06),
             Color.white.opacity(0.02),
-            Color.black.opacity(0.10)
+            Color.black.opacity(0.10),
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -239,7 +239,6 @@ struct AnimatedNumberView: View {
             }
     }
 }
-
 
 // MARK: - Arc Shape
 

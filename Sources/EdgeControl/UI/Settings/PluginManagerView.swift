@@ -90,7 +90,8 @@ struct PluginManagerView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .background(
+                            Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                     }
                     .buttonStyle(.plain)
 
@@ -105,7 +106,8 @@ struct PluginManagerView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .background(
+                            Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -117,7 +119,8 @@ struct PluginManagerView: View {
 
             // Right: selected plugin detail
             if let pluginId = selectedPluginId,
-               let plugin = pluginManager.plugin(for: pluginId) {
+                let plugin = pluginManager.plugin(for: pluginId)
+            {
                 pluginDetail(plugin)
             } else {
                 VStack {
@@ -204,196 +207,202 @@ struct PluginManagerView: View {
 
     private func pluginDetail(_ plugin: LoadedPlugin) -> some View {
         ScrollView(.vertical, showsIndicators: false) {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header
-            HStack {
-                Image(systemName: plugin.manifest.icon ?? "puzzlepiece.extension")
-                    .font(.system(size: 24))
-                    .foregroundStyle(accent)
-                    .frame(width: 32)
+            VStack(alignment: .leading, spacing: 14) {
+                // Header
+                HStack {
+                    Image(systemName: plugin.manifest.icon ?? "puzzlepiece.extension")
+                        .font(.system(size: 24))
+                        .foregroundStyle(accent)
+                        .frame(width: 32)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(plugin.manifest.name)
-                        .font(.system(size: 20, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                    HStack(spacing: 8) {
-                        Text("by \(plugin.manifest.author)")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(Theme.textSecondary)
-                        if let homepage = plugin.manifest.homepage, let url = URL(string: homepage) {
-                            Button {
-                                NSWorkspace.shared.open(url)
-                            } label: {
-                                Image(systemName: "link")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(accent)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(plugin.manifest.name)
+                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        HStack(spacing: 8) {
+                            Text("by \(plugin.manifest.author)")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundStyle(Theme.textSecondary)
+                            if let homepage = plugin.manifest.homepage, let url = URL(string: homepage) {
+                                Button {
+                                    NSWorkspace.shared.open(url)
+                                } label: {
+                                    Image(systemName: "link")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(accent)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
+                    Spacer()
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { plugin.isEnabled },
+                            set: { _ in
+                                pluginManager.togglePlugin(id: plugin.id);
+                                registry.registerPluginWidgets(pluginManager: pluginManager); cleanupOrphanedWidgets()
+                            }
+                        )
+                    )
+                    .toggleStyle(.switch)
+                    .tint(accent)
                 }
-                Spacer()
-                Toggle("", isOn: Binding(
-                    get: { plugin.isEnabled },
-                    set: { _ in pluginManager.togglePlugin(id: plugin.id); registry.registerPluginWidgets(pluginManager: pluginManager); cleanupOrphanedWidgets() }
-                ))
-                .toggleStyle(.switch)
-                .tint(accent)
-            }
 
-            // Info
-            HStack(spacing: 16) {
-                infoTag("Version", value: plugin.manifest.version)
-                infoTag("Widgets", value: "\(plugin.manifest.widgets.count)")
-                infoTag("ID", value: plugin.manifest.id)
-            }
-
-            if let desc = plugin.manifest.description {
-                Text(desc)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(Theme.textSecondary)
-            }
-
-            Divider().background(Theme.borderSubtle)
-
-            // Permissions
-            Text("PERMISSIONS")
-                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.textTertiary)
-
-            if plugin.manifest.permissions.isEmpty {
-                Text("No permissions required")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(Theme.textTertiary)
-            } else {
-                FlowLayout(spacing: 6) {
-                    ForEach(plugin.manifest.permissions, id: \.self) { perm in
-                        HStack(spacing: 4) {
-                            Image(systemName: perm.iconName)
-                                .font(.system(size: 10))
-                            Text(perm.displayName)
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        }
-                        .foregroundStyle(Theme.accentYellow)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Theme.accentYellow.opacity(0.1), in: Capsule())
-                    }
+                // Info
+                HStack(spacing: 16) {
+                    infoTag("Version", value: plugin.manifest.version)
+                    infoTag("Widgets", value: "\(plugin.manifest.widgets.count)")
+                    infoTag("ID", value: plugin.manifest.id)
                 }
-            }
 
-            // Allowed domains (if network-access permission)
-            if let domains = plugin.manifest.allowedDomains, !domains.isEmpty {
-                Text("ALLOWED DOMAINS")
+                if let desc = plugin.manifest.description {
+                    Text(desc)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Divider().background(Theme.borderSubtle)
+
+                // Permissions
+                Text("PERMISSIONS")
                     .font(.system(size: 12, weight: .heavy, design: .rounded))
                     .foregroundStyle(Theme.textTertiary)
 
-                FlowLayout(spacing: 6) {
-                    ForEach(domains, id: \.self) { domain in
-                        Text(domain)
-                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(accent)
+                if plugin.manifest.permissions.isEmpty {
+                    Text("No permissions required")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(Theme.textTertiary)
+                } else {
+                    FlowLayout(spacing: 6) {
+                        ForEach(plugin.manifest.permissions, id: \.self) { perm in
+                            HStack(spacing: 4) {
+                                Image(systemName: perm.iconName)
+                                    .font(.system(size: 10))
+                                Text(perm.displayName)
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            }
+                            .foregroundStyle(Theme.accentYellow)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(accent.opacity(0.1), in: Capsule())
+                            .background(Theme.accentYellow.opacity(0.1), in: Capsule())
+                        }
                     }
                 }
-            }
 
-            Divider().background(Theme.borderSubtle)
-
-            // Widgets list
-            Text("WIDGETS")
-                .font(.system(size: 12, weight: .heavy, design: .rounded))
-                .foregroundStyle(Theme.textTertiary)
-
-            ForEach(plugin.manifest.widgets) { widgetDef in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Image(systemName: widgetDef.icon ?? "puzzlepiece")
-                            .font(.system(size: 14))
-                            .foregroundStyle(accent)
-                        Text(widgetDef.name)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white)
-                        Spacer()
-                        Text("\(widgetDef.defaultSize[safe: 0] ?? 0)x\(widgetDef.defaultSize[safe: 1] ?? 0)")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Theme.textTertiary)
-                    }
-                    if let desc = widgetDef.description, !desc.isEmpty {
-                        Text(desc)
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
-                            .foregroundStyle(Theme.textTertiary)
-                            .padding(.leading, 22)
-                    }
-                }
-                .padding(8)
-                .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-            }
-
-            Spacer(minLength: 8)
-
-            // Storage info
-            if let storageSize = pluginStorageSize(pluginId: plugin.id) {
-                HStack(spacing: 8) {
-                    Text("STORAGE")
+                // Allowed domains (if network-access permission)
+                if let domains = plugin.manifest.allowedDomains, !domains.isEmpty {
+                    Text("ALLOWED DOMAINS")
                         .font(.system(size: 12, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.textTertiary)
-                    Text(storageSize)
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundStyle(Theme.textSecondary)
-                    Spacer()
-                    Button {
-                        showClearStorageConfirm = true
-                    } label: {
-                        Text("Clear")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Theme.accentOrange)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Theme.accentOrange.opacity(0.1), in: Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .alert("Clear Storage", isPresented: $showClearStorageConfirm) {
-                        Button("Cancel", role: .cancel) {}
-                        Button("Clear", role: .destructive) {
-                            PluginStorageService.shared.removeAll(pluginId: plugin.id)
-                        }
-                    } message: {
-                        Text("Clear all stored data for this plugin? This cannot be undone.")
-                    }
-                }
-            }
 
-            // Remove button
-            Button {
-                showRemoveConfirm = true
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "trash")
-                    Text("Remove Plugin")
+                    FlowLayout(spacing: 6) {
+                        ForEach(domains, id: \.self) { domain in
+                            Text(domain)
+                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                .foregroundStyle(accent)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(accent.opacity(0.1), in: Capsule())
+                        }
+                    }
                 }
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(Theme.accentRed)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Theme.accentRed.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .alert("Remove Plugin", isPresented: $showRemoveConfirm) {
-                Button("Cancel", role: .cancel) {}
-                Button("Remove", role: .destructive) {
-                    pluginManager.removePlugin(id: plugin.id)
-                    registry.registerPluginWidgets(pluginManager: pluginManager)
-                    cleanupOrphanedWidgets()
-                    selectedPluginId = nil
+
+                Divider().background(Theme.borderSubtle)
+
+                // Widgets list
+                Text("WIDGETS")
+                    .font(.system(size: 12, weight: .heavy, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+
+                ForEach(plugin.manifest.widgets) { widgetDef in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 8) {
+                            Image(systemName: widgetDef.icon ?? "puzzlepiece")
+                                .font(.system(size: 14))
+                                .foregroundStyle(accent)
+                            Text(widgetDef.name)
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Text("\(widgetDef.defaultSize[safe: 0] ?? 0)x\(widgetDef.defaultSize[safe: 1] ?? 0)")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Theme.textTertiary)
+                        }
+                        if let desc = widgetDef.description, !desc.isEmpty {
+                            Text(desc)
+                                .font(.system(size: 11, weight: .medium, design: .rounded))
+                                .foregroundStyle(Theme.textTertiary)
+                                .padding(.leading, 22)
+                        }
+                    }
+                    .padding(8)
+                    .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
-            } message: {
-                Text("Remove \"\(plugin.manifest.name)\" and all its data? This cannot be undone.")
+
+                Spacer(minLength: 8)
+
+                // Storage info
+                if let storageSize = pluginStorageSize(pluginId: plugin.id) {
+                    HStack(spacing: 8) {
+                        Text("STORAGE")
+                            .font(.system(size: 12, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Theme.textTertiary)
+                        Text(storageSize)
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Button {
+                            showClearStorageConfirm = true
+                        } label: {
+                            Text("Clear")
+                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .foregroundStyle(Theme.accentOrange)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Theme.accentOrange.opacity(0.1), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .alert("Clear Storage", isPresented: $showClearStorageConfirm) {
+                            Button("Cancel", role: .cancel) {}
+                            Button("Clear", role: .destructive) {
+                                PluginStorageService.shared.removeAll(pluginId: plugin.id)
+                            }
+                        } message: {
+                            Text("Clear all stored data for this plugin? This cannot be undone.")
+                        }
+                    }
+                }
+
+                // Remove button
+                Button {
+                    showRemoveConfirm = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "trash")
+                        Text("Remove Plugin")
+                    }
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.accentRed)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Theme.accentRed.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .alert("Remove Plugin", isPresented: $showRemoveConfirm) {
+                    Button("Cancel", role: .cancel) {}
+                    Button("Remove", role: .destructive) {
+                        pluginManager.removePlugin(id: plugin.id)
+                        registry.registerPluginWidgets(pluginManager: pluginManager)
+                        cleanupOrphanedWidgets()
+                        selectedPluginId = nil
+                    }
+                } message: {
+                    Text("Remove \"\(plugin.manifest.name)\" and all its data? This cannot be undone.")
+                }
             }
-        }
-        .padding(14)
+            .padding(14)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
@@ -404,7 +413,8 @@ struct PluginManagerView: View {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let storageFile = support.appendingPathComponent("EdgeControl/PluginData/\(pluginId)/storage.json")
         guard let attrs = try? FileManager.default.attributesOfItem(atPath: storageFile.path),
-              let size = attrs[.size] as? UInt64, size > 0 else { return nil }
+            let size = attrs[.size] as? UInt64, size > 0
+        else { return nil }
         if size < 1024 { return "\(size) B" }
         if size < 1024 * 1024 { return "\(size / 1024) KB" }
         return String(format: "%.1f MB", Double(size) / (1024 * 1024))
@@ -429,7 +439,8 @@ struct PluginManagerView: View {
                 registry.widget(for: placement.widgetId) == nil
             }
             for orphan in orphans {
-                layoutEngine.removeWidget(pageId: layoutEngine.document.pages[pageIndex].id, instanceId: orphan.instanceId)
+                layoutEngine.removeWidget(
+                    pageId: layoutEngine.document.pages[pageIndex].id, instanceId: orphan.instanceId)
             }
         }
     }
@@ -448,7 +459,8 @@ struct FlowLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let result = arrangeSubviews(proposal: proposal, subviews: subviews)
         for (index, position) in result.positions.enumerated() {
-            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
+            subviews[index].place(
+                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
         }
     }
 

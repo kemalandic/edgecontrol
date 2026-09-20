@@ -4,7 +4,7 @@ import XCTest
 
 final class MemoryReadingTests: XCTestCase {
     private let pageSize: Double = 16384
-    private let physicalBytes: Double = 137_438_953_472 // 128 GB
+    private let physicalBytes: Double = 137_438_953_472  // 128 GB
 
     /// Page counts read from `vm_stat` on a 128 GB machine that Activity Monitor
     /// and iStat Menus both reported as 63% used, 7% pressure.
@@ -17,7 +17,7 @@ final class MemoryReadingTests: XCTestCase {
         stats.wire_count = 425_874
         stats.purgeable_count = 316_230
         stats.external_page_count = 2_167_119
-        stats.internal_page_count = 5_308_468 // anonymous 4,992,238 + purgeable
+        stats.internal_page_count = 5_308_468  // anonymous 4,992,238 + purgeable
         stats.compressor_page_count = 39_382
         return stats
     }
@@ -79,7 +79,7 @@ final class MemoryReadingTests: XCTestCase {
 
     func testPercentagesStayInRange() {
         var stats = vm_statistics64()
-        stats.wire_count = 90_000_000 // more pages than the machine has
+        stats.wire_count = 90_000_000  // more pages than the machine has
         stats.internal_page_count = 90_000_000
         let reading = MemoryReading(stats: stats, pageSize: pageSize, physicalBytes: physicalBytes)
         XCTAssertEqual(reading.usedPercent, 100)

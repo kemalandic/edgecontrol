@@ -26,8 +26,9 @@ struct CICDSettingsView: View {
         for run in service.runs {
             let parts = run.id.split(separator: "/")
             guard parts.count >= 4,
-                  let accountID = UUID(uuidString: String(parts[0])),
-                  let host = store.accounts.first(where: { $0.id == accountID })?.host else { continue }
+                let accountID = UUID(uuidString: String(parts[0])),
+                let host = store.accounts.first(where: { $0.id == accountID })?.host
+            else { continue }
             let ref = CIRepositoryRef(host: host, fullName: parts.dropFirst().dropLast().joined(separator: "/"))
             if !hidden.contains(ref), seen.insert(ref).inserted { result.append(ref) }
         }
@@ -195,10 +196,10 @@ struct CICDSettingsView: View {
 
     private func healthColor(for account: CIAccount) -> Color {
         switch service.accountStates[account.id] {
-        case .ok:      return Theme.accentGreen
-        case .failed:  return Theme.accentRed
+        case .ok: return Theme.accentGreen
+        case .failed: return Theme.accentRed
         case .syncing: return Theme.accentYellow
-        default:       return Theme.text3(ts)
+        default: return Theme.text3(ts)
         }
     }
 
@@ -229,10 +230,13 @@ struct CICDSettingsView: View {
             Text("Discovery")
                 .font(Theme.title(ts))
                 .foregroundStyle(Theme.text2(ts))
-            Picker("Activity window", selection: Binding(
-                get: { service.settings.activityWindowDays },
-                set: { service.settings.activityWindowDays = $0 }
-            )) {
+            Picker(
+                "Activity window",
+                selection: Binding(
+                    get: { service.settings.activityWindowDays },
+                    set: { service.settings.activityWindowDays = $0 }
+                )
+            ) {
                 Text("7 days").tag(7)
                 Text("14 days").tag(14)
                 Text("30 days").tag(30)
@@ -341,7 +345,8 @@ struct CICDSettingsView: View {
                         // "owner/name" is what the API and the widget both key
                         // on; anything else would silently never match.
                         guard value.split(separator: "/").count == 2 else { return }
-                        let chosen = host.wrappedValue.isEmpty
+                        let chosen =
+                            host.wrappedValue.isEmpty
                             ? (store.accounts.first?.host ?? "")
                             : host.wrappedValue
                         guard !chosen.isEmpty else { return }
@@ -362,10 +367,13 @@ struct CICDSettingsView: View {
             Text("Refresh")
                 .font(Theme.title(ts))
                 .foregroundStyle(Theme.text2(ts))
-            Picker("Interval", selection: Binding(
-                get: { Int(service.settings.pollInterval) },
-                set: { service.settings.pollInterval = TimeInterval($0) }
-            )) {
+            Picker(
+                "Interval",
+                selection: Binding(
+                    get: { Int(service.settings.pollInterval) },
+                    set: { service.settings.pollInterval = TimeInterval($0) }
+                )
+            ) {
                 Text("15s").tag(15)
                 Text("30s").tag(30)
                 Text("60s").tag(60)

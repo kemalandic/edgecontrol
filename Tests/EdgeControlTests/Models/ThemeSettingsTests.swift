@@ -56,7 +56,7 @@ struct ThemeSettingsTests {
     func everySchemeResolves(scheme: ColorSchemeName) {
         var t = ThemeSettings()
         t.colorScheme = scheme
-        _ = t.resolvedPreset       // must not trap
+        _ = t.resolvedPreset  // must not trap
         #expect(t.resolvedPreset.backgroundColors.isEmpty == false)
     }
 

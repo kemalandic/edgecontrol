@@ -26,9 +26,11 @@ struct SMCValueTests {
         #expect(SMCValue.decode(type: "sp78", bytes: [0xF6, 0x00]) == -10.0)
     }
 
-    @Test("the sp family divides by the bits after the point", arguments: [
-        ("sp87", 128.0), ("sp96", 64.0), ("spb4", 16.0), ("spf0", 1.0),
-    ])
+    @Test(
+        "the sp family divides by the bits after the point",
+        arguments: [
+            ("sp87", 128.0), ("sp96", 64.0), ("spb4", 16.0), ("spf0", 1.0),
+        ])
     func spFamily(type: String, divisor: Double) {
         // 0x0100 is one whole unit before the divisor is applied.
         #expect(SMCValue.decode(type: type, bytes: [0x01, 0x00]) == 256.0 / divisor)
@@ -59,15 +61,17 @@ struct SMCValueTests {
     /// The reason this moved out of the service. Every one of these used to
     /// index past the end of the buffer, which traps — a short read from a
     /// sensor would have taken the app down rather than the reading.
-    @Test("a buffer too short for its type yields nothing rather than trapping", arguments: [
-        ("ui16", [UInt8(0x01)]),
-        ("ui32", [UInt8(0x01), 0x02]),
-        ("sp78", [UInt8(0x2D)]),
-        ("sp87", [UInt8(0x01)]),
-        ("spa5", [UInt8(0x01)]),
-        ("fpe2", [UInt8(0x01)]),
-        ("flt ", [UInt8(0x01), 0x02, 0x03]),
-    ])
+    @Test(
+        "a buffer too short for its type yields nothing rather than trapping",
+        arguments: [
+            ("ui16", [UInt8(0x01)]),
+            ("ui32", [UInt8(0x01), 0x02]),
+            ("sp78", [UInt8(0x2D)]),
+            ("sp87", [UInt8(0x01)]),
+            ("spa5", [UInt8(0x01)]),
+            ("fpe2", [UInt8(0x01)]),
+            ("flt ", [UInt8(0x01), 0x02, 0x03]),
+        ])
     func shortBufferIsRefused(type: String, bytes: [UInt8]) {
         #expect(SMCValue.decode(type: type, bytes: bytes) == nil)
     }

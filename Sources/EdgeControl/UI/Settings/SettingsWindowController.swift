@@ -25,14 +25,18 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var layoutEngine: LayoutEngine?
     private var registry: WidgetRegistry?
 
-    func configure(model: AppModel, layoutEngine: LayoutEngine, registry: WidgetRegistry, pluginManager: PluginManager) {
+    func configure(model: AppModel, layoutEngine: LayoutEngine, registry: WidgetRegistry, pluginManager: PluginManager)
+    {
         self.model = model
         self.layoutEngine = layoutEngine
         self.registry = registry
         self.pluginManager = pluginManager
     }
 
-    func show(model: AppModel? = nil, layoutEngine: LayoutEngine? = nil, registry: WidgetRegistry? = nil, pluginManager: PluginManager? = nil) {
+    func show(
+        model: AppModel? = nil, layoutEngine: LayoutEngine? = nil, registry: WidgetRegistry? = nil,
+        pluginManager: PluginManager? = nil
+    ) {
         if let m = model { self.model = m }
         if let le = layoutEngine { self.layoutEngine = le }
         if let r = registry { self.registry = r }
@@ -83,15 +87,16 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private func moveOffKioskScreen(_ win: NSWindow) {
         let kioskScreen = NSApp.windows.first { $0 is KioskWindow }?.screen
         guard let kioskScreen,
-              win.screen == kioskScreen || win.screen == nil,
-              let target = NSScreen.screens.first(where: { $0 != kioskScreen })
+            win.screen == kioskScreen || win.screen == nil,
+            let target = NSScreen.screens.first(where: { $0 != kioskScreen })
         else { return }
         let size = win.frame.size
         let v = target.visibleFrame
-        win.setFrameOrigin(NSPoint(
-            x: v.midX - size.width / 2,
-            y: v.midY - size.height / 2
-        ))
+        win.setFrameOrigin(
+            NSPoint(
+                x: v.midX - size.width / 2,
+                y: v.midY - size.height / 2
+            ))
     }
 
     func close() {

@@ -62,7 +62,7 @@ struct RadialGaugeView: View {
                         AngularGradient(
                             stops: [
                                 .init(color: accentColor, location: 0.0),
-                                .init(color: gaugeColor, location: 1.0)
+                                .init(color: gaugeColor, location: 1.0),
                             ],
                             center: .center,
                             startAngle: .degrees(startAngle),

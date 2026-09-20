@@ -16,17 +16,20 @@ public final class RemindersWidget: DashboardWidget {
         ConfigSchemaEntry(key: "list", label: "List", type: .text, defaultValue: .string("default")),
         // Items with due dates sort due-first (overdue on top); this orders
         // the undated remainder.
-        ConfigSchemaEntry(key: "undatedSort", label: "Undated Sort", type: .picker,
-                          defaultValue: .string("newest first"),
-                          options: ["newest first", "oldest first", "recently updated", "least recently updated"]),
-        ConfigSchemaEntry(key: "newDueToday", label: "New Reminders Due Today", type: .toggle,
-                          defaultValue: .bool(false),
-                          help: "Reminders added from this widget get a due date of today."),
-        ConfigSchemaEntry(key: "dueTime", label: "Due Time", type: .time,
-                          defaultValue: .string("18:00"),
-                          help: "When Due Today is on and no \"in…\" offset is typed, "
-                              + "new reminders come due — and notify — at this time. "
-                              + "A typed offset like \":30\" or \"2:15\" always wins."),
+        ConfigSchemaEntry(
+            key: "undatedSort", label: "Undated Sort", type: .picker,
+            defaultValue: .string("newest first"),
+            options: ["newest first", "oldest first", "recently updated", "least recently updated"]),
+        ConfigSchemaEntry(
+            key: "newDueToday", label: "New Reminders Due Today", type: .toggle,
+            defaultValue: .bool(false),
+            help: "Reminders added from this widget get a due date of today."),
+        ConfigSchemaEntry(
+            key: "dueTime", label: "Due Time", type: .time,
+            defaultValue: .string("18:00"),
+            help: "When Due Today is on and no \"in…\" offset is typed, "
+                + "new reminders come due — and notify — at this time. "
+                + "A typed offset like \":30\" or \"2:15\" always wins."),
     ]
     public let defaultColors = WidgetColors(primary: .orange)
 
@@ -118,7 +121,8 @@ private struct RemindersWidgetView: View {
     }
 
     private func createReminder() {
-        let due = remindInInterval(remindIn).map { Date().addingTimeInterval($0) }
+        let due =
+            remindInInterval(remindIn).map { Date().addingTimeInterval($0) }
             ?? defaultDueDate()
         service.add(title: draft, due: due)
         draft = ""
@@ -188,11 +192,13 @@ private struct RemindersWidgetView: View {
             Spacer()
             if let due = item.dueDate {
                 // Same-day reminders show their time; others show the date.
-                Text(Calendar.current.isDateInToday(due)
-                    ? Self.timeFormatter.string(from: due)
-                    : Self.dueFormatter.string(from: due))
-                    .font(Theme.label(ts))
-                    .foregroundStyle(due < Date() ? Theme.accentRed : Theme.text3(ts))
+                Text(
+                    Calendar.current.isDateInToday(due)
+                        ? Self.timeFormatter.string(from: due)
+                        : Self.dueFormatter.string(from: due)
+                )
+                .font(Theme.label(ts))
+                .foregroundStyle(due < Date() ? Theme.accentRed : Theme.text3(ts))
             }
         }
         .padding(.vertical, 4)

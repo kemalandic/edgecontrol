@@ -116,22 +116,22 @@ struct CICDWidgetView: View {
 
     private func statusColor(_ run: WidgetCICDRun) -> Color {
         switch run.state {
-        case .running, .queued:              return WidgetColors.yellow
-        case .success:                       return WidgetColors.green
-        case .failure:                       return WidgetColors.red
+        case .running, .queued: return WidgetColors.yellow
+        case .success: return WidgetColors.green
+        case .failure: return WidgetColors.red
         case .cancelled, .skipped, .unknown: return WidgetColors.textTertiary
         }
     }
 
     private func statusLabel(_ run: WidgetCICDRun) -> String {
         switch run.state {
-        case .running:   return "RUN"
-        case .queued:    return "QUEUE"
-        case .success:   return "PASS"
-        case .failure:   return "FAIL"
+        case .running: return "RUN"
+        case .queued: return "QUEUE"
+        case .success: return "PASS"
+        case .failure: return "FAIL"
         case .cancelled: return "CANCEL"
-        case .skipped:   return "SKIP"
-        case .unknown:   return "—"
+        case .skipped: return "SKIP"
+        case .unknown: return "—"
         }
     }
 }

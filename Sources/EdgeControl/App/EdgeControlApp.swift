@@ -83,7 +83,10 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     private let dashboardWindowController = DashboardWindowController()
     private var statusItem: NSStatusItem?
 
-    init(model: AppModel, layoutEngine: LayoutEngine, registry: WidgetRegistry, history: MetricsHistory, pluginManager: PluginManager) {
+    init(
+        model: AppModel, layoutEngine: LayoutEngine, registry: WidgetRegistry, history: MetricsHistory,
+        pluginManager: PluginManager
+    ) {
         self.model = model
         self.layoutEngine = layoutEngine
         self.registry = registry
@@ -270,7 +273,8 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
 
         let fileMenuItem = NSMenuItem()
         let fileMenu = NSMenu(title: "File")
-        let closeItem = NSMenuItem(title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        let closeItem = NSMenuItem(
+            title: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
         closeItem.keyEquivalentModifierMask = [.command]
         fileMenu.addItem(closeItem)
         fileMenuItem.submenu = fileMenu
@@ -302,17 +306,20 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         boldItem.target = NSFontManager.shared
         boldItem.tag = Int(NSFontTraitMask.boldFontMask.rawValue)
         formatMenu.addItem(boldItem)
-        let italicItem = NSMenuItem(title: "Italic", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "i")
+        let italicItem = NSMenuItem(
+            title: "Italic", action: #selector(NSFontManager.addFontTrait(_:)), keyEquivalent: "i")
         italicItem.target = NSFontManager.shared
         italicItem.tag = Int(NSFontTraitMask.italicFontMask.rawValue)
         formatMenu.addItem(italicItem)
         formatMenu.addItem(NSMenuItem(title: "Underline", action: #selector(NSText.underline(_:)), keyEquivalent: "u"))
-        let strikeItem = NSMenuItem(title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
+        let strikeItem = NSMenuItem(
+            title: "Strikethrough", action: Selector(("toggleStrikethrough:")), keyEquivalent: "x")
         strikeItem.keyEquivalentModifierMask = [.command, .shift]
         formatMenu.addItem(strikeItem)
         formatMenu.addItem(.separator())
         // Cmd+Return: the "complete the item" convention (Obsidian, Todoist).
-        formatMenu.addItem(NSMenuItem(title: "Toggle Checked", action: Selector(("toggleChecked:")), keyEquivalent: "\r"))
+        formatMenu.addItem(
+            NSMenuItem(title: "Toggle Checked", action: Selector(("toggleChecked:")), keyEquivalent: "\r"))
         formatMenu.addItem(.separator())
         let bodyTextItem = NSMenuItem(title: "Body Text", action: Selector(("resetToBodyText:")), keyEquivalent: "0")
         bodyTextItem.keyEquivalentModifierMask = [.command, .shift]
@@ -354,11 +361,12 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
 
     private func buildStatusMenu() -> NSMenu {
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(
-            title: "Settings…",
-            action: #selector(openSettings(_:)),
-            keyEquivalent: ","
-        ))
+        menu.addItem(
+            NSMenuItem(
+                title: "Settings…",
+                action: #selector(openSettings(_:)),
+                keyEquivalent: ","
+            ))
         menu.addItem(.separator())
         let quit = NSMenuItem(title: "Quit EdgeControl", action: #selector(quitApp(_:)), keyEquivalent: "q")
         menu.addItem(quit)

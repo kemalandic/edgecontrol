@@ -32,8 +32,8 @@ public struct DynamicGrid: Equatable, Sendable {
     private static let maxRows = 12
 
     /// Minimum screen size to display a grid
-    public static let minimumWidth: CGFloat = CGFloat(minColumns) * minCellSize   // 600
-    public static let minimumHeight: CGFloat = CGFloat(minRows) * minCellSize     // 400
+    public static let minimumWidth: CGFloat = CGFloat(minColumns) * minCellSize  // 600
+    public static let minimumHeight: CGFloat = CGFloat(minRows) * minCellSize  // 400
 
     /// Calculate grid dimensions for a given available size.
     public static func calculate(width: CGFloat, height: CGFloat) -> DynamicGrid {
@@ -88,8 +88,7 @@ public struct WidgetSizeRange: Codable, Hashable, Sendable {
     }
 
     public func contains(_ size: WidgetSize) -> Bool {
-        size.width >= min.width && size.width <= max.width &&
-        size.height >= min.height && size.height <= max.height
+        size.width >= min.width && size.width <= max.width && size.height >= min.height && size.height <= max.height
     }
 }
 
@@ -241,7 +240,8 @@ public enum ConfigValue: Codable, Hashable, Sendable {
         if let v = try? container.decode(Double.self) { self = .double(v); return }
         if let v = try? container.decode([String].self) { self = .stringArray(v); return }
         if let v = try? container.decode(String.self) { self = .string(v); return }
-        throw DecodingError.typeMismatch(ConfigValue.self, .init(codingPath: decoder.codingPath, debugDescription: "Unsupported config value type"))
+        throw DecodingError.typeMismatch(
+            ConfigValue.self, .init(codingPath: decoder.codingPath, debugDescription: "Unsupported config value type"))
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -310,18 +310,18 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
 /// Identifies a system service that widgets can depend on.
 /// Used for lazy service activation — services only run when a widget needs them.
 public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
-    case metrics        // SystemMetricsService
-    case smc            // SMCService (temperatures)
-    case network        // NetworkMonitorService
-    case wifi           // WiFiService
-    case bluetooth      // BluetoothService
-    case nowPlaying     // NowPlayingService
-    case audio          // AudioService
-    case weather        // WeatherService
-    case diskIO         // DiskIOService
-    case process        // ProcessMonitorService
-    case cicd           // CICDService — GitHub, Forgejo, any future host
-    case reminders      // RemindersService (EventKit)
+    case metrics  // SystemMetricsService
+    case smc  // SMCService (temperatures)
+    case network  // NetworkMonitorService
+    case wifi  // WiFiService
+    case bluetooth  // BluetoothService
+    case nowPlaying  // NowPlayingService
+    case audio  // AudioService
+    case weather  // WeatherService
+    case diskIO  // DiskIOService
+    case process  // ProcessMonitorService
+    case cicd  // CICDService — GitHub, Forgejo, any future host
+    case reminders  // RemindersService (EventKit)
 }
 
 // MARK: - Dashboard Widget Protocol
@@ -408,7 +408,8 @@ public enum WidgetLaunch {
         // setting SelectedTab first opens the chosen tab — no scripting or
         // extra permissions. (Already-running instances keep their tab.)
         if isActivityMonitor(trimmed), let index = activityMonitorTabs.firstIndex(of: tab) {
-            CFPreferencesSetAppValue("SelectedTab" as CFString, index as CFNumber, "com.apple.ActivityMonitor" as CFString)
+            CFPreferencesSetAppValue(
+                "SelectedTab" as CFString, index as CFNumber, "com.apple.ActivityMonitor" as CFString)
             CFPreferencesAppSynchronize("com.apple.ActivityMonitor" as CFString)
         }
         let fm = FileManager.default
@@ -418,9 +419,12 @@ public enum WidgetLaunch {
         let expanded = NSString(string: trimmed).expandingTildeInPath
         if expanded.hasPrefix("/") {
             if fm.fileExists(atPath: expanded) {
-                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: expanded), configuration: NSWorkspace.OpenConfiguration())
+                NSWorkspace.shared.openApplication(
+                    at: URL(fileURLWithPath: expanded), configuration: NSWorkspace.OpenConfiguration())
             } else {
-                NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+                NSWorkspace.shared.openApplication(
+                    at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"),
+                    configuration: NSWorkspace.OpenConfiguration())
             }
             return
         }
@@ -430,9 +434,12 @@ public enum WidgetLaunch {
             "/System/Applications/Utilities/\(trimmed).app",
         ]
         if let path = candidates.first(where: { fm.fileExists(atPath: $0) }) {
-            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
+            NSWorkspace.shared.openApplication(
+                at: URL(fileURLWithPath: path), configuration: NSWorkspace.OpenConfiguration())
         } else if trimmed != "Finder" {
-            NSWorkspace.shared.openApplication(at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"), configuration: NSWorkspace.OpenConfiguration())
+            NSWorkspace.shared.openApplication(
+                at: URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app"),
+                configuration: NSWorkspace.OpenConfiguration())
         }
     }
 }

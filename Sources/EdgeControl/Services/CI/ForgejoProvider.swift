@@ -61,10 +61,12 @@ public struct ForgejoProvider: CIProvider {
     // MARK: - Request helper
 
     private func decode<T: Decodable>(_ type: T.Type, from url: URL) async throws -> T {
-        let (data, response) = try await transport.get(url, headers: [
-            "Authorization": "token \(token)",
-            "Accept": "application/json",
-        ])
+        let (data, response) = try await transport.get(
+            url,
+            headers: [
+                "Authorization": "token \(token)",
+                "Accept": "application/json",
+            ])
         if let error = CIError.from(response: response) { throw error }
         do {
             return try JSONDecoder().decode(T.self, from: data)
@@ -83,7 +85,8 @@ public struct ForgejoProvider: CIProvider {
     /// One call: Forgejo's `/user/repos` already includes the organisation
     /// repositories the account can see, so no per-org fan-out is needed.
     public func discoverRepositories(activeSince: Date) async throws -> [CIRepository] {
-        let url = apiBaseURL
+        let url =
+            apiBaseURL
             .appendingPathComponent("user/repos")
             .appending(queryItems: [
                 URLQueryItem(name: "order_by", value: "recentupdate"),
@@ -96,8 +99,9 @@ public struct ForgejoProvider: CIProvider {
             // window and fill the widget with finished history.
             guard repo.archived != true else { return nil }
             guard let raw = repo.updated_at,
-                  let updated = formatter.date(from: raw),
-                  updated >= activeSince else { return nil }
+                let updated = formatter.date(from: raw),
+                updated >= activeSince
+            else { return nil }
             return CIRepository(
                 fullName: repo.full_name, shortName: repo.name, lastActivity: updated
             )
@@ -105,7 +109,8 @@ public struct ForgejoProvider: CIProvider {
     }
 
     public func fetchRuns(repository: CIRepository, limit: Int) async throws -> [CIRun] {
-        let url = apiBaseURL
+        let url =
+            apiBaseURL
             .appendingPathComponent("repos/\(repository.fullName)/actions/runs")
             .appending(queryItems: [URLQueryItem(name: "limit", value: String(limit))])
 
@@ -138,13 +143,13 @@ public struct ForgejoProvider: CIProvider {
     /// API's own `status` enum.
     static func state(_ status: String) -> CIRunState {
         switch status {
-        case "success":            return .success
-        case "failure":            return .failure
-        case "cancelled":          return .cancelled
-        case "running":            return .running
+        case "success": return .success
+        case "failure": return .failure
+        case "cancelled": return .cancelled
+        case "running": return .running
         case "waiting", "blocked": return .queued
-        case "skipped":            return .skipped
-        default:                   return .unknown
+        case "skipped": return .skipped
+        default: return .unknown
         }
     }
 
@@ -156,8 +161,9 @@ public struct ForgejoProvider: CIProvider {
         formatter: ISO8601DateFormatter
     ) -> Date {
         if let started,
-           let date = formatter.date(from: started),
-           date.timeIntervalSince1970 > 0 {
+            let date = formatter.date(from: started),
+            date.timeIntervalSince1970 > 0
+        {
             return date
         }
         if let created, let date = formatter.date(from: created) {

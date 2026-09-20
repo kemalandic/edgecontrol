@@ -113,60 +113,81 @@ public final class LayoutStore: Sendable {
         var pages: [PageConfig] = []
 
         // Page 1: System Monitor + Weather (original page1)
-        pages.append(PageConfig(name: "System Monitor", order: 0, widgets: [
-            WidgetPlacement(widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3),
-            WidgetPlacement(widgetId: "memory-gauge", col: 4, row: 0, width: 4, height: 3),
-            WidgetPlacement(widgetId: "cpu-history", col: 0, row: 3, width: 4, height: 3),
-            WidgetPlacement(widgetId: "memory-history", col: 4, row: 3, width: 4, height: 3),
-            WidgetPlacement(widgetId: "weather", col: 8, row: 0, width: 6, height: 6),
-            WidgetPlacement(widgetId: "storage-bars", col: 14, row: 0, width: 6, height: 3),
-            WidgetPlacement(widgetId: "process-list", col: 14, row: 3, width: 6, height: 3),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "System Monitor", order: 0,
+                widgets: [
+                    WidgetPlacement(widgetId: "cpu-gauge", col: 0, row: 0, width: 4, height: 3),
+                    WidgetPlacement(widgetId: "memory-gauge", col: 4, row: 0, width: 4, height: 3),
+                    WidgetPlacement(widgetId: "cpu-history", col: 0, row: 3, width: 4, height: 3),
+                    WidgetPlacement(widgetId: "memory-history", col: 4, row: 3, width: 4, height: 3),
+                    WidgetPlacement(widgetId: "weather", col: 8, row: 0, width: 6, height: 6),
+                    WidgetPlacement(widgetId: "storage-bars", col: 14, row: 0, width: 6, height: 3),
+                    WidgetPlacement(widgetId: "process-list", col: 14, row: 3, width: 6, height: 3),
+                ]))
 
         // Page 2: Network + Processes
-        pages.append(PageConfig(name: "Network", order: 1, widgets: [
-            WidgetPlacement(widgetId: "network-stats", col: 0, row: 0, width: 8, height: 4),
-            WidgetPlacement(widgetId: "process-list", col: 8, row: 0, width: 8, height: 6),
-            WidgetPlacement(widgetId: "disk-io", col: 0, row: 4, width: 8, height: 2),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Network", order: 1,
+                widgets: [
+                    WidgetPlacement(widgetId: "network-stats", col: 0, row: 0, width: 8, height: 4),
+                    WidgetPlacement(widgetId: "process-list", col: 8, row: 0, width: 8, height: 6),
+                    WidgetPlacement(widgetId: "disk-io", col: 0, row: 4, width: 8, height: 2),
+                ]))
 
         // Page 3: Temperatures
-        pages.append(PageConfig(name: "Temperatures", order: 2, widgets: [
-            WidgetPlacement(widgetId: "cpu-temp", col: 0, row: 0, width: 5, height: 4),
-            WidgetPlacement(widgetId: "gpu-temp", col: 5, row: 0, width: 5, height: 4),
-            WidgetPlacement(widgetId: "temp-history", col: 10, row: 0, width: 10, height: 4),
-            WidgetPlacement(widgetId: "cpu-gauge", col: 0, row: 4, width: 5, height: 2),
-            WidgetPlacement(widgetId: "memory-gauge", col: 5, row: 4, width: 5, height: 2),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Temperatures", order: 2,
+                widgets: [
+                    WidgetPlacement(widgetId: "cpu-temp", col: 0, row: 0, width: 5, height: 4),
+                    WidgetPlacement(widgetId: "gpu-temp", col: 5, row: 0, width: 5, height: 4),
+                    WidgetPlacement(widgetId: "temp-history", col: 10, row: 0, width: 10, height: 4),
+                    WidgetPlacement(widgetId: "cpu-gauge", col: 0, row: 4, width: 5, height: 2),
+                    WidgetPlacement(widgetId: "memory-gauge", col: 5, row: 4, width: 5, height: 2),
+                ]))
 
         // Page 4: Disk I/O + Storage
-        pages.append(PageConfig(name: "Storage", order: 3, widgets: [
-            WidgetPlacement(widgetId: "disk-io", col: 0, row: 0, width: 8, height: 4),
-            WidgetPlacement(widgetId: "storage-bars", col: 8, row: 0, width: 8, height: 4),
-            WidgetPlacement(widgetId: "network-stats", col: 0, row: 4, width: 10, height: 2),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Storage", order: 3,
+                widgets: [
+                    WidgetPlacement(widgetId: "disk-io", col: 0, row: 0, width: 8, height: 4),
+                    WidgetPlacement(widgetId: "storage-bars", col: 8, row: 0, width: 8, height: 4),
+                    WidgetPlacement(widgetId: "network-stats", col: 0, row: 4, width: 10, height: 2),
+                ]))
 
         // Page 5: Now Playing
-        pages.append(PageConfig(name: "Now Playing", order: 4, widgets: [
-            WidgetPlacement(widgetId: "now-playing", col: 2, row: 0, width: 12, height: 6),
-            WidgetPlacement(widgetId: "audio-devices", col: 14, row: 0, width: 6, height: 3),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Now Playing", order: 4,
+                widgets: [
+                    WidgetPlacement(widgetId: "now-playing", col: 2, row: 0, width: 12, height: 6),
+                    WidgetPlacement(widgetId: "audio-devices", col: 14, row: 0, width: 6, height: 3),
+                ]))
 
         // Page 6: Connectivity
-        pages.append(PageConfig(name: "Connectivity", order: 5, widgets: [
-            WidgetPlacement(widgetId: "wifi-info", col: 0, row: 0, width: 6, height: 4),
-            WidgetPlacement(widgetId: "bluetooth", col: 6, row: 0, width: 6, height: 4),
-            WidgetPlacement(widgetId: "audio-devices", col: 12, row: 0, width: 6, height: 4),
-            WidgetPlacement(widgetId: "network-stats", col: 0, row: 4, width: 10, height: 2),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Connectivity", order: 5,
+                widgets: [
+                    WidgetPlacement(widgetId: "wifi-info", col: 0, row: 0, width: 6, height: 4),
+                    WidgetPlacement(widgetId: "bluetooth", col: 6, row: 0, width: 6, height: 4),
+                    WidgetPlacement(widgetId: "audio-devices", col: 12, row: 0, width: 6, height: 4),
+                    WidgetPlacement(widgetId: "network-stats", col: 0, row: 4, width: 10, height: 2),
+                ]))
 
         // Page 7: Time & Info
-        pages.append(PageConfig(name: "Time & Info", order: 6, widgets: [
-            WidgetPlacement(widgetId: "world-clocks", col: 0, row: 0, width: 8, height: 4),
-            WidgetPlacement(widgetId: "day-progress", col: 8, row: 0, width: 6, height: 3),
-            WidgetPlacement(widgetId: "moon-phase", col: 14, row: 0, width: 4, height: 4),
-            WidgetPlacement(widgetId: "weather", col: 8, row: 3, width: 6, height: 3),
-        ]))
+        pages.append(
+            PageConfig(
+                name: "Time & Info", order: 6,
+                widgets: [
+                    WidgetPlacement(widgetId: "world-clocks", col: 0, row: 0, width: 8, height: 4),
+                    WidgetPlacement(widgetId: "day-progress", col: 8, row: 0, width: 6, height: 3),
+                    WidgetPlacement(widgetId: "moon-phase", col: 14, row: 0, width: 4, height: 4),
+                    WidgetPlacement(widgetId: "weather", col: 8, row: 3, width: 6, height: 3),
+                ]))
 
         return LayoutDocument(
             version: 1,

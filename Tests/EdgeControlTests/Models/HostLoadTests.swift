@@ -5,8 +5,11 @@ import Testing
 @Suite("Host load")
 struct HostLoadTests {
 
-    private func ticks(user: UInt32 = 0, system: UInt32 = 0, idle: UInt32 = 0, nice: UInt32 = 0)
-        -> HostLoad.CPUTicks {
+    private func ticks(
+        user: UInt32 = 0, system: UInt32 = 0, idle: UInt32 = 0, nice: UInt32 = 0
+    )
+        -> HostLoad.CPUTicks
+    {
         HostLoad.CPUTicks(user: user, system: system, idle: idle, nice: nice)
     }
 

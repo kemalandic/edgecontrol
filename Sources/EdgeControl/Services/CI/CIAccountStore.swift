@@ -19,7 +19,8 @@ public final class CIAccountStore: ObservableObject {
         self.defaults = defaults
         self.secrets = secrets
         if let data = defaults.data(forKey: Self.defaultsKey),
-           let decoded = try? JSONDecoder().decode([CIAccount].self, from: data) {
+            let decoded = try? JSONDecoder().decode([CIAccount].self, from: data)
+        {
             accounts = decoded
         }
     }

@@ -11,7 +11,7 @@ public final class MoonPhaseWidget: DashboardWidget {
     public let defaultSize = WidgetSize.size(3, 3)
 
     public let configSchema: [ConfigSchemaEntry] = [
-        ConfigSchemaEntry(key: "showIllumination", label: "Show Illumination", type: .toggle, defaultValue: .bool(true)),
+        ConfigSchemaEntry(key: "showIllumination", label: "Show Illumination", type: .toggle, defaultValue: .bool(true))
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
 

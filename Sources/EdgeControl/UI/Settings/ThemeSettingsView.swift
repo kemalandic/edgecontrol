@@ -31,7 +31,11 @@ struct ThemeSettingsView: View {
                         .font(.system(size: 12, weight: .heavy, design: .rounded))
                         .foregroundStyle(Theme.textTertiary)
 
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 6) {
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()),
+                        ], spacing: 6
+                    ) {
                         ForEach(PredefinedTheme.allCases, id: \.self) { preset in
                             presetCard(preset)
                         }
@@ -52,10 +56,13 @@ struct ThemeSettingsView: View {
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundStyle(.white)
                         Spacer()
-                        Picker("", selection: Binding(
-                            get: { theme.fontFamily },
-                            set: { val in update { $0.fontFamily = val } }
-                        )) {
+                        Picker(
+                            "",
+                            selection: Binding(
+                                get: { theme.fontFamily },
+                                set: { val in update { $0.fontFamily = val } }
+                            )
+                        ) {
                             ForEach(FontFamily.allCases, id: \.self) { family in
                                 Text(family.displayName).tag(family)
                             }
@@ -74,10 +81,12 @@ struct ThemeSettingsView: View {
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(accent)
                             .frame(width: 50)
-                        Slider(value: Binding(
-                            get: { theme.fontScale },
-                            set: { val in update { $0.fontScale = val } }
-                        ), in: 0.7...1.5, step: 0.05)
+                        Slider(
+                            value: Binding(
+                                get: { theme.fontScale },
+                                set: { val in update { $0.fontScale = val } }
+                            ), in: 0.7...1.5, step: 0.05
+                        )
                         .frame(width: 200)
                         .tint(accent)
                     }
@@ -100,13 +109,25 @@ struct ThemeSettingsView: View {
                     // Preview
                     HStack(spacing: 12) {
                         Text("Aa")
-                            .font(.system(size: theme.fontSizeValue * theme.fontScale, weight: .bold, design: theme.fontFamily.design))
+                            .font(
+                                .system(
+                                    size: theme.fontSizeValue * theme.fontScale, weight: .bold,
+                                    design: theme.fontFamily.design)
+                            )
                             .foregroundStyle(.white)
                         Text("The quick brown fox")
-                            .font(.system(size: theme.fontSizeBody * theme.fontScale, weight: .medium, design: theme.fontFamily.design))
+                            .font(
+                                .system(
+                                    size: theme.fontSizeBody * theme.fontScale, weight: .medium,
+                                    design: theme.fontFamily.design)
+                            )
                             .foregroundStyle(Theme.textSecondary)
                         Text("123.4%")
-                            .font(.system(size: theme.fontSizeLabel * theme.fontScale, weight: .bold, design: theme.fontFamily.design))
+                            .font(
+                                .system(
+                                    size: theme.fontSizeLabel * theme.fontScale, weight: .bold,
+                                    design: theme.fontFamily.design)
+                            )
                             .foregroundStyle(accent)
                             .monospacedDigit()
                     }
@@ -166,9 +187,14 @@ struct ThemeSettingsView: View {
                             } label: {
                                 VStack(spacing: 4) {
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(scheme == .custom
-                                            ? LinearGradient(colors: [.gray.opacity(0.3), .gray.opacity(0.1)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                            : LinearGradient(colors: scheme.preset.backgroundColors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        .fill(
+                                            scheme == .custom
+                                                ? LinearGradient(
+                                                    colors: [.gray.opacity(0.3), .gray.opacity(0.1)],
+                                                    startPoint: .topLeading, endPoint: .bottomTrailing)
+                                                : LinearGradient(
+                                                    colors: scheme.preset.backgroundColors, startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing)
                                         )
                                         .frame(height: 30)
                                         .overlay {
@@ -217,10 +243,12 @@ struct ThemeSettingsView: View {
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(accent)
                             .frame(width: 50)
-                        Slider(value: Binding(
-                            get: { theme.widgetOpacity },
-                            set: { val in update { $0.widgetOpacity = val } }
-                        ), in: 0...0.2, step: 0.01)
+                        Slider(
+                            value: Binding(
+                                get: { theme.widgetOpacity },
+                                set: { val in update { $0.widgetOpacity = val } }
+                            ), in: 0...0.2, step: 0.01
+                        )
                         .frame(width: 200)
                         .tint(accent)
                     }
@@ -235,10 +263,12 @@ struct ThemeSettingsView: View {
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(accent)
                             .frame(width: 50)
-                        Slider(value: Binding(
-                            get: { theme.widgetCornerRadius },
-                            set: { val in update { $0.widgetCornerRadius = val } }
-                        ), in: 0...20, step: 1)
+                        Slider(
+                            value: Binding(
+                                get: { theme.widgetCornerRadius },
+                                set: { val in update { $0.widgetCornerRadius = val } }
+                            ), in: 0...20, step: 1
+                        )
                         .frame(width: 200)
                         .tint(accent)
                     }
@@ -253,10 +283,12 @@ struct ThemeSettingsView: View {
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(accent)
                             .frame(width: 50)
-                        Slider(value: Binding(
-                            get: { theme.widgetGap },
-                            set: { val in update { $0.widgetGap = val } }
-                        ), in: 0...12, step: 1)
+                        Slider(
+                            value: Binding(
+                                get: { theme.widgetGap },
+                                set: { val in update { $0.widgetGap = val } }
+                            ), in: 0...12, step: 1
+                        )
                         .frame(width: 200)
                         .tint(accent)
                     }
@@ -376,7 +408,10 @@ struct ThemeSettingsView: View {
 
     // MARK: - Font Size Slider
 
-    private func fontSizeSlider(_ label: String, keyPath: WritableKeyPath<ThemeSettings, Double>, range: ClosedRange<Double>, default defaultVal: Double) -> some View {
+    private func fontSizeSlider(
+        _ label: String, keyPath: WritableKeyPath<ThemeSettings, Double>, range: ClosedRange<Double>,
+        default defaultVal: Double
+    ) -> some View {
         HStack {
             Text(label)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -386,10 +421,12 @@ struct ThemeSettingsView: View {
                 .font(.system(size: 12, weight: .bold, design: .monospaced))
                 .foregroundStyle(accent)
                 .frame(width: 30)
-            Slider(value: Binding(
-                get: { theme[keyPath: keyPath] },
-                set: { val in update { $0[keyPath: keyPath] = val } }
-            ), in: range, step: 1)
+            Slider(
+                value: Binding(
+                    get: { theme[keyPath: keyPath] },
+                    set: { val in update { $0[keyPath: keyPath] = val } }
+                ), in: range, step: 1
+            )
             .frame(width: 140)
             .tint(accent)
             Button {
@@ -421,7 +458,8 @@ struct ThemeSettingsView: View {
         .background(Color.white.opacity(0.03), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
-    private func schemeColorRow(_ label: String, keyPath: WritableKeyPath<CustomColorScheme, WidgetColor>) -> some View {
+    private func schemeColorRow(_ label: String, keyPath: WritableKeyPath<CustomColorScheme, WidgetColor>) -> some View
+    {
         let current = theme.customColorScheme?[keyPath: keyPath] ?? CustomColorScheme()[keyPath: keyPath]
         return SchemeColorRow(label: label, current: current) { newColor in
             var scheme = theme.customColorScheme ?? CustomColorScheme()
@@ -430,7 +468,9 @@ struct ThemeSettingsView: View {
         }
     }
 
-    private func colorCircle(currentColor: WidgetColor, label: String, isDefault: Bool, onChange: @escaping (WidgetColor) -> Void) -> some View {
+    private func colorCircle(
+        currentColor: WidgetColor, label: String, isDefault: Bool, onChange: @escaping (WidgetColor) -> Void
+    ) -> some View {
         WidgetColorCircle(currentColor: currentColor, label: label, isDefault: isDefault, onChange: onChange)
     }
 
@@ -445,10 +485,12 @@ struct ThemeSettingsView: View {
         } label: {
             VStack(spacing: 4) {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(LinearGradient(
-                        colors: preset.settings.colorScheme.preset.backgroundColors,
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ))
+                    .fill(
+                        LinearGradient(
+                            colors: preset.settings.colorScheme.preset.backgroundColors,
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(height: 36)
                     .overlay {
                         Circle()

@@ -87,7 +87,8 @@ struct GeneralSettingsView: View {
             // System panel coexistence
             settingsToggle(
                 "Allow System Panels Over Dashboard",
-                subtitle: "Clipboard managers (Paste) and similar hotkey panels can appear above the dashboard; the menu bar can too",
+                subtitle:
+                    "Clipboard managers (Paste) and similar hotkey panels can appear above the dashboard; the menu bar can too",
                 icon: "rectangle.stack",
                 isOn: Binding(
                     get: { layoutEngine.document.globalSettings.allowSystemPanels },
@@ -117,14 +118,17 @@ struct GeneralSettingsView: View {
 
                 Spacer()
 
-                Picker("", selection: Binding(
-                    get: { layoutEngine.document.globalSettings.units },
-                    set: { newValue in
-                        var gs = layoutEngine.document.globalSettings
-                        gs.units = newValue
-                        layoutEngine.updateGlobalSettings(gs)
-                    }
-                )) {
+                Picker(
+                    "",
+                    selection: Binding(
+                        get: { layoutEngine.document.globalSettings.units },
+                        set: { newValue in
+                            var gs = layoutEngine.document.globalSettings
+                            gs.units = newValue
+                            layoutEngine.updateGlobalSettings(gs)
+                        }
+                    )
+                ) {
                     ForEach(UnitSystem.allCases, id: \.self) { system in
                         Text(system.displayName).tag(system)
                     }

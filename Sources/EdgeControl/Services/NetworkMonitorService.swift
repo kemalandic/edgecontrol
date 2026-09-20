@@ -2,8 +2,8 @@ import Foundation
 
 @MainActor
 public final class NetworkMonitorService: ObservableObject {
-    @Published public var downloadSpeed: Double = 0 // bytes/sec
-    @Published public var uploadSpeed: Double = 0   // bytes/sec
+    @Published public var downloadSpeed: Double = 0  // bytes/sec
+    @Published public var uploadSpeed: Double = 0  // bytes/sec
     @Published public var totalDownloaded: UInt64 = 0
     @Published public var totalUploaded: UInt64 = 0
 

@@ -4,7 +4,7 @@ import Metal
 
 public struct CoreUsage: Identifiable, Equatable {
     public let id: Int
-    public let usage: Double // 0-100
+    public let usage: Double  // 0-100
 }
 
 /// The memory arithmetic, kept apart from the `host_statistics64` call so it can
@@ -114,7 +114,8 @@ public final class SystemMetricsService: ObservableObject {
     }
 
     private func currentCPULoadPercent() -> Double {
-        var size = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info_data_t>.stride / MemoryLayout<integer_t>.stride)
+        var size = mach_msg_type_number_t(
+            MemoryLayout<host_cpu_load_info_data_t>.stride / MemoryLayout<integer_t>.stride)
         var info = host_cpu_load_info()
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(size)) {
@@ -141,7 +142,9 @@ public final class SystemMetricsService: ObservableObject {
         return HostLoad.cpuPercent(previous: before, current: ticks) ?? latest?.cpuLoadPercent ?? 0
     }
 
-    private func currentMemorySnapshot() -> (usedPercent: Double, usedGB: Double, pressurePercent: Double, swapUsedMB: Double) {
+    private func currentMemorySnapshot() -> (
+        usedPercent: Double, usedGB: Double, pressurePercent: Double, swapUsedMB: Double
+    ) {
         var rawPageSize: vm_size_t = 0
         host_page_size(hostPort, &rawPageSize)
         let pageSize = Double(rawPageSize)
@@ -179,8 +182,9 @@ public final class SystemMetricsService: ObservableObject {
         let root = URL(fileURLWithPath: "/")
         let keys: Set<URLResourceKey> = [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]
         guard let values = try? root.resourceValues(forKeys: keys),
-              let total = values.volumeTotalCapacity,
-              let available = values.volumeAvailableCapacityForImportantUsage else {
+            let total = values.volumeTotalCapacity,
+            let available = values.volumeAvailableCapacityForImportantUsage
+        else {
             return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
         }
         guard let snapshot = HostLoad.storage(totalBytes: Int64(total), availableBytes: Int64(available)) else {

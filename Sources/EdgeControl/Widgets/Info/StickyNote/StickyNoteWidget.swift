@@ -15,18 +15,25 @@ public final class StickyNoteWidget: DashboardWidget {
 
     public let configSchema: [ConfigSchemaEntry] = [
         ConfigSchemaEntry(key: "note", label: "Note", type: .text, defaultValue: .string("")),
-        ConfigSchemaEntry(key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
-                          options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
-        ConfigSchemaEntry(key: "textColor", label: "Text Color", type: .picker,
-                          defaultValue: .string("soft white"),
-                          options: ["soft white", "white", "gray", "black", "yellow", "orange",
-                                    "pink", "red", "green", "mint", "blue", "purple"]),
-        ConfigSchemaEntry(key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.5),
-                          minValue: 0.0, maxValue: 1.0, step: 0.05),
-        ConfigSchemaEntry(key: "font", label: "Font", type: .picker, defaultValue: .string("mono"),
-                          options: ["system", "rounded", "serif", "mono", "marker", "noteworthy"]),
-        ConfigSchemaEntry(key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(18),
-                          minValue: 10, maxValue: 24, step: 1),
+        ConfigSchemaEntry(
+            key: "color", label: "Color", type: .picker, defaultValue: .string("yellow"),
+            options: ["yellow", "orange", "pink", "red", "green", "mint", "blue", "purple", "gray"]),
+        ConfigSchemaEntry(
+            key: "textColor", label: "Text Color", type: .picker,
+            defaultValue: .string("soft white"),
+            options: [
+                "soft white", "white", "gray", "black", "yellow", "orange",
+                "pink", "red", "green", "mint", "blue", "purple",
+            ]),
+        ConfigSchemaEntry(
+            key: "opacity", label: "Opacity", type: .slider, defaultValue: .double(0.5),
+            minValue: 0.0, maxValue: 1.0, step: 0.05),
+        ConfigSchemaEntry(
+            key: "font", label: "Font", type: .picker, defaultValue: .string("mono"),
+            options: ["system", "rounded", "serif", "mono", "marker", "noteworthy"]),
+        ConfigSchemaEntry(
+            key: "fontSize", label: "Font Size", type: .slider, defaultValue: .double(18),
+            minValue: 10, maxValue: 24, step: 1),
     ]
     public let defaultColors = WidgetColors(primary: .yellow)
 

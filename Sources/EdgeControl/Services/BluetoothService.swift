@@ -6,7 +6,7 @@ public struct BTDevice: Identifiable, Equatable {
     public let name: String
     public let isConnected: Bool
     public let deviceType: String
-    public let batteryLevel: Int? // 0-100 if available
+    public let batteryLevel: Int?  // 0-100 if available
 
     public var icon: String {
         switch deviceType.lowercased() {

@@ -157,7 +157,8 @@ public final class LayoutEngine: ObservableObject {
         document.pages = ordered
         reindexPages()
         if let activeId, let newIdx = sortedPages.firstIndex(where: { $0.id == activeId }),
-           currentPageIndex != newIdx {
+            currentPageIndex != newIdx
+        {
             currentPageIndex = newIdx
         }
         save()
@@ -204,7 +205,8 @@ public final class LayoutEngine: ObservableObject {
     /// out from under one another while editing.
     public func reorderWidget(pageId: String, instanceId: String, toFront: Bool) {
         guard let pageIdx = pageIndex(for: pageId),
-              let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return }
+            let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId)
+        else { return }
         recordLayoutUndo()
         let placement = document.pages[pageIdx].widgets.remove(at: widgetIdx)
         if toFront {
@@ -226,7 +228,8 @@ public final class LayoutEngine: ObservableObject {
     @discardableResult
     public func moveWidget(pageId: String, instanceId: String, toCol: Int, toRow: Int) -> Bool {
         guard let pageIdx = pageIndex(for: pageId),
-              let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return false }
+            let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId)
+        else { return false }
 
         let widget = document.pages[pageIdx].widgets[widgetIdx]
         let newRect = GridRect(col: toCol, row: toRow, width: widget.width, height: widget.height)
@@ -254,7 +257,7 @@ public final class LayoutEngine: ObservableObject {
         minSize: (String) -> WidgetSize? = { _ in nil }
     ) {
         guard let pageIdx = pageIndex(for: pageId),
-              let kept = document.pages[pageIdx].widgets.first(where: { $0.instanceId == keptId })
+            let kept = document.pages[pageIdx].widgets.first(where: { $0.instanceId == keptId })
         else { return }
         let keptRect = kept.gridRect
         let displacedIds = document.pages[pageIdx].widgets
@@ -329,7 +332,8 @@ public final class LayoutEngine: ObservableObject {
     @discardableResult
     public func resizeWidget(pageId: String, instanceId: String, newWidth: Int, newHeight: Int) -> Bool {
         guard let pageIdx = pageIndex(for: pageId),
-              let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return false }
+            let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId)
+        else { return false }
 
         let widget = document.pages[pageIdx].widgets[widgetIdx]
         let newRect = GridRect(col: widget.col, row: widget.row, width: newWidth, height: newHeight)
@@ -349,7 +353,8 @@ public final class LayoutEngine: ObservableObject {
     /// Update widget config.
     public func updateWidgetConfig(pageId: String, instanceId: String, config: WidgetConfig) {
         guard let pageIdx = pageIndex(for: pageId),
-              let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId) else { return }
+            let widgetIdx = widgetIndex(pageIndex: pageIdx, instanceId: instanceId)
+        else { return }
         document.pages[pageIdx].widgets[widgetIdx].config = config
         save()
     }
@@ -400,7 +405,9 @@ public final class LayoutEngine: ObservableObject {
     /// Check if a specific placement is valid (no collision, within bounds).
     /// While editing, overlap is a permitted staging state, so only bounds
     /// disqualify; use `wouldOverlap` to color-code staged collisions.
-    public func isValidPlacement(pageId: String, col: Int, row: Int, width: Int, height: Int, excludeInstanceId: String? = nil) -> Bool {
+    public func isValidPlacement(
+        pageId: String, col: Int, row: Int, width: Int, height: Int, excludeInstanceId: String? = nil
+    ) -> Bool {
         guard pageIndex(for: pageId) != nil else { return false }
 
         let rect = GridRect(col: col, row: row, width: width, height: height)

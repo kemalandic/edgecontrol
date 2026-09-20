@@ -56,7 +56,10 @@ private struct DayProgressWidgetView: View {
                         .stroke(Color.white.opacity(0.08), lineWidth: 8)
                     Circle()
                         .trim(from: 0, to: dayProgress)
-                        .stroke(Theme.widgetPrimary("day-progress", ts: ts, default: .yellow), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                        .stroke(
+                            Theme.widgetPrimary("day-progress", ts: ts, default: .yellow),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
                         .rotationEffect(.degrees(-90))
 
                     Text(String(format: "%.0f%%", dayProgress * 100))
@@ -89,10 +92,16 @@ private struct DayProgressWidgetView: View {
                         RoundedRectangle(cornerRadius: 4)
                             .fill(Color.white.opacity(0.08))
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(LinearGradient(
-                                colors: [Theme.widgetPrimary("day-progress", ts: ts, default: .yellow), Theme.widgetSecondary("day-progress", ts: ts, default: .orange) ?? Theme.accentOrange],
-                                startPoint: .leading, endPoint: .trailing
-                            ))
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Theme.widgetPrimary("day-progress", ts: ts, default: .yellow),
+                                        Theme.widgetSecondary("day-progress", ts: ts, default: .orange)
+                                            ?? Theme.accentOrange,
+                                    ],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
                             .frame(width: geo.size.width * dayProgress)
                     }
                 }

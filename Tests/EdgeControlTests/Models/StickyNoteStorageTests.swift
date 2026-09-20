@@ -28,11 +28,13 @@ struct StickyNoteStorageTests {
     }
 
     /// Notes get written in whatever language the person thinks in.
-    @Test("non-ASCII text survives", arguments: [
-        "Saçına çiçek taksam — ğüşıöç",
-        "日本語のメモ",
-        "emoji ✅ 🎉 and a — dash",
-    ])
+    @Test(
+        "non-ASCII text survives",
+        arguments: [
+            "Saçına çiçek taksam — ğüşıöç",
+            "日本語のメモ",
+            "emoji ✅ 🎉 and a — dash",
+        ])
     func unicodeSurvives(text: String) throws {
         let restored = try #require(roundTrip(note(text)))
         #expect(restored.string == text)
@@ -59,8 +61,9 @@ struct StickyNoteStorageTests {
     @Test("heading sizes survive")
     func headingSizesSurvive() throws {
         let attributed = NSMutableAttributedString(string: "big\nsmall", attributes: [.font: font])
-        attributed.addAttribute(.font, value: NSFont.systemFont(ofSize: 29),
-                                range: NSRange(location: 0, length: 3))
+        attributed.addAttribute(
+            .font, value: NSFont.systemFont(ofSize: 29),
+            range: NSRange(location: 0, length: 3))
         let restored = try #require(roundTrip(attributed))
         let first = restored.attribute(.font, at: 0, effectiveRange: nil) as? NSFont
         #expect(first?.pointSize == 29)
@@ -100,11 +103,13 @@ struct StickyNoteStorageTests {
     /// Returning nil is what makes the caller fall back to the plain-text
     /// mirror instead of showing a blank note, so it matters that damage reads
     /// as nil rather than as an empty string.
-    @Test("damaged storage yields nil so the caller can fall back", arguments: [
-        "not base64 at all!!",
-        "aGVsbG8=",              // valid base64, not RTF
-        "e1xydGYx",              // truncated RTF header
-    ])
+    @Test(
+        "damaged storage yields nil so the caller can fall back",
+        arguments: [
+            "not base64 at all!!",
+            "aGVsbG8=",  // valid base64, not RTF
+            "e1xydGYx",  // truncated RTF header
+        ])
     func damagedStorageYieldsNil(stored: String) {
         #expect(RichStickyTextView.fromRTF(stored) == nil)
     }

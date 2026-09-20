@@ -72,8 +72,9 @@ struct RichStickyTextView: NSViewRepresentable {
         // pre-restyle RTF then, and reloading from it would undo the reflow
         // or recolor (the bug that shipped first).
         if !fontChanged, !colorChanged,
-           Self.rtfString(textView.attributedString()) != rtfBase64,
-           let restored = Self.fromRTF(rtfBase64) {
+            Self.rtfString(textView.attributedString()) != rtfBase64,
+            let restored = Self.fromRTF(rtfBase64)
+        {
             textView.textStorage?.setAttributedString(restored)
             textView.normalizeCheckboxes()
         }
@@ -111,7 +112,8 @@ struct RichStickyTextView: NSViewRepresentable {
     private func recolorText(in textView: LinkPasteTextView) {
         guard let storage = textView.textStorage, storage.length > 0 else { return }
         storage.beginEditing()
-        storage.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+        storage.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: storage.length)) {
+            value, range, _ in
             if storage.attribute(.link, at: range.location, effectiveRange: nil) != nil { return }
             let alpha = (value as? NSColor)?.alphaComponent ?? 1
             let color = alpha < 1 ? textColor.withAlphaComponent(alpha) : textColor
@@ -129,7 +131,8 @@ struct RichStickyTextView: NSViewRepresentable {
             let traits = old.fontDescriptor.symbolicTraits
             var descriptor = baseFont.fontDescriptor.withSymbolicTraits(traits)
             if NSFont(descriptor: descriptor, size: 0) == nil { descriptor = baseFont.fontDescriptor }
-            let newFont = NSFont(descriptor: descriptor, size: old.pointSize * ratio)
+            let newFont =
+                NSFont(descriptor: descriptor, size: old.pointSize * ratio)
                 ?? baseFont
             storage.addAttribute(.font, value: newFont, range: range)
         }
@@ -237,7 +240,8 @@ struct RichStickyTextView: NSViewRepresentable {
         var rest = Substring(markdown)
         let pattern = /\[([^\]]+)\]\(([^)\s]+)\)/
         while let match = rest.firstMatch(of: pattern) {
-            result.append(NSAttributedString(string: String(rest[rest.startIndex..<match.range.lowerBound]), attributes: plain))
+            result.append(
+                NSAttributedString(string: String(rest[rest.startIndex..<match.range.lowerBound]), attributes: plain))
             var linkAttrs = plain
             linkAttrs[.link] = String(match.2)
             result.append(NSAttributedString(string: String(match.1), attributes: linkAttrs))

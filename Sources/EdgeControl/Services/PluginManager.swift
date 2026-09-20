@@ -5,7 +5,7 @@ import Foundation
 @MainActor
 public final class PluginManager: ObservableObject {
     @Published public private(set) var plugins: [LoadedPlugin] = []
-    @Published public private(set) var errors: [String: String] = [:] // pluginId → error
+    @Published public private(set) var errors: [String: String] = [:]  // pluginId → error
 
     public static let pluginsDirectory: URL = {
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -33,7 +33,8 @@ public final class PluginManager: ObservableObject {
         errors.removeAll()
 
         let fm = FileManager.default
-        guard let contents = try? fm.contentsOfDirectory(at: Self.pluginsDirectory, includingPropertiesForKeys: nil) else { return }
+        guard let contents = try? fm.contentsOfDirectory(at: Self.pluginsDirectory, includingPropertiesForKeys: nil)
+        else { return }
 
         for url in contents where url.pathExtension == "ecplugin" {
             loadPlugin(at: url)
@@ -62,18 +63,23 @@ public final class PluginManager: ObservableObject {
         }
 
         // Validate plugin ID is safe for filesystem use (no path traversal)
-        let isValidId = manifest.id.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "-" || $0 == "_") }
+        let isValidId = manifest.id.allSatisfy {
+            $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "." || $0 == "-" || $0 == "_")
+        }
         guard isValidId, !manifest.id.isEmpty else {
-            errors[bundlePath.lastPathComponent] = "Invalid plugin ID: must contain only letters, numbers, dots, hyphens, underscores"
+            errors[bundlePath.lastPathComponent] =
+                "Invalid plugin ID: must contain only letters, numbers, dots, hyphens, underscores"
             return
         }
 
         // Validate widgets have HTML files, and that each one stays inside the
         // bundle. See PluginBundle.containedHTMLURL for what "inside" means.
         for widgetDef in manifest.widgets {
-            guard let htmlURL = PluginBundle.containedHTMLURL(
-                bundlePath: bundlePath, htmlFile: widgetDef.htmlFile
-            ) else {
+            guard
+                let htmlURL = PluginBundle.containedHTMLURL(
+                    bundlePath: bundlePath, htmlFile: widgetDef.htmlFile
+                )
+            else {
                 errors[manifest.id] = "Invalid widget HTML path: \(widgetDef.htmlFile)"
                 return
             }
@@ -177,7 +183,10 @@ public final class PluginManager: ObservableObject {
                     return
                 }
 
-                guard let contents = try? FileManager.default.contentsOfDirectory(at: tempDir, includingPropertiesForKeys: nil) else {
+                guard
+                    let contents = try? FileManager.default.contentsOfDirectory(
+                        at: tempDir, includingPropertiesForKeys: nil)
+                else {
                     self.errors["install"] = "Failed to read extracted contents"
                     completion(false)
                     return
@@ -189,10 +198,12 @@ public final class PluginManager: ObservableObject {
                     let directManifest = tempDir.appendingPathComponent("manifest.json")
                     if FileManager.default.fileExists(atPath: directManifest.path) {
                         let name = zipURL.deletingPathExtension().lastPathComponent
-                        let wrapperParent = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+                        let wrapperParent = FileManager.default.temporaryDirectory.appendingPathComponent(
+                            UUID().uuidString)
                         let wrappedDir = wrapperParent.appendingPathComponent("\(name).ecplugin")
                         do {
-                            try FileManager.default.createDirectory(at: wrapperParent, withIntermediateDirectories: true)
+                            try FileManager.default.createDirectory(
+                                at: wrapperParent, withIntermediateDirectories: true)
                             try FileManager.default.copyItem(at: tempDir, to: wrappedDir)
                             let result = self.installFromDirectory(wrappedDir)
                             try? FileManager.default.removeItem(at: wrapperParent)
@@ -259,7 +270,8 @@ public final class PluginManager: ObservableObject {
 
     private static func loadState() -> PluginSavedState {
         guard let data = try? Data(contentsOf: stateURL),
-              let state = try? JSONDecoder().decode(PluginSavedState.self, from: data) else {
+            let state = try? JSONDecoder().decode(PluginSavedState.self, from: data)
+        else {
             return PluginSavedState()
         }
         return state
