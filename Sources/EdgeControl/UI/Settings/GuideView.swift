@@ -93,6 +93,42 @@ struct GuideView: View {
                             ("⌘Z / ⇧⌘Z", "Undo / redo."),
                             ("⌘A/C/V/X", "Select all, copy, paste, cut — the standard set."),
                             ("Click a box", "Toggles the checkbox; works by touch too."),
+                            ("/", "At the start of a line, opens the list kinds as a menu."),
+                            (
+                                "`code`",
+                                "The closing backtick makes a code chip; ``` at the start of a line opens a block."
+                            ),
+                            ("Select text", "Raises a bar over it: bold, italic, strikethrough, code."),
+                            ("⌘⇧C", "Copies the note — or the selection — as Markdown."),
+                            ("Paste", "Markdown becomes a note; an image is stored beside it."),
+                            (
+                                "⤢ in the corner",
+                                "Fills the panel with the note. Esc, the backdrop or the corner button returns."
+                            ),
+                            (
+                                "⌘⇧R",
+                                "Sends the caret's unfinished to-do — or every one in a selection — to Reminders. Skips what is already there."
+                            ),
+                        ])
+                    section(
+                        "Notes — everywhere else",
+                        rows: [
+                            (
+                                "⌃⌥Space",
+                                "From any app: a box opens, what you type lands in the Inbox note. Turn it off in General."
+                            ),
+                            (
+                                "Note picker",
+                                "A sticky note's settings can point it at any note that exists, including the Inbox."
+                            ),
+                            (
+                                "Export Notes",
+                                "General → Export Notes writes every note as Markdown, images included."
+                            ),
+                            (
+                                "On disk",
+                                "Application Support/EdgeControl/Notes — real RTF files, a plain-text mirror, and the last twenty versions of each."
+                            ),
                         ])
                     section(
                         "Reminders",

@@ -21,6 +21,7 @@ public enum StickyNoteCommand: String, CaseIterable, Hashable, Sendable {
     case code
     case divider
     case date
+    case reminder
     case body
 
     public var title: String {
@@ -34,6 +35,7 @@ public enum StickyNoteCommand: String, CaseIterable, Hashable, Sendable {
         case .code: return "Code"
         case .divider: return "Divider"
         case .date: return "Today's Date"
+        case .reminder: return "Add to Reminders"
         case .body: return "Body Text"
         }
     }
@@ -50,6 +52,7 @@ public enum StickyNoteCommand: String, CaseIterable, Hashable, Sendable {
         case .code: return "chevron.left.forwardslash.chevron.right"
         case .divider: return "minus"
         case .date: return "calendar"
+        case .reminder: return "bell.badge"
         case .body: return "textformat"
         }
     }
@@ -62,7 +65,7 @@ public enum StickyNoteCommand: String, CaseIterable, Hashable, Sendable {
         case .todo: return StickyNoteMarkup.uncheckedGlyph + "\t"
         case .bullet: return "\u{2022}\t"
         case .numbered: return "1.\t"
-        case .heading1, .heading2, .heading3, .code, .divider, .date, .body: return nil
+        case .heading1, .heading2, .heading3, .code, .divider, .date, .reminder, .body: return nil
         }
     }
 

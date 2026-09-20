@@ -40,7 +40,7 @@ struct StickyNoteCommandTests {
         #expect(StickyNoteMarkup.marker(of: StickyNoteCommand.numbered.marker! + "x") == .ordered(1))
 
         let withoutMarkers = StickyNoteCommand.allCases.filter { $0.marker == nil }
-        #expect(Set(withoutMarkers) == [.heading1, .heading2, .heading3, .code, .divider, .date, .body])
+        #expect(Set(withoutMarkers) == [.heading1, .heading2, .heading3, .code, .divider, .date, .reminder, .body])
     }
 
     /// A numbered list starting anywhere but 1 is the thing the editor

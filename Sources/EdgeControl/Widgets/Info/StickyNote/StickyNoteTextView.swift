@@ -12,8 +12,12 @@ final class LinkPasteTextView: NSTextView {
     var onFontSizeReset: (() -> Void)?
     var writeMedia: ((Data) -> String?)?
     var readMedia: ((String) -> Data?)?
+    /// Hands the chosen to-do titles to whoever owns the Reminders service
+    /// and answers with a line to show for it.
+    var promoteToReminders: (([String]) -> String)?
     private var isNormalizing = false
     private lazy var formatBar = StickyNoteFormatBar(owner: self)
+    private lazy var notice = TransientNotice(owner: self)
 
     @objc func increaseFontSize(_ sender: Any?) { onFontSizeDelta?(1) }
     @objc func decreaseFontSize(_ sender: Any?) { onFontSizeDelta?(-1) }
@@ -711,6 +715,20 @@ final class LinkPasteTextView: NSTextView {
         updateFormatBar()
     }
 
+    // MARK: Reminders
+
+    /// Puts the selected to-dos — or the one the caret is on — where they
+    /// will ring.
+    @objc func addToReminders(_ sender: Any?) {
+        guard let storage = textStorage, let promoteToReminders else { return }
+        let titles = ReminderPromotion.candidates(in: storage, range: selectedRange())
+        guard !titles.isEmpty else {
+            notice.show(ReminderPromotion.summary(added: 0, skipped: 0))
+            return
+        }
+        notice.show(promoteToReminders(titles))
+    }
+
     // MARK: Slash commands
 
     /// A slash at the head of a line offers the line kinds as a menu.
@@ -783,6 +801,8 @@ final class LinkPasteTextView: NSTextView {
             _ = convertHorizontalRuleText()
         case .code:
             insertCodePlaceholder()
+        case .reminder:
+            addToReminders(nil)
         case .date:
             insertText(
                 NSAttributedString(string: StickyNoteCommand.todaysDate(), attributes: bodyAttributes),

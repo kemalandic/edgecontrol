@@ -18,6 +18,8 @@ struct RichStickyTextView: NSViewRepresentable {
     let writeMedia: (Data) -> String?
     /// Reads an image back for drawing.
     let readMedia: (String) -> Data?
+    /// Promotes to-do titles into Reminders and answers with what to show.
+    let promoteToReminders: ([String]) -> String
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = LinkPasteTextView()
@@ -56,6 +58,7 @@ struct RichStickyTextView: NSViewRepresentable {
         textView.onFontSizeReset = onFontSizeReset
         textView.writeMedia = writeMedia
         textView.readMedia = readMedia
+        textView.promoteToReminders = promoteToReminders
         textView.typingAttributes = [.font: baseFont, .foregroundColor: textColor]
         textView.normalizeCheckboxes()
 
@@ -75,6 +78,7 @@ struct RichStickyTextView: NSViewRepresentable {
         textView.onFontSizeReset = onFontSizeReset
         textView.writeMedia = writeMedia
         textView.readMedia = readMedia
+        textView.promoteToReminders = promoteToReminders
         let fontChanged = context.coordinator.appliedFontKey != fontKey
         let colorChanged = context.coordinator.appliedColorKey != colorKey
         // Reload only on a genuine external change — and never on the pass

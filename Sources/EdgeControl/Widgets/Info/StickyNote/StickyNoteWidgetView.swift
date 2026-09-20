@@ -16,6 +16,7 @@ struct StickyNoteWidgetView: View {
     let baseConfig: WidgetConfig
 
     @EnvironmentObject private var layoutEngine: LayoutEngine
+    @EnvironmentObject private var model: AppModel
     @Environment(\.themeSettings) private var ts
     @State private var activeId = ""
     @State private var rtfDraft = ""
@@ -23,6 +24,7 @@ struct StickyNoteWidgetView: View {
     @State private var lastSaved = ""
     @State private var seeded = false
     @State private var saveTask: Task<Void, Never>?
+    @State private var hovering = false
 
     private var primary: Color { StickyNotePalette.tint(colorName, ts: ts) }
     private var textNSColor: NSColor { StickyNotePalette.text(textColorName) }
@@ -46,11 +48,34 @@ struct StickyNoteWidgetView: View {
             readMedia: { name in
                 guard !activeId.isEmpty else { return nil }
                 return store.mediaData(named: name, for: activeId)
-            }
+            },
+            promoteToReminders: { titles in promote(titles) }
         )
         .padding(Theme.compactPadding)
         .background(primary.opacity(tintOpacity))
         .widgetCard()
+        // A note in a six-row cell is a note you cannot write in. The panel
+        // is right there — this is the way to borrow all of it, and the way
+        // back is the backdrop, the corner button or Esc.
+        .overlay(alignment: .topTrailing) {
+            if hovering, !instanceId.isEmpty, !pageId.isEmpty,
+                !layoutEngine.isFocused(pageId: pageId, instanceId: instanceId)
+            {
+                Button {
+                    layoutEngine.focus(pageId: pageId, instanceId: instanceId)
+                } label: {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .padding(5)
+                        .background(Circle().fill(Color.black.opacity(0.45)))
+                }
+                .buttonStyle(.plain)
+                .padding(4)
+                .transition(.opacity)
+            }
+        }
+        .onHover { hovering = $0 }
         .onAppear { seed() }
         // The id can arrive after the first render — a widget dropped on the
         // dashboard gets its note on appear, and the new configuration comes
@@ -106,6 +131,27 @@ struct StickyNoteWidgetView: View {
         store.adopt(plan)
         layoutEngine.updateWidgetConfig(pageId: pageId, instanceId: instanceId, config: plan.config)
         return plan.noteId
+    }
+
+    // MARK: - Reminders
+
+    /// Puts the to-dos into Reminders, skipping the ones already waiting
+    /// there, and answers with a line to show for it.
+    ///
+    /// The service is started on demand: it normally runs only while a
+    /// Reminders widget is placed, and a note should not need one on the
+    /// dashboard to reach the same database. Starting it is also what
+    /// prompts for access the first time.
+    private func promote(_ titles: [String]) -> String {
+        let service = model.remindersService
+        service.start()
+        // `items` is filled by an asynchronous fetch, so the very first
+        // promotion after launch may not see what is already there. It
+        // settles from the second one on, and a duplicate reminder is a
+        // smaller problem than a missing one.
+        let fresh = ReminderPromotion.newTitles(titles, existing: service.items.map(\.title))
+        for title in fresh { service.add(title: title) }
+        return ReminderPromotion.summary(added: fresh.count, skipped: titles.count - fresh.count)
     }
 
     // MARK: - Saving
