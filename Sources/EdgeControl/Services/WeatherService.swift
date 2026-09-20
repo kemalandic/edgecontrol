@@ -114,27 +114,8 @@ public final class WeatherDataService: ObservableObject {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 let response = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
 
-                self.current = CurrentWeatherData(
-                    temperature: response.current.temperature2m,
-                    humidity: response.current.relativeHumidity2m,
-                    windSpeed: response.current.windSpeed10m,
-                    weatherCode: response.current.weatherCode,
-                    isDay: response.current.isDay == 1,
-                    conditionText: Self.weatherDescription(code: response.current.weatherCode),
-                    symbolName: Self.weatherSymbol(code: response.current.weatherCode, isDay: response.current.isDay == 1)
-                )
-
-                self.dailyForecast = zip(response.daily.time.indices, response.daily.time).map { index, date in
-                    let code = response.daily.weatherCode[index]
-                    return DayForecast(
-                        date: date,
-                        weatherCode: code,
-                        highTemp: response.daily.temperature2mMax[index],
-                        lowTemp: response.daily.temperature2mMin[index],
-                        conditionText: Self.weatherDescription(code: code),
-                        symbolName: Self.weatherSymbol(code: code, isDay: true)
-                    )
-                }
+                self.current = WeatherMapping.current(from: response)
+                self.dailyForecast = WeatherMapping.forecast(from: response)
 
                 self.error = nil
             } catch {
@@ -145,7 +126,9 @@ public final class WeatherDataService: ObservableObject {
 
     // MARK: - WMO Weather Code Mapping
 
-    static func weatherDescription(code: Int) -> String {
+    /// Pure lookup — nonisolated so the mapping can use it off the main
+    /// actor.
+    nonisolated static func weatherDescription(code: Int) -> String {
         switch code {
         case 0: return "Clear"
         case 1: return "Mostly Clear"
@@ -174,7 +157,9 @@ public final class WeatherDataService: ObservableObject {
         }
     }
 
-    static func weatherSymbol(code: Int, isDay: Bool) -> String {
+    /// Pure lookup — nonisolated so the mapping can use it off the main
+    /// actor.
+    nonisolated static func weatherSymbol(code: Int, isDay: Bool) -> String {
         switch code {
         case 0: return isDay ? "sun.max.fill" : "moon.stars.fill"
         case 1: return isDay ? "sun.min.fill" : "moon.fill"
