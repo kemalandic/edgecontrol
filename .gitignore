@@ -3,7 +3,6 @@
 # Scripts/package.sh output: archive, exported app, staging tree and the dmg.
 build/
 .swiftpm/
-xcuserdata/
 DerivedData/
 *.o
 *.dylib
@@ -19,3 +18,9 @@ CLAUDE.md
 *.log
 TestPlugins/
 TestResults.xcresult
+
+# Generated from project.yml by xcodegen. Every consumer regenerates it before
+# use — README, CONTRIBUTING, Scripts/ci-local.sh, Scripts/package.sh and CI all
+# run `xcodegen generate` first — so committing it bought nothing and cost a
+# merge conflict on every pull request that added a file.
+EdgeControl.xcodeproj/

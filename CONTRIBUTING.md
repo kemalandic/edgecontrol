@@ -10,6 +10,11 @@ Thanks for your interest in contributing! Here's how you can help.
 4. Open `EdgeControl.xcodeproj` in Xcode
 5. Build and run with Cmd+R
 
+`EdgeControl.xcodeproj` is generated from `project.yml` and is not committed, so
+step 3 is not optional — and run it again after adding or moving a file, or the
+build will not see it. `project.yml` is where target settings are edited; the
+generated project is overwritten.
+
 ## Making Changes
 
 - Create a feature branch from `main`

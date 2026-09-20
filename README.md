@@ -127,6 +127,9 @@ open EdgeControl.xcodeproj
 # Cmd+R to run
 ```
 
+The Xcode project is generated from `project.yml` and is not in the repository —
+`xcodegen generate` creates it, and re-running it picks up any files added since.
+
 ## Touch Support
 
 EdgeControl has native HID touch input support for touchscreen displays (including the CORSAIR XENEON EDGE). Every button and control works with both mouse clicks and direct touch taps. The touch system auto-calibrates to your display positioning. On non-touch displays, all controls work with standard mouse input.
