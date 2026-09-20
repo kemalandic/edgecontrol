@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// Renders a single page as a 20x6 grid with placed widgets.
@@ -74,7 +75,7 @@ struct GridPageView: View {
 
                 // Placed widgets
                 ForEach(page.widgets) { placement in
-                    if let widget = registry.widget(for: placement.widgetId) {
+                    if registry.widget(for: placement.widgetId) != nil {
                         let isDragging = draggingInstanceId == placement.instanceId
                         let isResizing = resizingInstanceId == placement.instanceId
                         let isSelected = selectedInstanceId == placement.instanceId
