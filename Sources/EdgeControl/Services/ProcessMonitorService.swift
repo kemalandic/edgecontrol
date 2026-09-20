@@ -47,6 +47,10 @@ public final class ProcessMonitorService: ObservableObject {
         timer = nil
     }
 
+    /// Rows the list shows. The widget's own row cap is driven from this, so
+    /// the two cannot drift.
+    public static let displayedProcessCount = 16
+
     private func sample() {
         Task.detached {
             let snapshots = Self.fetchRawSnapshots()
@@ -76,13 +80,11 @@ public final class ProcessMonitorService: ObservableObject {
         for snap in snapshots {
             newCPUTime[snap.pid] = snap.totalCPUTime
 
-            let cpuPercent: Double
-            if elapsedNs > 0, let prevTime = previousCPUTime[snap.pid] {
-                let delta = snap.totalCPUTime > prevTime ? snap.totalCPUTime - prevTime : 0
-                cpuPercent = (Double(delta) / Double(elapsedNs)) * 100.0
-            } else {
-                cpuPercent = 0
-            }
+            let cpuPercent = ProcessUsage.cpuPercent(
+                previous: previousCPUTime[snap.pid] ?? snap.totalCPUTime,
+                current: snap.totalCPUTime,
+                elapsedNanos: elapsedNs
+            )
 
             results.append(ProcessInfo_EC(
                 id: snap.pid,
@@ -99,9 +101,7 @@ public final class ProcessMonitorService: ObservableObject {
             previousSampleTime = first.sampleTime
         }
 
-        // Sort, take top 5, resolve icons
-        let top = Array(results.sorted { $0.cpuPercent > $1.cpuPercent }.prefix(16))
-        resolveIcons(for: top)
+        resolveIcons(for: ProcessUsage.busiest(results, limit: Self.displayedProcessCount))
     }
 
     /// Resolve app icons on MainActor.
