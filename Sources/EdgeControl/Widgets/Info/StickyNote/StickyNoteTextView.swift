@@ -116,25 +116,20 @@ final class LinkPasteTextView: NSTextView {
     /// strikethrough from the selection (or the current line), keeping links.
     @objc func resetToBodyText(_ sender: Any?) {
         guard let storage = textStorage else { return }
-        let ns = string as NSString
         var range = selectedRange()
         if range.length == 0 {
-            range = ns.lineRange(for: NSRange(location: range.location, length: 0))
+            range = (string as NSString).lineRange(for: NSRange(location: range.location, length: 0))
         }
         guard range.length > 0 else {
             typingAttributes = bodyAttributes
             return
         }
         guard shouldChangeText(in: range, replacementString: nil) else { return }
-        storage.addAttribute(.font, value: defaultFont, range: range)
-        storage.addAttribute(.paragraphStyle, value: bodyParagraph, range: range)
-        storage.removeAttribute(.strikethroughStyle, range: range)
-        storage.removeAttribute(.underlineStyle, range: range)
+        formatting.resetToBody(in: storage, range: range)
         didChangeText()
         typingAttributes = bodyAttributes
     }
 
-    /// One drawn checkbox (attachment) plus its following tab.
     private func checkboxMarker(checked: Bool, level: Int = 0) -> NSAttributedString {
         let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: checked))
         s.append(NSAttributedString(string: "\t", attributes: listAttributes(level: level)))
@@ -145,177 +140,28 @@ final class LinkPasteTextView: NSTextView {
         return s
     }
 
-    /// The flipped replacement for an existing box, carrying over the
-    /// character's current paragraph style — a bare checkboxOnly() has
-    /// none, and normalization would read that as indent level 0,
-    /// outdenting the line on every toggle.
-    private func toggledBox(_ box: CheckboxAttachment, at location: Int) -> NSAttributedString {
-        let s = NSMutableAttributedString(attributedString: checkboxOnly(checked: !box.checked))
-        if let style = textStorage?.attribute(.paragraphStyle, at: location, effectiveRange: nil) {
-            s.addAttribute(.paragraphStyle, value: style, range: NSRange(location: 0, length: s.length))
-        }
-        return s
-    }
-
     private func checkboxOnly(checked: Bool) -> NSAttributedString {
-        let attachment = CheckboxAttachment.make(
-            checked: checked, font: defaultFont,
-            stroke: defaultColor, accent: accentColor
-        )
-        let s = NSMutableAttributedString(attachment: attachment)
-        s.addAttributes(
-            [.cursor: NSCursor.pointingHand, .font: defaultFont],
-            range: NSRange(location: 0, length: s.length)
-        )
-        return s
+        normalizer.checkbox(checked: checked)
     }
 
     /// Storage carries ☐/☑ characters; the view draws them. Any glyph that
     /// appears (load, paste, legacy notes) becomes a drawn attachment.
+    /// The passes themselves live in StickyNoteNormalizer, which needs only
+    /// an attributed string — so they can be checked without a window.
+    private var formatting: StickyNoteFormatting {
+        StickyNoteFormatting(
+            layout: layout, defaultFont: defaultFont, defaultColor: defaultColor, accentColor: accentColor)
+    }
+
+    private var normalizer: StickyNoteNormalizer {
+        StickyNoteNormalizer(
+            layout: layout, defaultFont: defaultFont, defaultColor: defaultColor,
+            accentColor: accentColor, readMedia: readMedia)
+    }
+
     func normalizeCheckboxes() {
         guard let storage = textStorage else { return }
-        var idx = storage.length - 1
-        let ns = storage.string as NSString
-        while idx >= 0 {
-            let ch = ns.substring(with: NSRange(location: idx, length: 1))
-            if ch == "☐" || ch == "☑" {
-                let range = NSRange(location: idx, length: 1)
-                storage.replaceCharacters(in: range, with: checkboxOnly(checked: ch == "☑"))
-            }
-            idx -= 1
-        }
-        normalizeMedia()
-        applyParagraphSpacing()
-        renumberOrderedLists()
-        applyTracking()
-    }
-
-    /// Turns the media links a loaded note carries into drawn images.
-    ///
-    /// Runs backwards for the same reason the checkbox pass does: each
-    /// replacement changes the length of everything after it.
-    func normalizeMedia() {
-        guard let storage = textStorage, let readMedia else { return }
-        var location = storage.length
-        while location > 0 {
-            var effective = NSRange()
-            let probe = max(0, location - 1)
-            let link = storage.attribute(.link, at: probe, effectiveRange: &effective)
-            location = effective.location
-
-            guard storage.attribute(.attachment, at: probe, effectiveRange: nil) == nil,
-                let name = NoteMedia.file(fromLink: linkString(link)),
-                let data = readMedia(name),
-                let attachment = MediaAttachment.make(filename: name, data: data)
-            else { continue }
-
-            let drawn = NSMutableAttributedString(attachment: attachment)
-            drawn.addAttributes(
-                [.font: defaultFont, .link: NoteMedia.link(forFile: name)],
-                range: NSRange(location: 0, length: drawn.length))
-            storage.replaceCharacters(in: effective, with: drawn)
-        }
-    }
-
-    private func linkString(_ value: Any?) -> String {
-        if let url = value as? URL { return url.absoluteString }
-        if let string = value as? String { return string }
-        return ""
-    }
-
-    /// Stamps the family's tracking over everything so loaded and pasted
-    /// text is covered, and clears it when the family doesn't need it.
-    private func applyTracking() {
-        guard let storage = textStorage, storage.length > 0 else { return }
-        let all = NSRange(location: 0, length: storage.length)
-        if noteKern > 0 {
-            storage.addAttribute(.kern, value: noteKern, range: all)
-        } else {
-            storage.removeAttribute(.kern, range: all)
-        }
-    }
-
-    /// Every paragraph gets its rhythm: heading-sized first characters get
-    /// the heading spacing, everything else the body spacing. Runs as part
-    /// of normalization so loaded and pasted content is covered too.
-    private func applyParagraphSpacing() {
-        guard let storage = textStorage, storage.length > 0 else { return }
-        let headingThreshold = defaultFont.pointSize * 1.1
-        var location = 0
-        while location < (storage.string as NSString).length {
-            let ns = storage.string as NSString
-            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
-            var line = ns.substring(with: paragraph)
-            if line.hasSuffix("\n") { line.removeLast() }
-
-            // Migrate legacy no-break-space separators to tabs so old notes
-            // pick up the aligned list column; re-run the same paragraph.
-            if line.count >= 2, StickyNoteMarkup.marker(of: line) != nil, !line.contains("\t") {
-                storage.replaceCharacters(
-                    in: NSRange(location: paragraph.location + 1, length: 1), with: "\t"
-                )
-                continue
-            }
-
-            let isList = markerLength(of: line) > 0
-            let firstFont = storage.attribute(.font, at: paragraph.location, effectiveRange: nil) as? NSFont
-            let existing =
-                storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-            let style = paragraphStyle(
-                isHeading: !isList && (firstFont?.pointSize ?? 0) > headingThreshold,
-                isList: isList,
-                markerInset: markerInset(for: line),
-                level: indentLevel(of: existing, isList: isList)
-            )
-            storage.addAttribute(.paragraphStyle, value: style, range: paragraph)
-            location = paragraph.location + paragraph.length
-        }
-    }
-
-    /// Numbered items in a contiguous list block stay sequential per indent
-    /// level: each one follows the previous number at its level (bullets and
-    /// checkboxes between them don't break the count), and any non-list
-    /// line — blank or plain text — ends the block and resets numbering.
-    /// Runs on every change, so inserting, deleting or converting an item
-    /// renumbers the rest of its list. The block's first number is kept
-    /// as typed, so lists may start anywhere.
-    private func renumberOrderedLists() {
-        guard let storage = textStorage, storage.length > 0 else { return }
-        var counters: [Int: Int] = [:]
-        var location = 0
-        while location < (storage.string as NSString).length {
-            let ns = storage.string as NSString
-            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
-            var line = ns.substring(with: paragraph)
-            if line.hasSuffix("\n") { line.removeLast() }
-            if markerLength(of: line) == 0 {
-                counters.removeAll()
-                location = paragraph.location + paragraph.length
-                continue
-            }
-            if let tab = line.firstIndex(of: "\t"), line[..<tab].hasSuffix("."),
-                let n = Int(line[..<tab].dropLast())
-            {
-                let existing =
-                    storage.attribute(.paragraphStyle, at: paragraph.location, effectiveRange: nil) as? NSParagraphStyle
-                let level = indentLevel(of: existing, isList: true)
-                counters = counters.filter { $0.key <= level }
-                let expected = counters[level].map { $0 + 1 } ?? n
-                counters[level] = expected
-                if n != expected {
-                    let headLength = (String(line[..<tab]) as NSString).length
-                    storage.replaceCharacters(
-                        in: NSRange(location: paragraph.location, length: headLength),
-                        with: "\(expected)."
-                    )
-                    let fresh = (storage.string as NSString)
-                        .lineRange(for: NSRange(location: paragraph.location, length: 0))
-                    location = fresh.location + fresh.length
-                    continue
-                }
-            }
-            location = paragraph.location + paragraph.length
-        }
+        normalizer.normalize(storage)
     }
 
     // MARK: Typing conversions
@@ -672,26 +518,7 @@ final class LinkPasteTextView: NSTextView {
         guard let storage = textStorage else { return }
         let range = selectedRange()
         guard range.length > 0, shouldChangeText(in: range, replacementString: nil) else { return }
-
-        // Off only when every character already has it: a mixed selection
-        // becomes uniformly styled, which is what every editor does.
-        var allHaveIt = true
-        storage.enumerateAttribute(.font, in: range) { value, _, stop in
-            guard let font = value as? NSFont else { return }
-            if !font.fontDescriptor.symbolicTraits.contains(trait) {
-                allHaveIt = false
-                stop.pointee = true
-            }
-        }
-
-        storage.enumerateAttribute(.font, in: range) { value, subrange, _ in
-            guard let font = value as? NSFont else { return }
-            var traits = font.fontDescriptor.symbolicTraits
-            if allHaveIt { traits.remove(trait) } else { traits.insert(trait) }
-            let descriptor = font.fontDescriptor.withSymbolicTraits(traits)
-            storage.addAttribute(
-                .font, value: NSFont(descriptor: descriptor, size: font.pointSize) ?? font, range: subrange)
-        }
+        formatting.toggle(trait, in: storage, range: range)
         didChangeText()
         updateFormatBar()
     }
@@ -701,16 +528,7 @@ final class LinkPasteTextView: NSTextView {
         guard let storage = textStorage else { return }
         let range = selectedRange()
         guard range.length > 0, shouldChangeText(in: range, replacementString: nil) else { return }
-
-        let isCode = storage.attribute(.backgroundColor, at: range.location, effectiveRange: nil) != nil
-        if isCode {
-            storage.removeAttribute(.backgroundColor, range: range)
-            storage.addAttribute(.font, value: defaultFont, range: range)
-        } else {
-            for (key, value) in NoteMarkdown.codeAttributes(font: defaultFont, textColor: defaultColor) {
-                storage.addAttribute(key, value: value, range: range)
-            }
-        }
+        formatting.toggleCode(in: storage, range: range)
         didChangeText()
         updateFormatBar()
     }
@@ -922,14 +740,14 @@ final class LinkPasteTextView: NSTextView {
         let point = convert(event.locationInWindow, from: nil)
         let index = characterIndexForInsertion(at: point)
         for candidate in [index, index - 1] where candidate >= 0 && candidate < (textStorage?.length ?? 0) {
-            if let box = textStorage?.attribute(.attachment, at: candidate, effectiveRange: nil) as? CheckboxAttachment
-            {
-                let range = NSRange(location: candidate, length: 1)
-                guard shouldChangeText(in: range, replacementString: nil) else { break }
-                textStorage?.replaceCharacters(in: range, with: toggledBox(box, at: candidate))
-                didChangeText()
-                return
-            }
+            guard let storage = textStorage,
+                let flipped = formatting.flippedCheckbox(at: candidate, in: storage)
+            else { continue }
+            let range = NSRange(location: candidate, length: 1)
+            guard shouldChangeText(in: range, replacementString: nil) else { break }
+            storage.replaceCharacters(in: range, with: flipped)
+            didChangeText()
+            return
         }
         super.mouseDown(with: event)
     }
@@ -938,23 +756,16 @@ final class LinkPasteTextView: NSTextView {
     /// checkbox line the caret or selection touches; other lines are left
     /// alone. Same write path as clicking the box.
     @objc func toggleChecked(_ sender: Any?) {
-        guard let storage = textStorage, storage.length > 0 else { return }
-        let ns = string as NSString
-        let lines = ns.lineRange(for: selectedRange())
-        var location = lines.location
-        while location < max(NSMaxRange(lines), lines.location + 1), location < ns.length {
-            let paragraph = ns.lineRange(for: NSRange(location: location, length: 0))
-            if paragraph.length > 0,
-                let box = storage.attribute(.attachment, at: paragraph.location, effectiveRange: nil)
-                    as? CheckboxAttachment
-            {
-                let range = NSRange(location: paragraph.location, length: 1)
-                if shouldChangeText(in: range, replacementString: nil) {
-                    storage.replaceCharacters(in: range, with: toggledBox(box, at: paragraph.location))
-                    didChangeText()
-                }
-            }
-            location = paragraph.location + paragraph.length
+        guard let storage = textStorage else { return }
+        // Collected before any of them is flipped: replacing a box is a
+        // one-for-one character swap, so earlier locations stay valid, but
+        // reading them up front keeps that from being load-bearing.
+        for location in formatting.checkboxLocations(in: storage, range: selectedRange()).reversed() {
+            guard let flipped = formatting.flippedCheckbox(at: location, in: storage) else { continue }
+            let range = NSRange(location: location, length: 1)
+            guard shouldChangeText(in: range, replacementString: nil) else { continue }
+            storage.replaceCharacters(in: range, with: flipped)
+            didChangeText()
         }
     }
 
@@ -963,17 +774,13 @@ final class LinkPasteTextView: NSTextView {
     @objc func toggleStrikethrough(_ sender: Any?) {
         let range = selectedRange()
         guard range.length > 0, let storage = textStorage else {
+            // With no selection the command arms the pen instead.
             let current = typingAttributes[.strikethroughStyle] as? Int ?? 0
             typingAttributes[.strikethroughStyle] = current == 0 ? NSUnderlineStyle.single.rawValue : 0
             return
         }
         guard shouldChangeText(in: range, replacementString: nil) else { return }
-        let current = storage.attribute(.strikethroughStyle, at: range.location, effectiveRange: nil) as? Int ?? 0
-        if current == 0 {
-            storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
-        } else {
-            storage.removeAttribute(.strikethroughStyle, range: range)
-        }
+        formatting.toggleStrikethrough(in: storage, range: range)
         didChangeText()
     }
 
