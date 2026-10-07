@@ -312,6 +312,10 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time
+    /// A printer found on the network, stored by its Bonjour name; empty
+    /// means every printer. Like `notePicker`, its options are found while
+    /// the app runs, so they cannot be part of the schema.
+    case printerPicker
 }
 
 // MARK: - Service Key
@@ -331,6 +335,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case process  // ProcessMonitorService
     case cicd  // CICDService — GitHub, Forgejo, any future host
     case reminders  // RemindersService (EventKit)
+    case printers  // PrinterService (IPP, found over Bonjour)
 }
 
 // MARK: - Dashboard Widget Protocol

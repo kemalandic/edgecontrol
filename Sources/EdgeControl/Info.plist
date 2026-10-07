@@ -34,6 +34,13 @@
     <string>EdgeControl uses your location for accurate weather data on your dashboard.</string>
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>EdgeControl displays your connected Bluetooth devices on the dashboard.</string>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>The Printers widget finds the printers on your local network and asks them for their status.</string>
+    <key>NSBonjourServices</key>
+    <array>
+        <string>_ipp._tcp</string>
+        <string>_ipps._tcp</string>
+    </array>
     <key>NSAppleEventsUsageDescription</key>
     <string>EdgeControl reads what is playing in your browser and music apps and controls playback from the dashboard.</string>
 </dict>

@@ -6,6 +6,7 @@ struct WidgetConfigEditor: View {
     let schema: [ConfigSchemaEntry]
     @Binding var config: WidgetConfig
     @EnvironmentObject private var layoutEngine: LayoutEngine
+    @EnvironmentObject private var model: AppModel
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -48,6 +49,8 @@ struct WidgetConfigEditor: View {
             timeRow(entry)
         case .colorPicker:
             EmptyView()
+        case .printerPicker:
+            PrinterPickerRow(entry: entry, config: $config, service: model.printerService, accent: accent)
         }
     }
 
@@ -338,6 +341,41 @@ struct WidgetConfigEditor: View {
         panel.beginSheetModal(for: win) { response in
             guard response == .OK, let url = panel.url else { return }
             config[key] = .string(url.path)
+        }
+    }
+}
+
+// MARK: - Printer picker
+
+/// Lists the printers found on the network. One that has gone quiet stays
+/// in the list while it is chosen, so a printer that is switched off doesn't
+/// quietly turn the widget back into All Printers.
+private struct PrinterPickerRow: View {
+    let entry: ConfigSchemaEntry
+    @Binding var config: WidgetConfig
+    @ObservedObject var service: PrinterService
+    let accent: Color
+
+    var body: some View {
+        let current = config.string(entry.key)
+        let found = service.printers.contains { $0.id == current }
+        HStack {
+            Text(entry.label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Picker("", selection: Binding(get: { current }, set: { config[entry.key] = .string($0) })) {
+                Text("All Printers").tag("")
+                ForEach(service.printers) { printer in
+                    Text(printer.name).tag(printer.id)
+                }
+                if !current.isEmpty, !found {
+                    Text("\(PrinterStatus.displayName(current)) (not found)").tag(current)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(accent)
+            .frame(maxWidth: 200)
         }
     }
 }
