@@ -934,4 +934,10 @@ private struct PluginWebViewRepresentable: NSViewRepresentable {
 /// while still allowing clicks/interactions within the plugin's own bounds.
 private class NonFirstResponderWebView: WKWebView {
     override var acceptsFirstResponder: Bool { false }
+
+    /// A dashboard is glanced at and tapped while another app is in front.
+    /// WKWebView takes the first click only over selected text or a legacy
+    /// scrollbar, so the first click or press on a plugin would otherwise
+    /// only bring EdgeControl forward and never reach the page.
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }

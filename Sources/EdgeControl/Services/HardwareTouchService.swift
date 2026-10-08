@@ -225,6 +225,7 @@ public final class HardwareTouchService: ObservableObject {
     // Swipe tracking
     private var touchStartPoint: CGPoint?
     private var touchStartTime: Date?
+    private var intent = SwipeIntent()
 
     public init() {}
 
@@ -296,6 +297,7 @@ public final class HardwareTouchService: ObservableObject {
 
         if sample.pressed && !wasPressed {
             pressSequence += 1
+            intent = SwipeIntent()
             // Swipe start
             let rawPoint = CGPoint(x: sample.x, y: sample.y)
             if let mapped = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
@@ -309,9 +311,12 @@ public final class HardwareTouchService: ObservableObject {
             if let current = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
                 let dx = current.x - startPoint.x
                 let dy = current.y - startPoint.y
+                intent.track(
+                    distanceFromStart: hypot(dx, dy), elapsed: Date().timeIntervalSince(touchStartTime ?? Date()))
                 // Engage once the drag reads as horizontal; stay engaged
-                // until release so the page doesn't flicker mid-gesture.
-                if liveSwipeDX != nil || (abs(dx) > 12 && abs(dx) > abs(dy) * 1.5) {
+                // until release so the page doesn't flicker mid-gesture. A
+                // finger that rested first is dragging something, not paging.
+                if liveSwipeDX != nil || (!intent.isHold && abs(dx) > 12 && abs(dx) > abs(dy) * 1.5) {
                     liveSwipeDX = dx
                 }
             }
@@ -329,7 +334,7 @@ public final class HardwareTouchService: ObservableObject {
                     let distance = hypot(dx, dy)
                     let duration = Date().timeIntervalSince(startTime)
 
-                    if abs(dx) > 100 && abs(dx) > abs(dy) * 2 && duration < 1.0 {
+                    if !intent.isHold && abs(dx) > 100 && abs(dx) > abs(dy) * 2 && duration < 1.0 {
                         // Swipe
                         swipeDirection = dx < 0 ? .left : .right
                     } else if distance < 30 && duration < 0.4 {
