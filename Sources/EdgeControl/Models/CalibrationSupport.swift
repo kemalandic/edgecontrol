@@ -5,11 +5,16 @@ public struct RawTouchSample: Equatable, Sendable {
     public var x: Int
     public var y: Int
     public var pressed: Bool
+    /// The panel's own range for x and y, from its HID descriptor.
+    public var maxX: Int
+    public var maxY: Int
 
-    public init(x: Int = 0, y: Int = 0, pressed: Bool = false) {
+    public init(x: Int = 0, y: Int = 0, pressed: Bool = false, maxX: Int = 16_383, maxY: Int = 9_599) {
         self.x = x
         self.y = y
         self.pressed = pressed
+        self.maxX = maxX
+        self.maxY = maxY
     }
 }
 

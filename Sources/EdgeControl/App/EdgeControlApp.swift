@@ -41,6 +41,7 @@ final class DashboardWindowController {
         if let hosting = dashboardWindow.contentView as? KioskHostingView<AnyView> {
             hosting.rootView = rootView
         }
+        model.touchService.attach(window: dashboardWindow)
 
         let placed = WindowPlacement.configure(
             dashboardWindow,

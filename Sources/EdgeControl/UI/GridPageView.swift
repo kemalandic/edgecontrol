@@ -269,8 +269,13 @@ struct GridPageView: View {
                         // page-sized container, and a contentShape added after
                         // it would make every widget swallow the whole page's
                         // clicks.
+                        // Only while it has a job: a plugin handles its own
+                        // touches, and a zone over it would take them all.
                         .touchTappable(
-                            id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry
+                            id: "widget-tap-\(placement.instanceId)", registry: model.touchService.zoneRegistry,
+                            enabled: editMode
+                                || (!launchTarget(for: placement).isEmpty
+                                    && registry.widget(for: placement.widgetId)?.category != .plugin)
                         ) {
                             Task { @MainActor in
                                 if editMode {

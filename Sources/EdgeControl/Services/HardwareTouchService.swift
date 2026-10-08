@@ -60,6 +60,7 @@ final class HIDTouchInputSource: NSObject, TouchInputSource {
     var onOpenStatus: ((String) -> Void)?
     private var sample = RawTouchSample()
     private var started = false
+    private var requestedAccess = false
     private var openedDevices: [IOHIDDevice] = []
 
     // Corsair XENEON EDGE vendor/product IDs
@@ -150,6 +151,15 @@ final class HIDTouchInputSource: NSObject, TouchInputSource {
             let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
             let success = result == kIOReturnSuccess
             TouchLogger.log("device \(usageKey(device)) open \(success ? "ok" : "failed (\(result))")")
+            // Seizing the panel's mouse interface takes Input Monitoring.
+            // Without it macOS keeps treating the panel as a mouse, which
+            // clicks wherever the pointer lands as well as where EdgeControl
+            // delivers the touch. Ask once; macOS remembers the answer.
+            if result == kIOReturnNotPermitted, !requestedAccess {
+                requestedAccess = true
+                let granted = IOHIDRequestAccess(kIOHIDRequestTypeListenEvent)
+                TouchLogger.log("Input Monitoring \(granted ? "granted" : "requested")")
+            }
             if !success {
                 IOHIDDeviceUnscheduleFromRunLoop(device, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
             }
@@ -179,15 +189,34 @@ final class HIDTouchInputSource: NSObject, TouchInputSource {
         return "u\(page):\(usage)"
     }
 
+    private var reportPending = false
+
     private func handle(value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         switch (IOHIDElementGetUsagePage(element), IOHIDElementGetUsage(element)) {
-        case (1, 48): sample.x = IOHIDValueGetIntegerValue(value)
-        case (1, 49): sample.y = IOHIDValueGetIntegerValue(value)
-        case (9, 1): sample.pressed = IOHIDValueGetIntegerValue(value) != 0
+        case (1, 48):
+            sample.x = IOHIDValueGetIntegerValue(value)
+            let max = IOHIDElementGetLogicalMax(element)
+            if max > 0 { sample.maxX = max }
+        case (1, 49):
+            sample.y = IOHIDValueGetIntegerValue(value)
+            let max = IOHIDElementGetLogicalMax(element)
+            if max > 0 { sample.maxY = max }
+        // Contact: the mouse interface's button, or the touchscreen's own
+        // tip switch, whichever interface EdgeControl could open.
+        case (9, 1), (13, 0x42): sample.pressed = IOHIDValueGetIntegerValue(value) != 0
         default: return
         }
-        onSample?(sample)
+        // A report's values arrive one at a time, contact before position,
+        // so a new touch would first be seen where the last one was. Pass
+        // the sample on once the whole report is in.
+        guard !reportPending else { return }
+        reportPending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.reportPending = false
+            self.onSample?(self.sample)
+        }
     }
 }
 
@@ -222,9 +251,11 @@ public final class HardwareTouchService: ObservableObject {
     private var pressSequence = 0
     private var previousPressed = false
 
-    // Swipe tracking
-    private var touchStartPoint: CGPoint?
-    private var touchStartTime: Date?
+    // Gestures, and their delivery into the dashboard window
+    private var gesture = TouchGesture()
+    private var lastPoint = CGPoint.zero
+    private var holdTask: Task<Void, Never>?
+    private let injector = TouchEventInjector()
 
     public init() {}
 
@@ -252,15 +283,21 @@ public final class HardwareTouchService: ObservableObject {
         source.start()
         touchSource = source
 
-        // Start calibration timer only if calibration is still needed
-        if dwellCalibration.activeCorner != nil {
-            startCalibrationTimer()
-        }
+        // The panel's own coordinates map it; the corner-dwell calibration
+        // runs only when asked for (resetCalibration).
         refreshState()
+    }
+
+    /// The dashboard window, which touch is delivered into.
+    public func attach(window: NSWindow) {
+        injector.window = window
     }
 
     public func stop() {
         TouchLogger.log("hardware touch service stop")
+        holdTask?.cancel()
+        holdTask = nil
+        gesture = TouchGesture()
         timer?.invalidate()
         timer = nil
         touchSource?.stop()
@@ -293,61 +330,68 @@ public final class HardwareTouchService: ObservableObject {
 
     private func handle(sample: RawTouchSample) {
         let wasPressed = previousPressed
+        if let size = injector.window?.contentView?.bounds.size, size.width > 0, size.height > 0 {
+            renderBounds = CGRect(origin: .zero, size: size)
+        }
+        let point = PanelMapping(maxX: sample.maxX, maxY: sample.maxY)
+            .point(x: sample.x, y: sample.y, in: renderBounds.size)
+        let now = ProcessInfo.processInfo.systemUptime
 
         if sample.pressed && !wasPressed {
             pressSequence += 1
-            // Swipe start
-            let rawPoint = CGPoint(x: sample.x, y: sample.y)
-            if let mapped = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
-                touchStartPoint = mapped
-                touchStartTime = Date()
+            lastPoint = point
+            perform(gesture.began(at: point, time: now))
+            scheduleHold()
+        } else if sample.pressed {
+            if point != lastPoint {
+                lastPoint = point
+                perform(gesture.moved(to: point, time: now))
             }
-        }
-
-        if sample.pressed, let startPoint = touchStartPoint {
-            let rawPoint = CGPoint(x: sample.x, y: sample.y)
-            if let current = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
-                let dx = current.x - startPoint.x
-                let dy = current.y - startPoint.y
-                // Engage once the drag reads as horizontal; stay engaged
-                // until release so the page doesn't flicker mid-gesture.
-                if liveSwipeDX != nil || (abs(dx) > 12 && abs(dx) > abs(dy) * 1.5) {
-                    liveSwipeDX = dx
-                }
-            }
-        }
-
-        if !sample.pressed && wasPressed {
-            // Touch release — classify as tap or swipe
-            if let startPoint = touchStartPoint,
-                let startTime = touchStartTime
-            {
-                let rawPoint = CGPoint(x: latestSample.x, y: latestSample.y)
-                if let endPoint = calibration.mappedPoint(for: rawPoint, in: renderBounds) {
-                    let dx = endPoint.x - startPoint.x
-                    let dy = endPoint.y - startPoint.y
-                    let distance = hypot(dx, dy)
-                    let duration = Date().timeIntervalSince(startTime)
-
-                    if abs(dx) > 100 && abs(dx) > abs(dy) * 2 && duration < 1.0 {
-                        // Swipe
-                        swipeDirection = dx < 0 ? .left : .right
-                    } else if distance < 30 && duration < 0.4 {
-                        // Tap — hit-test registered touch zones
-                        let hit = zoneRegistry.handleTap(at: startPoint)
-                        TouchLogger.log("tap at (\(Int(startPoint.x)),\(Int(startPoint.y))) — \(hit ? "hit" : "miss")")
-                    }
-                }
-            }
-            touchStartPoint = nil
-            touchStartTime = nil
-            liveSwipeDX = nil
+        } else if wasPressed {
+            holdTask?.cancel()
+            holdTask = nil
+            // The release report can carry no position; the last one stands.
+            perform(gesture.ended(at: lastPoint, time: now))
         }
 
         previousPressed = sample.pressed
         eventSequence += 1
         latestSample = sample
         refreshState()
+    }
+
+    /// A finger still resting after the hold delay presses what's under it.
+    private func scheduleHold() {
+        holdTask?.cancel()
+        holdTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(Int(TouchGesture.holdDelay * 1000)))
+            guard !Task.isCancelled, let self else { return }
+            self.perform(self.gesture.holdElapsed(time: ProcessInfo.processInfo.systemUptime))
+        }
+    }
+
+    /// Native widgets keep their touch zones for taps; everything else gets
+    /// the mouse and scroll events it would get from a mouse or trackpad.
+    private func perform(_ events: [TouchGesture.Event]) {
+        for event in events {
+            switch event {
+            case .tap(let point):
+                let hit = zoneRegistry.handleTap(at: point)
+                TouchLogger.log("tap at (\(Int(point.x)),\(Int(point.y))) — \(hit ? "zone" : "click")")
+                if !hit { injector.click(at: point) }
+            case .pressBegan(let point): injector.press(at: point)
+            case .pressMoved(let point): injector.drag(to: point)
+            case .pressEnded(let point): injector.release(at: point)
+            case .scrollBegan(let point): injector.beginScroll(at: point)
+            case .scrolled(let dx, let dy, let point): injector.scroll(dx: dx, dy: dy, at: point)
+            case .scrollEnded(let point): injector.endScroll(at: point)
+            case .paging(let dx):
+                liveSwipeDX = dx
+            case .pageEnded(let dx):
+                if abs(dx) > 100 { swipeDirection = dx < 0 ? .left : .right }
+                liveSwipeDX = nil
+            }
+        }
     }
 
     /// Start the 30fps calibration timer (only runs during active calibration).
@@ -382,9 +426,9 @@ public final class HardwareTouchService: ObservableObject {
     }
 
     private func refreshState() {
-        let rawPoint = CGPoint(x: latestSample.x, y: latestSample.y)
         let validation = calibration.validationError()
-        let mappedPoint = validation == nil ? calibration.mappedPoint(for: rawPoint, in: renderBounds) : nil
+        let mappedPoint = PanelMapping(maxX: latestSample.maxX, maxY: latestSample.maxY)
+            .point(x: latestSample.x, y: latestSample.y, in: renderBounds.size)
         state = TouchRuntimeState(
             rawSample: latestSample,
             mappedPoint: mappedPoint,
