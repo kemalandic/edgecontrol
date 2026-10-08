@@ -145,6 +145,23 @@ struct GuideView: View {
                             ("Circle", "Tap to complete the reminder everywhere."),
                         ])
                     section(
+                        "Parcel",
+                        rows: [
+                            (
+                                "API key",
+                                "Parcel Premium gives you one at web.parcelapp.net. Paste it into any Parcel widget's settings; every Parcel widget shares it."
+                            ),
+                            (
+                                "Show",
+                                "Active is everything on its way. Recent also has deliveries that have just arrived."
+                            ),
+                            (
+                                "When",
+                                "Today, Tomorrow or the day it's due, with the carrier's time window when there is one. Yellow means the day has passed."
+                            ),
+                            ("Tap", "Opens Parcel."),
+                        ])
+                    section(
                         "Widget Catalog",
                         rows: [
                             (

@@ -1,0 +1,98 @@
+{
+  "success": true,
+  "deliveries": [
+    {
+      "carrier_code": "fedex",
+      "description": "Keyboard",
+      "status_code": 2,
+      "tracking_number": "770000000001",
+      "extra_information": "",
+      "date_expected": "2026-10-09 09:00:00",
+      "date_expected_end": "2026-10-09 13:00:00",
+      "events": [
+        {
+          "event": "Departed FedEx hub",
+          "date": "Thursday, October 8, 2026 6:12 AM",
+          "location": "Memphis, TN"
+        },
+        {
+          "event": "Picked up",
+          "date": "Wednesday, October 7, 2026 4:40 PM",
+          "location": "Reno, NV",
+          "additional": "Package received after cutoff"
+        }
+      ]
+    },
+    {
+      "carrier_code": "ups",
+      "description": "Desk lamp",
+      "status_code": 4,
+      "tracking_number": "1Z0000000000000002",
+      "timestamp_expected": 1791468000,
+      "timestamp_expected_end": 1791482400,
+      "date_expected": "2026-10-08 10:00:00",
+      "date_expected_end": "2026-10-08 14:00:00",
+      "events": [
+        {
+          "event": "Out For Delivery Today",
+          "date": "10.08.2026 07:05",
+          "location": "Philadelphia, PA, US"
+        }
+      ]
+    },
+    {
+      "carrier_code": "usps",
+      "description": "",
+      "status_code": "8",
+      "tracking_number": "9400000000000000000003",
+      "date_expected": "2026-10-12",
+      "events": null
+    },
+    {
+      "carrier_code": "amzlus",
+      "description": "Filters",
+      "status_code": 3,
+      "tracking_number": "TBA000000000004",
+      "extra_information": null,
+      "date_expected": "--//--",
+      "events": [
+        {
+          "event": "Ready for pickup at the locker",
+          "date": "",
+          "location": "Locker, Main St"
+        },
+        {
+          "event": "",
+          "date": ""
+        },
+        "not an event"
+      ]
+    },
+    {
+      "carrier_code": "dhl",
+      "description": "Phone case",
+      "status_code": 0,
+      "tracking_number": "JD000000000000005",
+      "events": [
+        {
+          "event": "Delivered",
+          "date": "October 7, 2026 2:41 PM EDT",
+          "location": "Front door"
+        }
+      ]
+    },
+    {
+      "carrier_code": "pholder",
+      "description": "A delivery Parcel couldn't read",
+      "tracking_number": "000006",
+      "events": []
+    },
+    {
+      "carrier_code": "usps",
+      "description": "Books",
+      "status_code": 99,
+      "tracking_number": "9400000000000000000007",
+      "events": []
+    }
+  ]
+}

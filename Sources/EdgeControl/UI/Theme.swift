@@ -99,6 +99,12 @@ enum Theme {
         return defaultColor.color
     }
 
+    /// Resolve the primary color of a widget that follows the accent: user
+    /// override → theme accent.
+    static func widgetPrimaryOrAccent(_ widgetId: String, ts: ThemeSettings) -> Color {
+        ts.widgetColorOverrides[widgetId]?.primary.color ?? accent(ts)
+    }
+
     /// Resolve a widget's secondary color: user override → widget default.
     static func widgetSecondary(_ widgetId: String, ts: ThemeSettings, default defaultColor: ThemeColor?) -> Color? {
         if let override = ts.widgetColorOverrides[widgetId]?.secondary {

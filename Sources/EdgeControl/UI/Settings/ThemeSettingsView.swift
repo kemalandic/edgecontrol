@@ -336,7 +336,11 @@ struct ThemeSettingsView: View {
 
     private func widgetColorRow(widget: any DashboardWidget) -> some View {
         let hasOverride = theme.widgetColorOverrides[widget.widgetId] != nil
-        let colors = theme.widgetColorOverrides[widget.widgetId] ?? widget.defaultColors
+        // A widget that follows the accent shows the accent as its default,
+        // so the swatch matches what the dashboard draws.
+        let defaults =
+            widget.defaultsToAccentColor ? WidgetColors(primary: theme.accentColor) : widget.defaultColors
+        let colors = theme.widgetColorOverrides[widget.widgetId] ?? defaults
 
         return HStack(spacing: 10) {
             Image(systemName: widget.iconName)
@@ -355,32 +359,32 @@ struct ThemeSettingsView: View {
                 label: "P",
                 isDefault: !hasOverride
             ) { newColor in
-                var current = theme.widgetColorOverrides[widget.widgetId] ?? widget.defaultColors
+                var current = theme.widgetColorOverrides[widget.widgetId] ?? defaults
                 current.primary = newColor
                 update { $0.widgetColorOverrides[widget.widgetId] = current }
             }
 
             // Secondary color circle
-            if let sec = widget.defaultColors.secondary {
+            if let sec = defaults.secondary {
                 colorCircle(
                     currentColor: colors.secondary ?? sec,
                     label: "S",
                     isDefault: !hasOverride
                 ) { newColor in
-                    var current = theme.widgetColorOverrides[widget.widgetId] ?? widget.defaultColors
+                    var current = theme.widgetColorOverrides[widget.widgetId] ?? defaults
                     current.secondary = newColor
                     update { $0.widgetColorOverrides[widget.widgetId] = current }
                 }
             }
 
             // Tertiary color circle
-            if let ter = widget.defaultColors.tertiary {
+            if let ter = defaults.tertiary {
                 colorCircle(
                     currentColor: colors.tertiary ?? ter,
                     label: "T",
                     isDefault: !hasOverride
                 ) { newColor in
-                    var current = theme.widgetColorOverrides[widget.widgetId] ?? widget.defaultColors
+                    var current = theme.widgetColorOverrides[widget.widgetId] ?? defaults
                     current.tertiary = newColor
                     update { $0.widgetColorOverrides[widget.widgetId] = current }
                 }

@@ -16,13 +16,13 @@ Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on 
 
 I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
 
-What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 27 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. Contributors then pushed it past a thing to glance at: it has a real note editor now, a key that captures a line from any app, and a door to Apple Reminders. It's something I use every single day, and it keeps getting better.
+What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 28 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. Contributors then pushed it past a thing to glance at: it has a real note editor now, a key that captures a line from any app, and a door to Apple Reminders. It's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
 EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor. And when you need to write something down, the notes are right there rather than in another app.
 
-### 27 Built-in Widgets
+### 28 Built-in Widgets
 
 **System (9)** — CPU Gauge, Memory Gauge, CPU History, Memory History, Process List, Disk I/O, Storage Bars, Memory Pressure, CPU Cores (per-core usage)
 
@@ -32,7 +32,7 @@ EdgeControl turns any display into a fully customizable system dashboard. You cr
 
 **Media (2)** — Now Playing (Safari, Chrome, Edge, Spotify, Apple Music — controls, artwork, progress), Audio Devices (output, volume)
 
-**Info (7)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase, Sticky Note (a real editor — see below), Reminders (your actual Reminders lists)
+**Info (8)** — Weather (current + 5-day forecast), Clock (10 visual themes), World Clocks, Day Progress, Moon Phase, Sticky Note (a real editor — see below), Reminders (your actual Reminders lists), Parcel (deliveries on their way, from the Parcel app with Parcel Premium)
 
 **DevTools (1)** — CI/CD Runs (GitHub Actions and Forgejo/Gitea, across all your hosts)
 
@@ -177,7 +177,7 @@ Sources/EdgeControl/
     ├── Temperature/  # CPU/GPU/SSD Temp, TempHistory, PerCoreTemp
     ├── Network/      # NetworkStats, WiFiInfo, Bluetooth
     ├── Media/        # NowPlaying, AudioDevices
-    ├── Info/         # Weather, Clock, WorldClocks, DayProgress, MoonPhase
+    ├── Info/         # Weather, Clock, WorldClocks, DayProgress, MoonPhase, Parcel
     ├── DevTools/     # CICDRuns
     └── Plugin/       # PluginWebWidget (WKWebView renderer + JS SDK)
 
