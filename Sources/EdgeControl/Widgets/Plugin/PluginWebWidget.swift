@@ -106,13 +106,22 @@ public final class PluginWebWidget: DashboardWidget {
         self.requiredServices = services
 
         // Convert plugin config schema to native config schema
-        self.configSchema = (widgetDef.configSchema ?? []).map { field in
+        self.configSchema = (widgetDef.configSchema ?? []).compactMap { field in
             let fieldType: ConfigFieldType
+            var opens: PluginMenuItem.Target?
             switch field.type {
             case "boolean": fieldType = .toggle
             case "number": fieldType = .stepper
             case "color": fieldType = .colorPicker
             case "select": fieldType = .picker
+            case "button":
+                // A button asking for something a plugin may not open isn't shown.
+                guard
+                    let target = PluginMenuItem.target(
+                        openApp: field.openApp, openURL: field.openURL, forPlugin: pluginId)
+                else { return nil }
+                fieldType = .button
+                opens = target
             default: fieldType = .text
             }
             let defaultVal: ConfigValue
@@ -122,7 +131,8 @@ public final class PluginWebWidget: DashboardWidget {
             case .string(let v): defaultVal = .string(v)
             }
             return ConfigSchemaEntry(
-                key: field.key, label: field.label, type: fieldType, defaultValue: defaultVal, options: field.options)
+                key: field.key, label: field.label, type: fieldType, defaultValue: defaultVal, options: field.options,
+                showWhen: field.showWhen, opens: opens)
         }
     }
 

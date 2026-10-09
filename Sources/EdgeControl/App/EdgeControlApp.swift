@@ -372,6 +372,17 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
 
     private func buildStatusMenu() -> NSMenu {
         let menu = NSMenu()
+        menu.delegate = self
+        fillStatusMenu(menu)
+        return menu
+    }
+
+    /// Settings, then whatever enabled plugins add, then Quit. Rebuilt each
+    /// time the menu opens, since plugins come and go while the app runs.
+    fileprivate func fillStatusMenu(_ menu: NSMenu) {
+        menu.removeAllItems()
+        // A plugin item whose app isn't installed shows, dimmed.
+        menu.autoenablesItems = false
         menu.addItem(
             NSMenuItem(
                 title: "Settings…",
@@ -379,13 +390,65 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
                 keyEquivalent: ","
             ))
         menu.addItem(.separator())
+        let pluginItems = pluginMenuItems()
+        if !pluginItems.isEmpty {
+            pluginItems.forEach(menu.addItem)
+            menu.addItem(.separator())
+        }
         let quit = NSMenuItem(title: "Quit EdgeControl", action: #selector(quitApp(_:)), keyEquivalent: "q")
         menu.addItem(quit)
-        return menu
+    }
+
+    private func pluginMenuItems() -> [NSMenuItem] {
+        pluginManager.plugins.filter(\.isEnabled).flatMap { plugin in
+            (plugin.manifest.menuItems ?? []).compactMap { entry -> NSMenuItem? in
+                guard let target = entry.target(forPlugin: plugin.id) else { return nil }
+                let item = NSMenuItem(title: entry.title, action: #selector(openPluginMenuItem(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = target
+                if !target.isAvailable {
+                    item.isEnabled = false
+                    item.toolTip = "\(plugin.manifest.name) needs its app installed for this"
+                }
+                return item
+            }
+        }
+    }
+
+    @objc private func openPluginMenuItem(_ sender: NSMenuItem) {
+        (sender.representedObject as? PluginMenuItem.Target)?.open()
     }
 
     @objc private func openSettings(_ sender: Any?) {
         SettingsWindowController.shared.show()
+    }
+}
+
+extension PluginMenuItem.Target {
+    /// False for an app that isn't installed.
+    var isAvailable: Bool {
+        guard case .app(let bundleId) = self else { return true }
+        return NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) != nil
+    }
+
+    func open() {
+        switch self {
+        case .app(let bundleId):
+            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else { return }
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            // An app that's already running is asked to reopen, which is when
+            // a companion app shows its window.
+            NSWorkspace.shared.openApplication(at: url, configuration: configuration, completionHandler: nil)
+        case .url(let url):
+            NSWorkspace.shared.open(url)
+        }
+    }
+}
+
+extension EdgeControlAppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        fillStatusMenu(menu)
     }
 }
 

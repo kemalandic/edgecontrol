@@ -270,6 +270,10 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
     /// Optional caption rendered under the control explaining what the
     /// setting actually does.
     public let help: String?
+    /// Shows the field only while another field has one of some values.
+    public let showWhen: ConfigCondition?
+    /// What a `.button` opens.
+    public let opens: PluginMenuItem.Target?
 
     public init(
         key: String,
@@ -280,7 +284,9 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         minValue: Double? = nil,
         maxValue: Double? = nil,
         step: Double? = nil,
-        help: String? = nil
+        help: String? = nil,
+        showWhen: ConfigCondition? = nil,
+        opens: PluginMenuItem.Target? = nil
     ) {
         self.key = key
         self.label = label
@@ -291,6 +297,45 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         self.maxValue = maxValue
         self.step = step
         self.help = help
+        self.showWhen = showWhen
+        self.opens = opens
+    }
+}
+
+/// When a settings field shows: while the field `key` has one of `values`.
+/// In a manifest, `{ "key": "mode", "is": "Deck" }` or `"is": ["A", "B"]`.
+public struct ConfigCondition: Codable, Hashable, Sendable {
+    public let key: String
+    public let values: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case key
+        case values = "is"
+    }
+
+    public init(key: String, values: [String]) {
+        self.key = key
+        self.values = values
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        key = try container.decode(String.self, forKey: .key)
+        if let one = try? container.decode(String.self, forKey: .values) {
+            values = [one]
+        } else {
+            values = try container.decode([String].self, forKey: .values)
+        }
+    }
+
+    /// Whether `config` meets it. A field the config doesn't hold yet counts
+    /// as its default in `schema`.
+    public func isMet(by config: WidgetConfig, in schema: [ConfigSchemaEntry]) -> Bool {
+        switch config[key] ?? schema.first(where: { $0.key == key })?.defaultValue {
+        case .string(let value): return values.contains(value)
+        case .bool(let value): return values.contains(value ? "true" : "false")
+        default: return false
+        }
     }
 }
 
@@ -312,6 +357,9 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time
+    /// A button that opens something rather than holding a value: for a
+    /// plugin, one of its own apps or a web page (`opens`).
+    case button
 }
 
 // MARK: - Service Key

@@ -13,7 +13,7 @@ struct WidgetConfigEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ForEach(schema, id: \.key) { entry in
+            ForEach(visibleEntries, id: \.key) { entry in
                 VStack(alignment: .leading, spacing: 3) {
                     configRow(entry)
                     if let help = entry.help {
@@ -25,6 +25,12 @@ struct WidgetConfigEditor: View {
                 }
             }
         }
+    }
+
+    /// The fields to show now: a field with a condition only while another
+    /// field meets it.
+    private var visibleEntries: [ConfigSchemaEntry] {
+        schema.filter { $0.showWhen?.isMet(by: config, in: schema) ?? true }
     }
 
     @ViewBuilder
@@ -48,7 +54,34 @@ struct WidgetConfigEditor: View {
             timeRow(entry)
         case .colorPicker:
             EmptyView()
+        case .button:
+            buttonRow(entry)
         }
+    }
+
+    // MARK: - Button
+
+    /// Opens what the entry names, such as a plugin's companion app. Dimmed
+    /// while that app isn't installed.
+    private func buttonRow(_ entry: ConfigSchemaEntry) -> some View {
+        let available = entry.opens?.isAvailable ?? false
+        return Button {
+            entry.opens?.open()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "arrow.up.forward.app")
+                Text(entry.label)
+            }
+            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .foregroundStyle(accent)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!available)
+        .opacity(available ? 1 : 0.4)
+        .help(available ? "" : "Needs the plugin's app installed")
     }
 
     // MARK: - Note picker
