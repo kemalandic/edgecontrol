@@ -29,9 +29,18 @@ public enum WindowPlacement {
     ) -> Bool {
         guard let window else { return false }
 
+        // The non-activating bit is part of the window's identity (see
+        // KioskWindow) and must survive style changes. Assign only on change:
+        // this runs on every dashboard update.
+        let keep = window.styleMask.intersection(.nonactivatingPanel)
+        func setStyle(_ style: NSWindow.StyleMask) {
+            let desired = style.union(keep)
+            if window.styleMask != desired { window.styleMask = desired }
+        }
+
         if !kioskMode {
             // Window mode: standard resizable window, no screen affinity.
-            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+            setStyle([.titled, .closable, .miniaturizable, .resizable])
             window.level = .normal
             window.collectionBehavior = []
             return true
@@ -56,7 +65,7 @@ public enum WindowPlacement {
 
         guard let screen = targetScreen else { return false }
 
-        window.styleMask = [.borderless]
+        setStyle([.borderless])
         // Paste-class panels present at the menu-bar level (24) on the key
         // window's screen; at .statusBar (25) the kiosk buries them
         // invisibly. One notch below lets them through, at the cost of the
@@ -72,10 +81,30 @@ public enum WindowPlacement {
     }
 }
 
-/// Borderless window that accepts key status — required for mouse/touch event handling in kiosk mode.
-class KioskWindow: NSWindow {
+/// The dashboard window: a panel that accepts key status (needed for mouse
+/// and touch handling when borderless) and, by default, never activates the
+/// app, so clicking or tapping it leaves focus on the display you're using.
+/// See DashboardFocus. Whether it activates is fixed at creation; changing the
+/// setting replaces the window.
+class KioskWindow: NSPanel {
+    let neverActivates: Bool
+
+    init(contentRect: NSRect, neverActivates: Bool) {
+        self.neverActivates = neverActivates
+        var style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .resizable]
+        if neverActivates { style.insert(.nonactivatingPanel) }
+        super.init(contentRect: contentRect, styleMask: style, backing: .buffered, defer: false)
+        identifier = DashboardFocus.windowIdentifier
+        // Panels hide when their app is inactive and float by default; the
+        // dashboard must do neither.
+        hidesOnDeactivate = false
+        isFloatingPanel = false
+        // Become key only for controls that need typing (text views/fields).
+        becomesKeyOnlyIfNeeded = neverActivates
+    }
+
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    override var canBecomeMain: Bool { !neverActivates }
 }
 
 /// Hosts the dashboard and keeps its SwiftUI tree out of the accessibility
@@ -89,16 +118,25 @@ class KioskWindow: NSWindow {
 /// do this are everywhere and invisible to the user: text grabbers query the
 /// element under the pointer on every mouse-up, hotkey navigators scan the
 /// front app, window managers enumerate windows. Never handing out children
-/// keeps the tree from ever being materialised, and the widgets remain
-/// operable through the Settings window.
+/// keeps the tree from ever being materialised.
+///
+/// The exception is a person using VoiceOver, Switch Control, Voice Control
+/// or Full Keyboard Access (or the "Always Available to Accessibility Tools"
+/// setting): for them the dashboard's real elements (widget cards, buttons)
+/// are exposed, at that per-frame cost. See AccessibilityExposure.
 final class KioskHostingView<Content: View>: NSHostingView<Content> {
-    override func isAccessibilityElement() -> Bool { true }
-    override func accessibilityRole() -> NSAccessibility.Role? { .group }
+    private var exposesTree: Bool { AccessibilityExposure.isNeeded }
+    override func isAccessibilityElement() -> Bool { exposesTree ? super.isAccessibilityElement() : true }
+    override func accessibilityRole() -> NSAccessibility.Role? { exposesTree ? super.accessibilityRole() : .group }
     override func accessibilityLabel() -> String? { "EdgeControl dashboard" }
-    override func accessibilityChildren() -> [Any]? { nil }
-    override func accessibilityChildrenInNavigationOrder() -> [any NSAccessibilityElementProtocol]? { nil }
-    override func accessibilityHitTest(_ point: NSPoint) -> Any? { self }
-    override var accessibilityFocusedUIElement: Any? { nil }
+    override func accessibilityChildren() -> [Any]? { exposesTree ? super.accessibilityChildren() : nil }
+    override func accessibilityChildrenInNavigationOrder() -> [any NSAccessibilityElementProtocol]? {
+        exposesTree ? super.accessibilityChildrenInNavigationOrder() : nil
+    }
+    override func accessibilityHitTest(_ point: NSPoint) -> Any? {
+        exposesTree ? super.accessibilityHitTest(point) : self
+    }
+    override var accessibilityFocusedUIElement: Any? { exposesTree ? super.accessibilityFocusedUIElement : nil }
 }
 
 struct WindowAccessor: NSViewRepresentable {

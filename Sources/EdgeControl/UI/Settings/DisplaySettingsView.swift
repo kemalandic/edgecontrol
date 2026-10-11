@@ -120,7 +120,9 @@ struct DisplaySettingsView: View {
 
             Spacer()
 
-            Toggle("", isOn: isOn)
+            // Titled for VoiceOver; the visible title is the text beside it.
+            Toggle(title, isOn: isOn)
+                .labelsHidden()
                 .toggleStyle(.switch)
                 .tint(accent)
         }

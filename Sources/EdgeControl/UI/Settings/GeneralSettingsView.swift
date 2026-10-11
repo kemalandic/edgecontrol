@@ -101,6 +101,43 @@ struct GeneralSettingsView: View {
                 )
             )
 
+            // Focus behaviour
+            settingsToggle(
+                "Dashboard Never Takes Focus",
+                subtitle:
+                    "Apps you open appear on the display you're working on, not behind the dashboard. Turn off if typing on the dashboard misbehaves",
+                icon: "rectangle.on.rectangle.slash",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.dashboardNeverTakesFocus },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.dashboardNeverTakesFocus = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                        NotificationCenter.default.post(name: DashboardFocus.settingChanged, object: nil)
+                    }
+                )
+            )
+
+            // Accessibility fallback
+            settingsToggle(
+                "Always Available to Accessibility Tools",
+                subtitle:
+                    "Voice Control, Full Keyboard Access and VoiceOver are detected automatically. Turn on if one of them can't see the dashboard",
+                icon: "accessibility",
+                isOn: Binding(
+                    get: { layoutEngine.document.globalSettings.alwaysExposeAccessibility },
+                    set: { newValue in
+                        var gs = layoutEngine.document.globalSettings
+                        gs.alwaysExposeAccessibility = newValue
+                        layoutEngine.updateGlobalSettings(gs)
+                        AccessibilityExposure.alwaysExpose = newValue
+                        if let dashboard = DashboardFocus.dashboard {
+                            NSAccessibility.post(element: dashboard, notification: .layoutChanged)
+                        }
+                    }
+                )
+            )
+
             // Quick capture
             settingsToggle(
                 "Quick Capture",
@@ -292,7 +329,9 @@ struct GeneralSettingsView: View {
 
             Spacer()
 
-            Toggle("", isOn: isOn)
+            // Titled for VoiceOver; the visible title is the text beside it.
+            Toggle(title, isOn: isOn)
+                .labelsHidden()
                 .toggleStyle(.switch)
                 .tint(accent)
         }

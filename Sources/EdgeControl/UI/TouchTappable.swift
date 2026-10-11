@@ -13,6 +13,8 @@ struct TouchTappable: ViewModifier {
             .onTapGesture {
                 action()
             }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
             .background(
                 GeometryReader { geo in
                     Color.clear

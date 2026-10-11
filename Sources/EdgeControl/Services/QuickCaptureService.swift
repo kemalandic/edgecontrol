@@ -88,6 +88,7 @@ public final class QuickCaptureService {
 
     private func dismiss() {
         window?.orderOut(nil)
+        Task { @MainActor in DashboardFocus.releaseIfIdle() }
     }
 
     private func capture(_ line: String) {

@@ -14,6 +14,8 @@ struct TouchButton: View {
     let isActive: Bool
     let activeColor: Color
     let registry: TouchZoneRegistry
+    /// Spoken name for icon-only buttons whose visible label is blank.
+    var accessibilityName: String? = nil
     let action: @Sendable () -> Void
 
     var body: some View {
@@ -34,6 +36,10 @@ struct TouchButton: View {
             .onTapGesture {
                 action()
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityName ?? label)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { action() }
             .background(
                 GeometryReader { geo in
                     Color.clear

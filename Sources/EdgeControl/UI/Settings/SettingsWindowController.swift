@@ -109,5 +109,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         // Clear reference so next show() creates a fresh window
         window = nil
+        // Opening Settings activated the app; give focus back once it's gone.
+        Task { @MainActor in DashboardFocus.releaseIfIdle() }
     }
 }

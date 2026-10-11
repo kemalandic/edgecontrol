@@ -127,6 +127,9 @@ struct GridPageView: View {
                         // Compact layouts at large font scales can overflow a
                         // 1-row cell; never let a widget paint over neighbors.
                         .clipped()
+                        // One named container per card for VoiceOver.
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel(registry.widget(for: placement.widgetId)?.displayName ?? "Widget")
                         .opacity(isDragging ? 0.5 : isResizing ? 0.7 : 1)
                         .overlay {
                             if editMode {

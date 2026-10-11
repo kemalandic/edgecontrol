@@ -164,6 +164,14 @@ public struct GlobalSettings: Codable, Sendable {
     /// where quick capture puts things and therefore the one note that is
     /// certain to exist once anybody has used the feature.
     public var desktopNoteId: String
+    /// The dashboard never becomes the active app, so the display you're
+    /// working on keeps focus and apps you open appear there, not behind the
+    /// kiosk. Off restores the old behaviour (see DashboardFocus).
+    public var dashboardNeverTakesFocus: Bool
+    /// Expose the dashboard's controls to accessibility tools at all times,
+    /// not only when VoiceOver, Switch Control, Voice Control or Full Keyboard
+    /// Access is detected (see AccessibilityExposure).
+    public var alwaysExposeAccessibility: Bool
 
     public init(
         selectedDisplayName: String? = nil,
@@ -176,7 +184,9 @@ public struct GlobalSettings: Codable, Sendable {
         theme: ThemeSettings = ThemeSettings(),
         allowSystemPanels: Bool = false,
         quickCaptureEnabled: Bool = true,
-        desktopNoteId: String = ""
+        desktopNoteId: String = "",
+        dashboardNeverTakesFocus: Bool = true,
+        alwaysExposeAccessibility: Bool = false
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
@@ -189,6 +199,8 @@ public struct GlobalSettings: Codable, Sendable {
         self.allowSystemPanels = allowSystemPanels
         self.quickCaptureEnabled = quickCaptureEnabled
         self.desktopNoteId = desktopNoteId
+        self.dashboardNeverTakesFocus = dashboardNeverTakesFocus
+        self.alwaysExposeAccessibility = alwaysExposeAccessibility
     }
 
     enum CodingKeys: String, CodingKey {
@@ -197,6 +209,8 @@ public struct GlobalSettings: Codable, Sendable {
         case allowSystemPanels
         case quickCaptureEnabled
         case desktopNoteId
+        case dashboardNeverTakesFocus
+        case alwaysExposeAccessibility
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -216,6 +230,8 @@ public struct GlobalSettings: Codable, Sendable {
         desktopNoteId = try c.decodeIfPresent(String.self, forKey: .desktopNoteId) ?? ""
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
         allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
+        dashboardNeverTakesFocus = try c.decodeIfPresent(Bool.self, forKey: .dashboardNeverTakesFocus) ?? true
+        alwaysExposeAccessibility = try c.decodeIfPresent(Bool.self, forKey: .alwaysExposeAccessibility) ?? false
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -231,5 +247,7 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(allowSystemPanels, forKey: .allowSystemPanels)
         try c.encode(quickCaptureEnabled, forKey: .quickCaptureEnabled)
         try c.encode(desktopNoteId, forKey: .desktopNoteId)
+        try c.encode(dashboardNeverTakesFocus, forKey: .dashboardNeverTakesFocus)
+        try c.encode(alwaysExposeAccessibility, forKey: .alwaysExposeAccessibility)
     }
 }

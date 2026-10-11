@@ -190,6 +190,12 @@ struct DashboardShell: View {
         // by parking a widget on a full page); the local flag just mirrors it
         // for gesture gating and overlays.
         .onChange(of: layoutEngine.isEditing) { _, editing in
+            // Esc and Cmd-Z work while editing; focus returns when you're done.
+            if editing {
+                DashboardFocus.takeKeyboard(holder: "edit")
+            } else {
+                DashboardFocus.returnKeyboard(holder: "edit")
+            }
             withAnimation(.easeInOut(duration: 0.2)) {
                 editMode = editing
             }
@@ -312,7 +318,8 @@ struct DashboardShell: View {
                 label: "\n",
                 isActive: editMode,
                 activeColor: accent,
-                registry: model.touchService.zoneRegistry
+                registry: model.touchService.zoneRegistry,
+                accessibilityName: editMode ? "Done editing layout" : "Edit layout"
             ) {
                 // The zone registry runs actions on the main actor, but the
                 // closure itself is @Sendable, so hop explicitly for Swift 6.
@@ -349,7 +356,8 @@ struct DashboardShell: View {
                 label: "\n",
                 isActive: false,
                 activeColor: accent,
-                registry: model.touchService.zoneRegistry
+                registry: model.touchService.zoneRegistry,
+                accessibilityName: "Settings"
             ) {
                 DispatchQueue.main.async {
                     SettingsWindowController.shared.show()
