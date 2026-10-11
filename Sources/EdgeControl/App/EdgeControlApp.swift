@@ -46,6 +46,7 @@ final class DashboardWindowController {
             dashboardWindow,
             display: model.selectedDisplay,
             kioskMode: layoutEngine.document.globalSettings.kioskMode,
+            preferredDisplayName: model.selectedDisplayName,
             strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity
         )
 
@@ -53,8 +54,8 @@ final class DashboardWindowController {
             dashboardWindow.orderFrontRegardless()
             dashboardWindow.makeKeyAndOrderFront(nil)
         } else {
-            // strictMonitorAffinity is on AND no eligible non-main screen
-            // exists — keep the window parked off-screen rather than
+            // strictMonitorAffinity is on AND the preferred screen is absent;
+            // no target exists — keep the window parked off-screen rather than
             // surfacing it on the main display.
             dashboardWindow.orderOut(nil)
         }
@@ -81,6 +82,10 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     private let history: MetricsHistory
     private let pluginManager: PluginManager
     private let dashboardWindowController = DashboardWindowController()
+    /// Bumped by every topology change, sleep and wake, so a retry scheduled
+    /// for an older event can't act after a newer one.
+    private var repinGeneration = 0
+    private var touchSuspendedForDisplay = false
     private var statusItem: NSStatusItem?
 
     init(
@@ -171,7 +176,8 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     /// display. Instead we retry on a short backoff until the target
     /// screen appears or we've burned a reasonable budget.
     @objc private func repinDashboard() {
-        retryRepin(attempt: 0)
+        repinGeneration += 1
+        retryRepin(attempt: 0, generation: repinGeneration)
     }
 
     /// Hide the window pre-emptively when the screen is about to sleep
@@ -179,7 +185,18 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     /// briefly relocating the window to the main display before our
     /// wake handler fires.
     @objc private func parkDashboard() {
+        repinGeneration += 1
         dashboardWindowController.hide()
+    }
+
+    /// The preferred display is gone: stay hidden rather than land on another
+    /// monitor, and release the touchscreen until the display returns.
+    private func waitForMissingDisplay() {
+        dashboardWindowController.hide()
+        if !touchSuspendedForDisplay {
+            model.touchService.stop()
+            touchSuspendedForDisplay = true
+        }
     }
 
     // Backoff schedule: try right away, then doubling out to 60s. Once the
@@ -188,33 +205,31 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
         0, 0.5, 1.5, 3, 6, 12, 30, 60, 60, 60,
     ]
 
-    private func retryRepin(attempt: Int) {
-        // Hard ceiling at 10 attempts (~ 4 minutes) — beyond that something
-        // is wrong with the target display that won't resolve without user
-        // action. The window stays hidden meanwhile rather than parking on
-        // the wrong display.
-        guard attempt < Self.repinAttemptDelays.count else { return }
-        let delay = Self.repinAttemptDelays[attempt]
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-            guard let self else { return }
-            let targetName = self.model.selectedDisplay?.name
-            let targetPresent = NSScreen.screens.contains { $0.localizedName == targetName }
-            if targetPresent || targetName == nil {
-                // Target available (or no specific target configured) →
-                // place + done.
-                self.dashboardWindowController.show(
-                    model: self.model,
-                    layoutEngine: self.layoutEngine,
-                    registry: self.registry,
-                    history: self.history,
-                    pluginManager: self.pluginManager,
-                )
-            } else {
-                // Target not enumerated yet — hide the window so it doesn't
-                // flash onto the main display, and try again later.
-                self.dashboardWindowController.hide()
-                self.retryRepin(attempt: attempt + 1)
+    private func retryRepin(attempt: Int, generation: Int) {
+        // Hard ceiling at 10 attempts (~ 4 minutes); a later topology change
+        // starts a fresh sequence anyway.
+        guard generation == repinGeneration, attempt < Self.repinAttemptDelays.count else { return }
+        model.refreshDisplays()
+        let preferred = model.selectedDisplayName
+        let strict =
+            layoutEngine.document.globalSettings.strictMonitorAffinity
+            && layoutEngine.document.globalSettings.kioskMode
+        let missing = preferred != nil && model.selectedDisplay == nil
+        if strict && missing {
+            waitForMissingDisplay()
+            let next = attempt + 1
+            guard next < Self.repinAttemptDelays.count else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.repinAttemptDelays[next]) { [weak self] in
+                self?.retryRepin(attempt: next, generation: generation)
             }
+            return
+        }
+        dashboardWindowController.show(
+            model: model, layoutEngine: layoutEngine,
+            registry: registry, history: history, pluginManager: pluginManager)
+        if touchSuspendedForDisplay && !missing {
+            model.touchService.start()
+            touchSuspendedForDisplay = false
         }
     }
 

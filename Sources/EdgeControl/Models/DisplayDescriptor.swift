@@ -20,3 +20,11 @@ extension NSScreen {
         return "\(id)"
     }
 }
+
+/// A disconnected preferred display stays preferred; availability is separate.
+enum DisplaySelection {
+    static func resolve(_ displays: [DisplayDescriptor], preferredName: String?) -> DisplayDescriptor? {
+        if let preferredName { return displays.first { $0.name == preferredName } }
+        return displays.first { !$0.isMain } ?? displays.first
+    }
+}

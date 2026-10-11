@@ -4,26 +4,17 @@ import SwiftUI
 public enum WindowPlacement {
     /// Place a window per the kiosk-mode / display configuration.
     ///
-    /// Returns true if a target screen was found and the window was
-    /// placed; false if no eligible target exists (caller can decide
-    /// whether to hide the window or accept the no-op).
-    ///
-    /// `strictMonitorAffinity` (default false → preserves existing
-    /// behavior): when true and kiosk mode is on, the placement
-    /// pipeline NEVER falls back to NSScreen.main and only accepts a
-    /// non-main screen. If a target display is named, it must match a
-    /// non-main screen exactly; if no name is set, the first non-main
-    /// screen wins. If neither yields a hit (the configured target is
-    /// asleep / unplugged, or the system is single-monitor), this
-    /// returns false WITHOUT touching the window — useful when the
-    /// caller wants to keep the window parked off-screen rather than
-    /// surfacing it on the main display.
+    /// Returns true when placed. In strict kiosk mode a named target must
+    /// be connected; otherwise the window is hidden until it returns.
+    /// A named target remains eligible when it becomes NSScreen.main,
+    /// which follows keyboard focus. With no preference, use a non-main screen.
     @MainActor
     @discardableResult
     public static func configure(
         _ window: NSWindow?,
         display: DisplayDescriptor?,
         kioskMode: Bool,
+        preferredDisplayName: String? = nil,
         strictMonitorAffinity: Bool = false,
         allowSystemPanels: Bool = false
     ) -> Bool {
@@ -39,13 +30,12 @@ public enum WindowPlacement {
 
         let targetScreen: NSScreen? = {
             if strictMonitorAffinity {
-                // Strict: only non-main screens are eligible, full stop.
-                // No silent fallback to main.
-                let nonMain = NSScreen.screens.filter { $0 != NSScreen.main }
-                if let displayName = display?.name {
-                    return nonMain.first { $0.localizedName == displayName }
+                if let name = preferredDisplayName ?? display?.name {
+                    // NSScreen.main follows keyboard focus; the named display
+                    // remains valid even when its dashboard becomes key.
+                    return NSScreen.screens.first { $0.localizedName == name }
                 }
-                return nonMain.first
+                return NSScreen.screens.first { $0 != NSScreen.main }
             }
             // Non-strict (default): named match → first non-main → main.
             return NSScreen.screens.first { screen in
@@ -54,7 +44,10 @@ public enum WindowPlacement {
             } ?? NSScreen.screens.first { $0 != NSScreen.main } ?? NSScreen.main
         }()
 
-        guard let screen = targetScreen else { return false }
+        guard let screen = targetScreen else {
+            window.orderOut(nil)
+            return false
+        }
 
         window.styleMask = [.borderless]
         // Paste-class panels present at the menu-bar level (24) on the key

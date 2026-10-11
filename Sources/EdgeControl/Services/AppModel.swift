@@ -144,13 +144,9 @@ public final class AppModel: ObservableObject {
     public func refreshDisplays() {
         availableDisplays = displayManager.availableDisplays()
 
-        // Select display: prefer saved name, fallback to first non-main, then main
-        let selected = displayManager.selectedScreen(name: selectedDisplayName)
-        selectedDisplay = availableDisplays.first { $0.name == selected?.localizedName }
-        if selectedDisplay == nil {
-            selectedDisplay = availableDisplays.first
-        }
-        selectedDisplayName = selectedDisplay?.name
+        selectedDisplay = DisplaySelection.resolve(availableDisplays, preferredName: selectedDisplayName)
+        // Never replace the user's preference with a temporary fallback during unplug/wake.
+        if selectedDisplayName == nil { selectedDisplayName = selectedDisplay?.name }
     }
 }
 

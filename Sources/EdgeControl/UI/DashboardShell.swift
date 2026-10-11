@@ -155,6 +155,7 @@ struct DashboardShell: View {
                     window,
                     display: model.selectedDisplay,
                     kioskMode: layoutEngine.document.globalSettings.kioskMode,
+                    preferredDisplayName: model.selectedDisplayName,
                     strictMonitorAffinity: layoutEngine.document.globalSettings.strictMonitorAffinity,
                     allowSystemPanels: layoutEngine.document.globalSettings.allowSystemPanels
                 )
