@@ -10,6 +10,8 @@ struct PageManagerView: View {
     @State private var showAddPage = false
     @State private var flashedInstanceId: String?
     @State private var newPageName = ""
+    /// The page awaiting confirmation before it (and its widgets) is deleted.
+    @State private var pageToDelete: PageConfig?
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -47,6 +49,20 @@ struct PageManagerView: View {
             }
             .frame(width: 220)
             .padding(14)
+            .alert(
+                "Delete “\(pageToDelete?.name ?? "")”?",
+                isPresented: Binding(get: { pageToDelete != nil }, set: { if !$0 { pageToDelete = nil } }),
+                presenting: pageToDelete
+            ) { page in
+                Button("Delete Page", role: .destructive) { deletePage(page) }
+                Button("Cancel", role: .cancel) {}
+            } message: { page in
+                Text(
+                    page.widgets.isEmpty
+                        ? "This can't be undone."
+                        : "Its \(page.widgets.count) widget\(page.widgets.count == 1 ? "" : "s") will be removed too. This can't be undone."
+                )
+            }
 
             Rectangle().fill(Theme.borderSubtle).frame(width: 1)
 
@@ -150,13 +166,15 @@ struct PageManagerView: View {
             }
             .disabled(idx >= layoutEngine.pageCount - 1)
             if layoutEngine.pageCount > 1 {
-                Button("Delete", role: .destructive) {
-                    layoutEngine.removePage(id: page.id)
-                    if selectedPageId == page.id {
-                        selectedPageId = layoutEngine.currentPage?.id
-                    }
-                }
+                Button("Delete…", role: .destructive) { pageToDelete = page }
             }
+        }
+    }
+
+    private func deletePage(_ page: PageConfig) {
+        layoutEngine.removePage(id: page.id)
+        if selectedPageId == page.id {
+            selectedPageId = layoutEngine.currentPage?.id
         }
     }
 
@@ -174,6 +192,24 @@ struct PageManagerView: View {
                     .foregroundStyle(Theme.textTertiary)
 
                 Spacer()
+
+                if layoutEngine.pageCount > 1 {
+                    Button {
+                        pageToDelete = page
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                            Text("Delete")
+                        }
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Theme.accentRed)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Theme.accentRed.opacity(0.1), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete this page and its widgets")
+                }
 
                 // Navigate to this page
                 Button {
