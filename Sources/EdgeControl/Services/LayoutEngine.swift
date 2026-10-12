@@ -534,7 +534,36 @@ public final class LayoutEngine: ObservableObject {
             // happens when the edit session ends (the exit path calls save()
             // with isEditing already false).
             guard !self.isEditing else { return }
-            self.store.save(self.document)
+            self.recordSave(self.store.save(self.document))
+        }
+    }
+
+    /// The last write of layout.json failed (disk full, permissions); shown
+    /// in Settings. Cleared by the next successful save.
+    @Published public private(set) var saveFailed = false
+    /// The layout file couldn't be read safely at launch and is being left
+    /// untouched; changes this session aren't saved (Settings explains).
+    public var layoutFileProtected: Bool { store.isProtectingFile }
+
+    private func recordSave(_ succeeded: Bool) {
+        if saveFailed != !succeeded { saveFailed = !succeeded }
+    }
+
+    /// Replaces the layout with an imported file after checking it (see
+    /// LayoutStore.importData). The previous one is kept on disk.
+    public func importLayout(_ data: Data) -> Result<Void, LayoutStore.ImportError> {
+        switch store.importData(data, current: document) {
+        case .failure(let error):
+            return .failure(error)
+        case .success(let imported):
+            isEditing = false
+            focusedWidget = nil
+            document = imported
+            currentPageIndex = min(currentPageIndex, max(pageCount - 1, 0))
+            // Services follow the placed widgets (DashboardShell watches this).
+            layoutVersion += 1
+            recordSave(true)
+            return .success(())
         }
     }
 
@@ -543,7 +572,7 @@ public final class LayoutEngine: ObservableObject {
     /// layout — the file keeps its pre-session state instead.
     public func flushSave() {
         guard !hasOverlaps else { return }
-        store.save(document)
+        recordSave(store.save(document))
         saveScheduled = false
     }
 

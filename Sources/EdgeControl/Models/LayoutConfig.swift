@@ -27,10 +27,11 @@ public struct LayoutDocument: Codable, Sendable {
     // lost — but the dashboard still resets, and it need not.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
-        grid = try c.decodeIfPresent(GridDimensions.self, forKey: .grid) ?? GridDimensions()
-        pages = try c.decodeIfPresent([PageConfig].self, forKey: .pages) ?? []
-        globalSettings = try c.decodeIfPresent(GlobalSettings.self, forKey: .globalSettings) ?? GlobalSettings()
+        version = c.lenient(Int.self, forKey: .version, default: 1)
+        grid = c.lenient(GridDimensions.self, forKey: .grid, default: GridDimensions())
+        // One unreadable page or widget is skipped, not the whole layout.
+        pages = c.lenientArray(PageConfig.self, forKey: .pages)
+        globalSettings = c.lenient(GlobalSettings.self, forKey: .globalSettings, default: GlobalSettings())
     }
 }
 
@@ -64,6 +65,17 @@ public struct PageConfig: Codable, Identifiable, Sendable {
         self.name = name
         self.order = order
         self.widgets = widgets
+    }
+}
+
+extension PageConfig {
+    /// A page keeps its readable widgets when one of them can't be read.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = c.lenient(String.self, forKey: .id, default: UUID().uuidString)
+        name = c.lenient(String.self, forKey: .name, default: "Page")
+        order = c.lenient(Int.self, forKey: .order, default: 0)
+        widgets = c.lenientArray(WidgetPlacement.self, forKey: .widgets)
     }
 }
 
@@ -101,6 +113,21 @@ public struct WidgetPlacement: Codable, Identifiable, Hashable, Sendable {
     /// Grid rect occupied by this widget (col..<col+width, row..<row+height)
     public var gridRect: GridRect {
         GridRect(col: col, row: row, width: width, height: height)
+    }
+}
+
+extension WidgetPlacement {
+    /// Position and identity must be readable; unreadable settings fall back
+    /// to the widget's defaults instead of losing the widget.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        instanceId = try c.decode(String.self, forKey: .instanceId)
+        widgetId = try c.decode(String.self, forKey: .widgetId)
+        col = try c.decode(Int.self, forKey: .col)
+        row = try c.decode(Int.self, forKey: .row)
+        width = try c.decode(Int.self, forKey: .width)
+        height = try c.decode(Int.self, forKey: .height)
+        config = c.lenient(WidgetConfig.self, forKey: .config, default: WidgetConfig())
     }
 }
 
@@ -201,21 +228,21 @@ public struct GlobalSettings: Codable, Sendable {
 
     // Custom Decodable so existing layout.json files (which don't carry
     // strictMonitorAffinity) keep decoding. Synthesized Decodable would
-    // throw on a missing key even with a struct-field default. Other
-    // fields keep their normal decoding behavior.
+    // throw on a missing key even with a struct-field default. A field that
+    // can't be read (wrong type, unknown value) falls back to its default.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        selectedDisplayName = try c.decodeIfPresent(String.self, forKey: .selectedDisplayName)
-        kioskMode = try c.decodeIfPresent(Bool.self, forKey: .kioskMode) ?? true
-        launchAtLogin = try c.decodeIfPresent(Bool.self, forKey: .launchAtLogin) ?? false
-        debugMode = try c.decodeIfPresent(Bool.self, forKey: .debugMode) ?? false
-        strictMonitorAffinity = try c.decodeIfPresent(Bool.self, forKey: .strictMonitorAffinity) ?? false
-        hideFromDock = try c.decodeIfPresent(Bool.self, forKey: .hideFromDock) ?? false
-        units = try c.decodeIfPresent(UnitSystem.self, forKey: .units) ?? .localeDefault
-        quickCaptureEnabled = try c.decodeIfPresent(Bool.self, forKey: .quickCaptureEnabled) ?? true
-        desktopNoteId = try c.decodeIfPresent(String.self, forKey: .desktopNoteId) ?? ""
-        theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
-        allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
+        selectedDisplayName = c.lenientOptional(String.self, forKey: .selectedDisplayName)
+        kioskMode = c.lenient(Bool.self, forKey: .kioskMode, default: true)
+        launchAtLogin = c.lenient(Bool.self, forKey: .launchAtLogin, default: false)
+        debugMode = c.lenient(Bool.self, forKey: .debugMode, default: false)
+        strictMonitorAffinity = c.lenient(Bool.self, forKey: .strictMonitorAffinity, default: false)
+        hideFromDock = c.lenient(Bool.self, forKey: .hideFromDock, default: false)
+        units = c.lenient(UnitSystem.self, forKey: .units, default: .localeDefault)
+        quickCaptureEnabled = c.lenient(Bool.self, forKey: .quickCaptureEnabled, default: true)
+        desktopNoteId = c.lenient(String.self, forKey: .desktopNoteId, default: "")
+        theme = c.lenient(ThemeSettings.self, forKey: .theme, default: ThemeSettings())
+        allowSystemPanels = c.lenient(Bool.self, forKey: .allowSystemPanels, default: false)
     }
 
     public func encode(to encoder: Encoder) throws {

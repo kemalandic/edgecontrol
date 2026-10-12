@@ -5,6 +5,8 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var model: AppModel
     @State private var launchAtLogin: Bool = false
+    /// The result of the last Import Layout.
+    @State private var importMessage: String?
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -250,6 +252,20 @@ struct GeneralSettingsView: View {
                 }
                 .buttonStyle(.plain)
             }
+            if let importMessage {
+                Text(importMessage)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(Theme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if layoutEngine.saveFailed {
+                Text(layoutEngine.layoutFileProtected
+                     ? "Your saved layout couldn't be read safely at launch, so it's being left untouched and changes aren't saved this session. Quit and reopen the app to try again."
+                     : "Your layout couldn't be saved, so recent changes may be lost when the app quits. Check that your Mac has free disk space.")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.accentOrange)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             Divider().background(Theme.borderSubtle)
 
@@ -340,10 +356,15 @@ struct GeneralSettingsView: View {
         guard let win = SettingsWindowController.shared.settingsWindow ?? NSApp.keyWindow else { return }
         panel.beginSheetModal(for: win) { response in
             guard response == .OK, let url = panel.url else { return }
-            guard let data = try? Data(contentsOf: url) else { return }
-            let store = LayoutStore()
-            if let doc = store.importData(data) {
-                layoutEngine.document = doc
+            guard let data = try? Data(contentsOf: url) else {
+                importMessage = LayoutStore.ImportError.notALayout.message
+                return
+            }
+            switch layoutEngine.importLayout(data) {
+            case .success:
+                importMessage = "Layout imported. Your previous layout was kept as layout-before-import.json in EdgeControl's Application Support folder."
+            case .failure(let error):
+                importMessage = error.message
             }
         }
     }

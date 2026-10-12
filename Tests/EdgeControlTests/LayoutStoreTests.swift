@@ -20,7 +20,13 @@ final class LayoutStoreTests: XCTestCase {
     }
 
     private var layoutURL: URL { directory.appendingPathComponent("layout.json") }
-    private var backupURL: URL { directory.appendingPathComponent("layout.json.corrupt") }
+    /// Unreadable files are moved aside as layout-unreadable-<time>-<id>.json,
+    /// oldest first by name.
+    private func quarantined() throws -> [URL] {
+        try FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.creationDateKey])
+            .filter { $0.lastPathComponent.hasPrefix("layout-unreadable-") }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
 
     func testFirstLaunchWritesTheGeneratedDefaults() {
         let document = LayoutStore(directory: directory).load()
@@ -53,19 +59,18 @@ final class LayoutStoreTests: XCTestCase {
         let document = LayoutStore(directory: directory).load()
 
         XCTAssertFalse(document.pages.isEmpty, "the app still needs a usable layout")
-        XCTAssertTrue(
-            FileManager.default.fileExists(atPath: backupURL.path),
-            "the unreadable file must survive"
-        )
+        let kept = try quarantined()
+        XCTAssertEqual(kept.count, 1, "the unreadable file must survive")
         XCTAssertEqual(
-            try String(contentsOf: backupURL, encoding: .utf8),
+            try String(contentsOf: XCTUnwrap(kept.first), encoding: .utf8),
             "not json",
             "the surviving copy must be the original bytes"
         )
     }
 
-    /// Quarantine deliberately keeps one generation: the first failure is the
-    /// copy closest to the last good state, so a later one must not bury it.
+    /// Every unreadable file is kept under its own name: the first failure is
+    /// the copy closest to the last good state, so a later one must not bury
+    /// it, nor be lost itself.
     func testASecondFailureDoesNotReplaceTheFirstBackup() throws {
         try Data("original".utf8).write(to: layoutURL)
         _ = LayoutStore(directory: directory).load()
@@ -73,6 +78,7 @@ final class LayoutStoreTests: XCTestCase {
         try Data("later garbage".utf8).write(to: layoutURL)
         _ = LayoutStore(directory: directory).load()
 
-        XCTAssertEqual(try String(contentsOf: backupURL, encoding: .utf8), "original")
+        let kept = try quarantined().map { try String(contentsOf: $0, encoding: .utf8) }
+        XCTAssertEqual(Set(kept), ["original", "later garbage"])
     }
 }

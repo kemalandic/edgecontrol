@@ -65,6 +65,34 @@ public struct ThemeSettings: Codable, Hashable, Sendable {
     }
 }
 
+extension ThemeSettings {
+    /// Each setting falls back to its default when unreadable, e.g. a font or
+    /// colour scheme name from a newer version, rather than failing the theme
+    /// (and with it the whole layout).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = ThemeSettings()
+        self.init(
+            fontScale: c.lenient(Double.self, forKey: .fontScale, default: d.fontScale),
+            fontFamily: c.lenient(FontFamily.self, forKey: .fontFamily, default: d.fontFamily),
+            fontSizeTitle: c.lenient(Double.self, forKey: .fontSizeTitle, default: d.fontSizeTitle),
+            fontSizeValue: c.lenient(Double.self, forKey: .fontSizeValue, default: d.fontSizeValue),
+            fontSizeLabel: c.lenient(Double.self, forKey: .fontSizeLabel, default: d.fontSizeLabel),
+            fontSizeCaption: c.lenient(Double.self, forKey: .fontSizeCaption, default: d.fontSizeCaption),
+            fontSizeBody: c.lenient(Double.self, forKey: .fontSizeBody, default: d.fontSizeBody),
+            fontSizeMicro: c.lenient(Double.self, forKey: .fontSizeMicro, default: d.fontSizeMicro),
+            accentColor: c.lenient(WidgetColor.self, forKey: .accentColor, default: d.accentColor),
+            widgetOpacity: c.lenient(Double.self, forKey: .widgetOpacity, default: d.widgetOpacity),
+            widgetCornerRadius: c.lenient(Double.self, forKey: .widgetCornerRadius, default: d.widgetCornerRadius),
+            widgetGap: c.lenient(Double.self, forKey: .widgetGap, default: d.widgetGap),
+            colorScheme: c.lenient(ColorSchemeName.self, forKey: .colorScheme, default: d.colorScheme),
+            backgroundStyle: c.lenient(BackgroundStyle.self, forKey: .backgroundStyle, default: d.backgroundStyle),
+            widgetColorOverrides: c.lenient([String: WidgetColors].self, forKey: .widgetColorOverrides, default: [:]),
+            customColorScheme: c.lenientOptional(CustomColorScheme.self, forKey: .customColorScheme)
+        )
+    }
+}
+
 // MARK: - Font Family
 
 public enum FontFamily: String, Codable, CaseIterable, Sendable {
