@@ -238,12 +238,8 @@ public final class SMCService: ObservableObject {
 
         // Per-core temperatures (with key caching)
         var cores: [CoreTemp] = []
-        let pKeys: [(String, String)]
-        if let cached = validKeyCache["pCore"] {
-            pKeys = cached.compactMap { k in pCoreKeys.first { $0.0 == k } }
-        } else {
-            pKeys = pCoreKeys
-        }
+        let pNames = keysToRead("pCore", all: pCoreKeys.map(\.0))
+        let pKeys = pNames.compactMap { k in pCoreKeys.first { $0.0 == k } }
         var workingPKeys: [String] = []
         for (key, label) in pKeys {
             if let temp = smc.getValue(key), temp > 0, temp < 130 {
@@ -251,16 +247,10 @@ public final class SMCService: ObservableObject {
                 workingPKeys.append(key)
             }
         }
-        if validKeyCache["pCore"] == nil, !workingPKeys.isEmpty {
-            validKeyCache["pCore"] = workingPKeys
-        }
+        recordProbe("pCore", working: workingPKeys, probedAll: pKeys.count == pCoreKeys.count)
 
-        let eKeys: [(String, String)]
-        if let cached = validKeyCache["eCore"] {
-            eKeys = cached.compactMap { k in eCoreKeys.first { $0.0 == k } }
-        } else {
-            eKeys = eCoreKeys
-        }
+        let eNames = keysToRead("eCore", all: eCoreKeys.map(\.0))
+        let eKeys = eNames.compactMap { k in eCoreKeys.first { $0.0 == k } }
         var workingEKeys: [String] = []
         for (key, label) in eKeys {
             if let temp = smc.getValue(key), temp > 0, temp < 130 {
@@ -268,9 +258,7 @@ public final class SMCService: ObservableObject {
                 workingEKeys.append(key)
             }
         }
-        if validKeyCache["eCore"] == nil, !workingEKeys.isEmpty {
-            validKeyCache["eCore"] = workingEKeys
-        }
+        recordProbe("eCore", working: workingEKeys, probedAll: eKeys.count == eCoreKeys.count)
         cpuCoreTemps = cores
 
         // Fan count and speeds
@@ -282,6 +270,25 @@ public final class SMCService: ObservableObject {
         }
     }
 
+    /// When each key group was last probed in full. A group with no working
+    /// keys on this Mac (another chip's per-core sensors, say) is cached as
+    /// empty and probed again only every five minutes, not on every sample.
+    private var probedAt: [String: Date] = [:]
+
+    private func keysToRead(_ group: String, all: [String]) -> [String] {
+        if let cached = validKeyCache[group],
+           !cached.isEmpty || Date().timeIntervalSince(probedAt[group] ?? .distantPast) < 300 {
+            return cached
+        }
+        return all
+    }
+
+    private func recordProbe(_ group: String, working: [String], probedAll: Bool) {
+        guard probedAll else { return }
+        validKeyCache[group] = working
+        probedAt[group] = Date()
+    }
+
     private func appendHistory(_ history: inout [Double], value: Double) {
         history.append(value)
         if history.count > maxHistory { history.removeFirst() }
@@ -289,12 +296,7 @@ public final class SMCService: ObservableObject {
 
     private func averageTemp(smc: SMCConnection, keys: [String]) -> Double? {
         let cacheKey = keys.first ?? ""
-        let keysToTry: [String]
-        if let cached = validKeyCache[cacheKey], !cached.isEmpty {
-            keysToTry = cached
-        } else {
-            keysToTry = keys
-        }
+        let keysToTry = keysToRead(cacheKey, all: keys)
 
         // Single pass: read values and build cache simultaneously
         var values: [Double] = []
@@ -305,12 +307,8 @@ public final class SMCService: ObservableObject {
                 workingKeys.append(key)
             }
         }
+        recordProbe(cacheKey, working: workingKeys, probedAll: keysToTry.count == keys.count)
         guard !values.isEmpty else { return nil }
-
-        // Cache valid keys after first scan (avoids re-trying dead keys)
-        if validKeyCache[cacheKey] == nil, !workingKeys.isEmpty {
-            validKeyCache[cacheKey] = workingKeys
-        }
 
         return values.reduce(0, +) / Double(values.count)
     }

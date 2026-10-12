@@ -59,6 +59,12 @@ public final class SystemMetricsService: ObservableObject {
     private var hasPreviousCPUInfo = false
     private var previousPerCore: [processor_cpu_load_info]?
     private var timer: Timer?
+    /// Disk space, read every 30 s off the main thread: the query takes 30–40
+    /// ms (it works out purgeable space), and on the main thread every 2 s
+    /// it dropped frames while scrolling. Free space barely moves in 30 s.
+    private var storageCache: (usedPercent: Double, usedGB: Double, totalGB: Double)?
+    private var storageSampledAt = Date.distantPast
+    private var storageRead: Task<Void, Never>?
     private let hostPort = mach_host_self()
 
     public init() {
@@ -91,7 +97,8 @@ public final class SystemMetricsService: ObservableObject {
     private func sample() {
         let cpuLoadPercent = currentCPULoadPercent()
         let memory = currentMemorySnapshot()
-        let storage = currentStorageSnapshot()
+        let storage = storageCache ?? (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
+        refreshStorageIfDue()
         perCoreUsage = currentPerCoreUsage()
         latest = SystemMetrics(
             cpuLoadPercent: cpuLoadPercent,
@@ -178,18 +185,26 @@ public final class SystemMetricsService: ObservableObject {
         return (usedPercent, usedGB, pressurePercent, swap)
     }
 
-    private func currentStorageSnapshot() -> (usedPercent: Double, usedGB: Double, totalGB: Double) {
+    private func refreshStorageIfDue() {
+        guard storageRead == nil, Date().timeIntervalSince(storageSampledAt) >= 30 else { return }
+        storageSampledAt = Date()
+        storageRead = Task { [weak self] in
+            let snapshot = await Task.detached(priority: .utility) { Self.readStorage() }.value
+            guard let self else { return }
+            if let snapshot { self.storageCache = snapshot }
+            self.storageRead = nil
+        }
+    }
+
+    /// Nil when the volume can't be read; the last reading stays.
+    nonisolated private static func readStorage() -> (usedPercent: Double, usedGB: Double, totalGB: Double)? {
         let root = URL(fileURLWithPath: "/")
         let keys: Set<URLResourceKey> = [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]
         guard let values = try? root.resourceValues(forKeys: keys),
             let total = values.volumeTotalCapacity,
-            let available = values.volumeAvailableCapacityForImportantUsage
-        else {
-            return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
-        }
-        guard let snapshot = HostLoad.storage(totalBytes: Int64(total), availableBytes: Int64(available)) else {
-            return (latest?.storageUsedPercent ?? 0, latest?.storageUsedGB ?? 0, latest?.storageTotalGB ?? 0)
-        }
+            let available = values.volumeAvailableCapacityForImportantUsage,
+            let snapshot = HostLoad.storage(totalBytes: Int64(total), availableBytes: Int64(available))
+        else { return nil }
         return (snapshot.usedPercent, snapshot.usedGB, snapshot.totalGB)
     }
 
