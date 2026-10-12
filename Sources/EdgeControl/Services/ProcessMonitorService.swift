@@ -126,10 +126,20 @@ public final class ProcessMonitorService: ObservableObject {
     }
 
     /// Fetch raw process data off-main-actor. Pure function — no shared mutable state.
+    /// Every running process. `proc_listallpids` returns a count of PIDs,
+    /// not bytes (libproc divides by `sizeof(int)` itself), so dividing it
+    /// again scanned only the first quarter. The buffer is sized from the
+    /// current count, with room for processes started in between.
+    nonisolated static func allPIDs() -> [pid_t] {
+        let estimate = max(Int(proc_listallpids(nil, 0)), 0)
+        var pids = [pid_t](repeating: 0, count: max(estimate + 64, 1024))
+        let count = Int(proc_listallpids(&pids, Int32(MemoryLayout<pid_t>.size * pids.count)))
+        return Array(pids.prefix(max(0, min(count, pids.count))))
+    }
+
     nonisolated private static func fetchRawSnapshots() -> [RawProcessSnapshot] {
-        var pids = [pid_t](repeating: 0, count: 1024)
-        let bytesUsed = proc_listallpids(&pids, Int32(MemoryLayout<pid_t>.size * pids.count))
-        let pidCount = Int(bytesUsed) / MemoryLayout<pid_t>.size
+        let pids = allPIDs()
+        let pidCount = pids.count
         let now = mach_absolute_time()
 
         var snapshots: [RawProcessSnapshot] = []
