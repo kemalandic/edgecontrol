@@ -50,25 +50,49 @@ private struct DayProgressWidgetView: View {
     var body: some View {
         VStack(spacing: isCompact ? 6 : (isTall ? 20 : 10)) {
             if isCompact {
-                // Compact: circular progress
-                ZStack {
-                    Circle()
-                        .stroke(Color.white.opacity(0.08), lineWidth: 8)
-                    Circle()
-                        .trim(from: 0, to: dayProgress)
-                        .stroke(
-                            Theme.widgetPrimary("day-progress", ts: ts, default: .yellow),
-                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
+                // Compact: the ring, and beside it what it measures, so a bare
+                // percentage isn't left to explain itself.
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white.opacity(0.08), lineWidth: 8)
+                        Circle()
+                            .trim(from: 0, to: dayProgress)
+                            .stroke(
+                                Theme.widgetPrimary("day-progress", ts: ts, default: .yellow),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                            )
+                            .rotationEffect(.degrees(-90))
 
-                    Text(String(format: "%.0f%%", dayProgress * 100))
-                        .font(Theme.value(ts))
-                        .foregroundStyle(.white)
-                        .monospacedDigit()
+                        Text(String(format: "%.0f%%", dayProgress * 100))
+                            .font(Theme.value(ts))
+                            .foregroundStyle(.white)
+                            .monospacedDigit()
+                            .minimumScaleFactor(0.5)
+                            .padding(10)
+                    }
+                    .aspectRatio(1, contentMode: .fit)
+                    .padding(4)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("DAY PROGRESS")
+                            .font(Theme.caption(ts))
+                            .tracking(0.8)
+                            .foregroundStyle(Theme.widgetPrimary("day-progress", ts: ts, default: .yellow))
+                            .lineLimit(1)
+                        Text(timeRemaining)
+                            .font(Theme.title(ts))
+                            .foregroundStyle(Theme.text1(ts))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                        Text("left today")
+                            .font(Theme.caption(ts))
+                            .foregroundStyle(Theme.text2(ts))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .aspectRatio(1, contentMode: .fit)
-                .padding(4)
+                .frame(maxHeight: .infinity)
+                .accessibilityElement(children: .combine)
             } else {
                 // Center the linear stack in 2+ row cells; 1-row keeps its top-aligned fit.
                 if isTall { Spacer(minLength: 0) }
@@ -119,7 +143,7 @@ private struct DayProgressWidgetView: View {
                 }
             }
 
-            Spacer(minLength: 0)
+            if !isCompact { Spacer(minLength: 0) }
         }
         .padding(isCompact ? Theme.compactPadding : Theme.widgetPadding)
         .widgetCard()
