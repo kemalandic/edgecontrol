@@ -184,9 +184,8 @@ struct WidgetConfigEditor: View {
             ) {
                 ForEach(options, id: \.self) { option in
                     Text(
-                        option.capitalized.replacingOccurrences(of: "Daybar", with: "Day Bar").replacingOccurrences(
-                            of: "Dotmatrix", with: "Dot Matrix"
-                        ).replacingOccurrences(of: "Cpu", with: "CPU")
+                        entry.optionLabels?[option]
+                            ?? option.capitalized.replacingOccurrences(of: "Cpu", with: "CPU")
                     )
                     .tag(option)
                 }

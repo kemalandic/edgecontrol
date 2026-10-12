@@ -264,6 +264,9 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
     public let type: ConfigFieldType
     public let defaultValue: ConfigValue
     public let options: [String]?
+    /// What the picker shows for each option, when the stored value isn't
+    /// presentable ("dotMatrix" → "Dot Matrix").
+    public let optionLabels: [String: String]?
     public let minValue: Double?
     public let maxValue: Double?
     public let step: Double?
@@ -277,6 +280,7 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         type: ConfigFieldType,
         defaultValue: ConfigValue,
         options: [String]? = nil,
+        optionLabels: [String: String]? = nil,
         minValue: Double? = nil,
         maxValue: Double? = nil,
         step: Double? = nil,
@@ -287,6 +291,7 @@ public struct ConfigSchemaEntry: Codable, Hashable, Sendable {
         self.type = type
         self.defaultValue = defaultValue
         self.options = options
+        self.optionLabels = optionLabels
         self.minValue = minValue
         self.maxValue = maxValue
         self.step = step

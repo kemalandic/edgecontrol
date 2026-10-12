@@ -14,6 +14,7 @@ public enum ClockStyle: String, Codable, CaseIterable, Sendable {
     case neon
     case binary
     case dotMatrix
+    case flip
 
     public var displayName: String {
         switch self {
@@ -27,6 +28,7 @@ public enum ClockStyle: String, Codable, CaseIterable, Sendable {
         case .neon: "Neon"
         case .binary: "Binary"
         case .dotMatrix: "Dot Matrix"
+        case .flip: "Flip Clock"
         }
     }
 }
@@ -36,7 +38,7 @@ public enum ClockStyle: String, Codable, CaseIterable, Sendable {
 public final class ClockWidget: DashboardWidget {
     public let widgetId = "clock"
     public let displayName = "Clock"
-    public let description = "Live clock with 10 visual themes"
+    public let description = "Live clock with 11 visual themes, including a split-flap flip clock"
     public let iconName = "clock"
     public let category: WidgetCategory = .info
     public let supportedSizes = WidgetSizeRange(min: .size(3, 2), max: .size(8, 4))
@@ -48,7 +50,8 @@ public final class ClockWidget: DashboardWidget {
         ConfigSchemaEntry(key: "use24h", label: "24-Hour Format", type: .toggle, defaultValue: .bool(true)),
         ConfigSchemaEntry(
             key: "clockStyle", label: "Style", type: .picker, defaultValue: .string("digital"),
-            options: ClockStyle.allCases.map(\.rawValue)),
+            options: ClockStyle.allCases.map(\.rawValue),
+            optionLabels: Dictionary(uniqueKeysWithValues: ClockStyle.allCases.map { ($0.rawValue, $0.displayName) })),
     ]
     public let defaultColors = WidgetColors(primary: .cyan)
 
@@ -106,6 +109,12 @@ private struct ClockContainer: View {
             case .neon: neonStyle
             case .binary: binaryStyle
             case .dotMatrix: dotMatrixStyle
+            case .flip:
+                FlipClockView(
+                    hours: use24h ? hourStr : String(hour12), minutes: minStr,
+                    seconds: showSeconds ? secStr : nil,
+                    meridiem: use24h ? nil : ampm,
+                    date: showDate ? (isCompact ? shortDate : fullDate) : nil)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
