@@ -180,6 +180,8 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
     /// wake handler fires.
     @objc private func parkDashboard() {
         dashboardWindowController.hide()
+        // Nothing is on screen to update until it's placed again.
+        model.suspendBackgroundWork()
     }
 
     // Backoff schedule: try right away, then doubling out to 60s. Once the
@@ -209,10 +211,12 @@ final class EdgeControlAppDelegate: NSObject, NSApplicationDelegate {
                     history: self.history,
                     pluginManager: self.pluginManager,
                 )
+                self.model.resumeBackgroundWork()
             } else {
                 // Target not enumerated yet — hide the window so it doesn't
                 // flash onto the main display, and try again later.
                 self.dashboardWindowController.hide()
+                self.model.suspendBackgroundWork()
                 self.retryRepin(attempt: attempt + 1)
             }
         }

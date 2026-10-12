@@ -78,6 +78,31 @@ public final class AppModel: ObservableObject {
         // Note: other services are started on-demand via updateActiveServices()
     }
 
+    /// While the dashboard is hidden (displays asleep, screen locked, its
+    /// display missing) nothing is on screen to show: data services stop
+    /// polling and resume when it's placed again. Touch keeps running.
+    public private(set) var isSuspended = false
+    /// Bumped on suspend, so a start delayed from before it can't run after a
+    /// later resume has scheduled its own.
+    private var startGeneration = 0
+
+    public func suspendBackgroundWork() {
+        guard hasStarted, !isSuspended else { return }
+        isSuspended = true
+        startGeneration += 1
+        metricsService.stop()
+        for key in activeServices { service(for: key)?.stop() }
+        AppLog.lifecycle.info("background work suspended (\(self.activeServices.count) services)")
+    }
+
+    public func resumeBackgroundWork() {
+        guard isSuspended else { return }
+        isSuspended = false
+        metricsService.start()
+        startStaggered(activeServices.sorted { $0.rawValue < $1.rawValue })
+        AppLog.lifecycle.info("background work resumed")
+    }
+
     public func stop() {
         metricsService.stop()
         touchService.stop()
@@ -108,11 +133,24 @@ public final class AppModel: ObservableObject {
         for key in sortedKeys {
             activeServices.insert(key)
         }
-        for (index, key) in sortedKeys.enumerated() {
+        // Started on resume instead.
+        guard !isSuspended else { return }
+        startStaggered(sortedKeys)
+    }
+
+    private func startStaggered(_ keys: [ServiceKey]) {
+        let generation = startGeneration
+        for (index, key) in keys.enumerated() {
             let delay = Double(index) * 0.15
             if delay > 0 {
                 Task { @MainActor in
                     try? await Task.sleep(for: .milliseconds(Int(delay * 1000)))
+                    // The widget may have been removed (or the dashboard
+                    // hidden) during the delay; starting anyway left a
+                    // service polling with nothing to stop it.
+                    guard generation == self.startGeneration,
+                        self.activeServices.contains(key), !self.isSuspended
+                    else { return }
                     self.service(for: key)?.start()
                 }
             } else {
