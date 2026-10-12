@@ -64,6 +64,7 @@ private struct WeatherWidgetBody: View {
                 // actually look at lives, rather than to the forecast strip.
                 todayRow(w, layout)
                     .frame(maxHeight: .infinity)
+                    .overlay(alignment: .topLeading) { statusNote }
 
                 if showsForecast {
                     Divider().background(Theme.border(ts))
@@ -92,6 +93,23 @@ private struct WeatherWidgetBody: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .widgetCard()
+        }
+    }
+
+    /// Says when the reading isn't current or isn't for where you are.
+    @ViewBuilder private var statusNote: some View {
+        let stale = service.error != nil
+        if stale || service.locationNote != nil {
+            HStack(spacing: 4) {
+                Image(systemName: stale ? "wifi.slash" : "location.slash")
+                Text(stale
+                     ? "Offline · updated \(service.updatedAt.map { $0.formatted(date: .omitted, time: .shortened) } ?? "earlier")"
+                     : (service.locationNote?.hasPrefix("Location unavailable: showing London") == true ? "London (location off)" : "Last known location"))
+            }
+            .font(Theme.micro(ts))
+            .foregroundStyle(Theme.text3(ts))
+            .padding(8)
+            .help(service.locationNote ?? service.error ?? "")
         }
     }
 
