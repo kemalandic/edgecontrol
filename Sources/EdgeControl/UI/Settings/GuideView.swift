@@ -145,6 +145,28 @@ struct GuideView: View {
                             ("Circle", "Tap to complete the reminder everywhere."),
                         ])
                     section(
+                        "Cameras",
+                        rows: [
+                            (
+                                "go2rtc Server",
+                                "Every camera on the server appears. RTSP, ONVIF, Ring and other cameras go into go2rtc; Frigate and Home Assistant include it."
+                            ),
+                            ("Tabs", "With Show set to Single, tap a camera's name to switch to it."),
+                            (
+                                "Switch Every",
+                                "The next camera connects a few seconds before its turn, and the widget moves on once it's playing."
+                            ),
+                            ("Grid", "Tap a camera to fill the widget with it; tap again to go back."),
+                            (
+                                "Speaker",
+                                "Turns on a camera's sound, when its stream has any. One camera plays sound at a time."
+                            ),
+                            (
+                                "Off screen",
+                                "Cameras stop streaming while their page isn't showing or the displays sleep, and start again after."
+                            ),
+                        ])
+                    section(
                         "Widget Catalog",
                         rows: [
                             (

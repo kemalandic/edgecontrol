@@ -97,6 +97,7 @@ public final class WidgetRegistry: ObservableObject {
         // Media
         register(NowPlayingWidget(service: model.nowPlayingService))
         register(AudioDevicesWidget(service: model.audioService))
+        register(CamerasWidget(service: model.cameraService))
 
         // Info
         register(WeatherWidget(service: model.weatherService))

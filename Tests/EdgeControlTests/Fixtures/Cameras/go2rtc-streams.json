@@ -1,0 +1,26 @@
+{
+  "front_door": {
+    "producers": [{ "url": "rtsp://192.168.1.10:554/stream1" }],
+    "consumers": null
+  },
+  "garage": {
+    "producers": [{ "url": "ffmpeg:rtsp://192.168.1.11/live#video=h264" }],
+    "consumers": null
+  },
+  "Back_Yard": {
+    "producers": [{ "url": "onvif://192.168.1.13" }],
+    "consumers": null
+  },
+  "camera10": {
+    "producers": [{ "url": "rtsp://192.168.1.20/ch10" }],
+    "consumers": null
+  },
+  "camera9": {
+    "producers": [{ "url": "rtsp://192.168.1.20/ch9" }],
+    "consumers": null
+  },
+  "rtsp://admin:secret@192.168.1.12/live": {
+    "producers": [{ "url": "rtsp://admin:secret@192.168.1.12/live" }],
+    "consumers": [{ "format_name": "webrtc" }]
+  }
+}

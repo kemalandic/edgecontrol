@@ -312,6 +312,9 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time
+    /// The cameras a Cameras widget shows, picked from its go2rtc server's
+    /// list or added by URL. Stored as a string array of `CameraSource` entries.
+    case cameraList
 }
 
 // MARK: - Service Key
@@ -331,6 +334,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case process  // ProcessMonitorService
     case cicd  // CICDService — GitHub, Forgejo, any future host
     case reminders  // RemindersService (EventKit)
+    case cameras  // CameraService — go2rtc camera lists
 }
 
 // MARK: - Dashboard Widget Protocol
@@ -346,6 +350,9 @@ public protocol DashboardWidget: Identifiable where ID == String {
     var isConfigurable: Bool { get }
     var configSchema: [ConfigSchemaEntry] { get }
     var defaultColors: WidgetColors { get }
+    /// True for a widget whose color, until the user picks one on the Theme
+    /// page, is the theme's accent rather than `defaultColors.primary`.
+    var defaultsToAccentColor: Bool { get }
     /// Services this widget requires. Empty = self-contained (no external data).
     var requiredServices: Set<ServiceKey> { get }
 
@@ -365,6 +372,8 @@ extension DashboardWidget {
     }
 
     public var requiredServices: Set<ServiceKey> { [] }
+
+    public var defaultsToAccentColor: Bool { false }
 
     public func settingsBody(config: Binding<WidgetConfig>) -> any View {
         EmptyView()
@@ -395,7 +404,7 @@ public enum WidgetLaunch {
         name.contains("Activity Monitor")
     }
     /// Widgets whose taps already do something keep their behavior.
-    public static let excluded: Set<String> = ["cicd-runs"]
+    public static let excluded: Set<String> = ["cicd-runs", "cameras"]
 
     public static func defaultApp(for widgetId: String) -> String {
         switch widgetId {

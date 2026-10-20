@@ -23,6 +23,7 @@ public final class AppModel: ObservableObject {
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
     public let remindersService = RemindersService()
+    public let cameraService = CameraService()
     public let accountStore = CIAccountStore()
     public let noteStore = NoteStore()
     /// Held so the global key stays registered for the app's lifetime, and so
@@ -136,6 +137,7 @@ public final class AppModel: ObservableObject {
         case .process: return processService
         case .cicd: return cicdService
         case .reminders: return remindersService
+        case .cameras: return cameraService
         }
     }
 
@@ -174,3 +176,4 @@ extension WeatherDataService: ServiceLifecycle {}
 extension DiskIOService: ServiceLifecycle {}
 extension ProcessMonitorService: ServiceLifecycle {}
 extension CICDService: ServiceLifecycle {}
+extension CameraService: ServiceLifecycle {}

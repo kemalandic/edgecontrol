@@ -102,7 +102,8 @@ struct DashboardShell: View {
                     )
                     // Hardware finger: track while down, settle on release.
                     .onReceive(model.touchService.$liveSwipeDX) { dx in
-                        guard !editMode else { return }
+                        // Nor while something is drawn over the pages.
+                        guard !editMode, model.touchService.zoneRegistry.topLayer == 0 else { return }
                         if let dx {
                             lastLiveDX = dx
                             pageDragOffset = rubberBand(dx, pageCount: pages.count)
@@ -127,6 +128,9 @@ struct DashboardShell: View {
                     {
                         focusLayer(placement: placement, pageId: focus.pageId, grid: grid, size: geo.size)
                     }
+
+                    // A camera opened full screen covers everything.
+                    CameraFullScreenLayer(service: model.cameraService)
 
                 } else {
                     // Loading state
