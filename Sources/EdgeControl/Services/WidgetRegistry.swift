@@ -81,6 +81,7 @@ public final class WidgetRegistry: ObservableObject {
         register(StorageBarsWidget(metricsService: model.metricsService))
         register(MemoryPressureWidget(metricsService: model.metricsService))
         register(CPUCoresWidget(metricsService: model.metricsService))
+        register(AppDrawerWidget())
 
         // Temperature
         register(CPUTempWidget(service: model.smcService))

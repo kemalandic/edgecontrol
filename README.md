@@ -16,15 +16,15 @@ Built from scratch in Swift & SwiftUI — no third-party dependencies. Works on 
 
 I got the XENEON EDGE because I loved the idea of a dedicated touchscreen dashboard on my desk. But on macOS, there's no software for it — it just shows up as another monitor. So I built my own.
 
-What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 27 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. Contributors then pushed it past a thing to glance at: it has a real note editor now, a key that captures a line from any app, and a door to Apple Reminders. It's something I use every single day, and it keeps getting better.
+What started as a basic system monitor for one specific display has grown into a universal dashboard platform that adapts to any screen. 28 widgets, dynamic grid layout, macOS desktop widgets, complete theme customization, and a plugin system. Contributors then pushed it past a thing to glance at: it has a real note editor now, a key that captures a line from any app, and a door to Apple Reminders. It's something I use every single day, and it keeps getting better.
 
 ## What It Does
 
 EdgeControl turns any display into a fully customizable system dashboard. You create pages, place widgets wherever you want on a dynamic grid that automatically adapts to your screen, resize them, and configure everything from colors to fonts. Run it full-screen on a secondary display or as a resizable window on your main monitor. And when you need to write something down, the notes are right there rather than in another app.
 
-### 27 Built-in Widgets
+### 28 Built-in Widgets
 
-**System (9)** — CPU Gauge, Memory Gauge, CPU History, Memory History, Process List, Disk I/O, Storage Bars, Memory Pressure, CPU Cores (per-core usage)
+**System (10)** — CPU Gauge, Memory Gauge, CPU History, Memory History, Process List, Disk I/O, Storage Bars, Memory Pressure, CPU Cores (per-core usage), App Drawer (your Dock, or a deck of keys — see below)
 
 **Temperature (5)** — CPU Temp, GPU Temp, SSD Temp, Temperature History, Per-Core Temp (P-core/E-core breakdown)
 
@@ -97,6 +97,15 @@ of this is reachable on a touch panel with no keyboard.
   corner button expands it to the whole display, Esc brings the dashboard back.
 - **Several notes per widget.** Point a widget at any note, or keep a few within
   reach as tabs.
+
+### App Drawer
+
+App Drawer puts apps a tap away: a copy of your Dock with running apps, your most or recently used apps, or a **deck** of keys you set up, like a Stream Deck.
+
+- **Keys** open an app, run one of your Shortcuts, open a link or a file, copy or type text, press a keyboard shortcut or a media key, do several of those in a row, or open a folder of more keys. Holding a key can do something else.
+- **Edit on the dashboard** with the pencil, which brings its own keyboard, or on the Mac with **Edit Decks…** in the widget's settings: titles, colors, SF Symbols, emoji or pictures, hotkeys recorded by pressing them, and multi-actions.
+- **Looks like the Dock.** Keys take the shape of a macOS app icon and follow the theme's accent, dimmed or full. Plain, Cards, Dividers and a square Keys style.
+- **Decks are a file**, `Decks.json`, kept on this Mac or in a folder iCloud Drive, Google Drive, Dropbox or OneDrive syncs, so another Mac pointed at the same folder shares them.
 
 ### Plugin System
 
@@ -190,6 +199,7 @@ Sources/EdgeControlWidgets/   # macOS Desktop Widget Extension (WidgetKit)
 
 - **Location** — weather data (Open-Meteo, free API)
 - **Bluetooth** — connected device list
+- **Accessibility** — only for App Drawer keys that press keyboard shortcuts, media keys or type text; EdgeControl asks the first time one is used
 
 ## Community & Support
 

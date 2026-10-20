@@ -21,6 +21,8 @@ public enum AppLog {
     public static let media = Logger(subsystem: subsystem, category: "Media")
     /// Talking to the hardware: SMC sensors, touch devices.
     public static let hardware = Logger(subsystem: subsystem, category: "Hardware")
+    /// App Drawer: its decks, and the keys it runs.
+    public static let appDrawer = Logger(subsystem: subsystem, category: "AppDrawer")
 }
 
 extension AppLog {
