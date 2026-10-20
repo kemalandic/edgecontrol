@@ -93,6 +93,7 @@ public final class WidgetRegistry: ObservableObject {
         register(NetworkStatsWidget(service: model.networkService))
         register(WiFiInfoWidget(service: model.wifiService))
         register(BluetoothWidget(service: model.bluetoothService))
+        register(BambuPrinterWidget(service: model.bambuService))
 
         // Media
         register(NowPlayingWidget(service: model.nowPlayingService))

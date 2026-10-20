@@ -6,6 +6,7 @@ struct WidgetConfigEditor: View {
     let schema: [ConfigSchemaEntry]
     @Binding var config: WidgetConfig
     @EnvironmentObject private var layoutEngine: LayoutEngine
+    @EnvironmentObject private var model: AppModel
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -48,6 +49,8 @@ struct WidgetConfigEditor: View {
             timeRow(entry)
         case .colorPicker:
             EmptyView()
+        case .bambuPrinter:
+            BambuPrinterEditor(entry: entry, config: $config, service: model.bambuService, accent: accent)
         }
     }
 

@@ -312,6 +312,9 @@ public enum ConfigFieldType: String, Codable, Hashable, Sendable {
     case colorPicker
     /// A time of day, stored as an "HH:mm" string.
     case time
+    /// A Bambu Lab printer's address, stored as a string, with its access
+    /// code, which goes to the Keychain rather than the layout.
+    case bambuPrinter
 }
 
 // MARK: - Service Key
@@ -331,6 +334,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case process  // ProcessMonitorService
     case cicd  // CICDService — GitHub, Forgejo, any future host
     case reminders  // RemindersService (EventKit)
+    case bambu  // BambuService (MQTT to Bambu Lab printers)
 }
 
 // MARK: - Dashboard Widget Protocol
