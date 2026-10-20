@@ -22,6 +22,7 @@ public final class AppModel: ObservableObject {
     public let audioService = AudioService()
     public let wifiService = WiFiService()
     public let bluetoothService = BluetoothService()
+    public let batteryService = BatteryService()
     public let remindersService = RemindersService()
     public let accountStore = CIAccountStore()
     public let noteStore = NoteStore()
@@ -129,6 +130,7 @@ public final class AppModel: ObservableObject {
         case .network: return networkService
         case .wifi: return wifiService
         case .bluetooth: return bluetoothService
+        case .batteries: return batteryService
         case .nowPlaying: return nowPlayingService
         case .audio: return audioService
         case .weather: return weatherService
@@ -168,6 +170,7 @@ extension SMCService: ServiceLifecycle {}
 extension NetworkMonitorService: ServiceLifecycle {}
 extension WiFiService: ServiceLifecycle {}
 extension BluetoothService: ServiceLifecycle {}
+extension BatteryService: ServiceLifecycle {}
 extension NowPlayingService: ServiceLifecycle {}
 extension AudioService: ServiceLifecycle {}
 extension WeatherDataService: ServiceLifecycle {}

@@ -8,7 +8,17 @@ public struct BTDevice: Identifiable, Equatable {
     public let deviceType: String
     public let batteryLevel: Int?  // 0-100 if available
 
+    func with(batteryLevel: Int?) -> BTDevice {
+        BTDevice(id: id, name: name, isConnected: isConnected, deviceType: deviceType, batteryLevel: batteryLevel)
+    }
+
     public var icon: String {
+        // The class lumps keyboards, mice and trackpads together; the name
+        // usually says which.
+        let lowered = name.lowercased()
+        if lowered.contains("trackpad") { return "rectangle.and.hand.point.up.left" }
+        if lowered.contains("mouse") { return "computermouse" }
+        if lowered.contains("keyboard") { return "keyboard" }
         switch deviceType.lowercased() {
         case let t where t.contains("headphone") || t.contains("headset") || t.contains("airpod"): return "headphones"
         case let t where t.contains("keyboard"): return "keyboard"
@@ -28,6 +38,10 @@ public final class BluetoothService: ObservableObject {
     @Published public var isAvailable: Bool = false
 
     private var timer: Timer?
+    private var samples = 0
+    /// AirPods' levels, from System Information. It takes a moment to ask,
+    /// so it's asked once a minute rather than every sample.
+    private var reportedBatteries: [BatteryReading] = []
 
     /// Dedicated utility-QoS queue for IOBluetooth calls. `IOBluetoothDevice
     /// .pairedDevices()` is synchronous and can block for several seconds —
@@ -45,6 +59,7 @@ public final class BluetoothService: ObservableObject {
 
     public func start() {
         stop()
+        samples = 0
         sample()
         timer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -60,6 +75,8 @@ public final class BluetoothService: ObservableObject {
     }
 
     private func sample() {
+        let readReport = samples % 6 == 0
+        samples += 1
         // The weak capture belongs on the outer closure: leaving it on the inner
         // Task only made the outer one hold a strong reference so it had
         // something to weakly capture.
@@ -72,10 +89,17 @@ public final class BluetoothService: ObservableObject {
             // safe to call from a background dispatch queue, and the result
             // hops back to the main actor for the @Published assignment.
             let snapshot = Self.collectPairedDevices()
+            // Magic keyboards, mice and trackpads, from the I/O Registry.
+            let registry = BatteryReader.registryAccessories()
+            let report = readReport ? BatteryReader.bluetoothReport() : nil
             Task { @MainActor in
                 guard let self else { return }
+                if let report { self.reportedBatteries = report }
+                let levels = BatteryReader.levelsByAddress(registry + self.reportedBatteries)
                 self.isAvailable = snapshot.available
-                self.devices = snapshot.devices
+                self.devices = snapshot.devices.map { device in
+                    device.with(batteryLevel: BatteryReader.normalizedAddress(device.id).flatMap { levels[$0] })
+                }
             }
         }
     }

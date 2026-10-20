@@ -324,6 +324,7 @@ public enum ServiceKey: String, CaseIterable, Hashable, Sendable {
     case network  // NetworkMonitorService
     case wifi  // WiFiService
     case bluetooth  // BluetoothService
+    case batteries  // BatteryService (this Mac, AirPods, Magic accessories)
     case nowPlaying  // NowPlayingService
     case audio  // AudioService
     case weather  // WeatherService
