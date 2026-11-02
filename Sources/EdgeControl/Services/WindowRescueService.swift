@@ -39,6 +39,9 @@ public final class WindowRescueService: NSObject {
     public func start() {
         guard !isRunning else { return }
         isRunning = true
+        if !Self.isTrusted {
+            AppLog.windows.notice("can't move windows from behind the dashboard: Accessibility isn't allowed")
+        }
         let workspace = NSWorkspace.shared.notificationCenter
         for name in [NSWorkspace.didActivateApplicationNotification, NSWorkspace.didLaunchApplicationNotification] {
             workspace.addObserver(self, selector: #selector(appCameForward(_:)), name: name, object: nil)
@@ -183,7 +186,12 @@ public final class WindowRescueService: NSObject {
         Self.set(kAXPositionAttribute, of: window, to: destination.origin)
         // Moving between displays can make an app adjust the size; settle it.
         if destination.size != frame.size { Self.set(kAXSizeAttribute, of: window, to: destination.size) }
-        AppLog.windows.info("moved a window from behind the dashboard to \(screen.localizedName, privacy: .public)")
+        var pid: pid_t = 0
+        AXUIElementGetPid(window, &pid)
+        let app = NSRunningApplication(processIdentifier: pid)?.localizedName ?? "an app"
+        AppLog.windows.notice(
+            "moved \(app, privacy: .public)'s window from behind the dashboard to \(screen.localizedName, privacy: .public)"
+        )
     }
 
     private static func isMovable(_ window: AXUIElement) -> Bool {
