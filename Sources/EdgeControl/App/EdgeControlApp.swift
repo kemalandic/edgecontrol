@@ -415,7 +415,11 @@ enum EdgeControlExecutable {
             else { return nil }
             return dashboard.frame
         }
-        if layoutEngine.document.globalSettings.moveWindowsFromBehindDashboard { windowRescue.start() }
+        // Not in the test host: it shares the bundle identifier, and macOS
+        // records an Accessibility attempt against the build that made it.
+        if layoutEngine.document.globalSettings.moveWindowsFromBehindDashboard && !AppSupport.isRunningTests {
+            windowRescue.start()
+        }
         model.windowRescue = windowRescue
 
         let pluginManager = PluginManager()

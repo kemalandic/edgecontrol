@@ -150,7 +150,7 @@ public final class WindowRescueService: NSObject {
     }
 
     private func rescueWindows(of pid: pid_t) {
-        guard isRunning, dashboardFrame() != nil else { return }
+        guard isRunning, Self.isTrusted, dashboardFrame() != nil else { return }
         var value: CFTypeRef?
         let app = AXUIElementCreateApplication(pid)
         guard AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &value) == .success,
