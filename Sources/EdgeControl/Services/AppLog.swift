@@ -21,6 +21,8 @@ public enum AppLog {
     public static let media = Logger(subsystem: subsystem, category: "Media")
     /// Talking to the hardware: SMC sensors, touch devices.
     public static let hardware = Logger(subsystem: subsystem, category: "Hardware")
+    /// Other apps' windows the dashboard moves out from behind itself.
+    public static let windows = Logger(subsystem: subsystem, category: "Windows")
 }
 
 extension AppLog {

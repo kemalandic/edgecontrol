@@ -27,6 +27,10 @@ struct GuideView: View {
                                 "⌘ + hover",
                                 "A gear appears in the widget's corner; click it to jump straight to that widget's settings."
                             ),
+                            (
+                                "Hidden windows",
+                                "A window that opens on the dashboard's display, where the dashboard would hide it, moves to the display you're using. It needs Accessibility; General has the switch."
+                            ),
                         ])
                     section(
                         "Edit Mode",
