@@ -5,6 +5,7 @@ struct GeneralSettingsView: View {
     @EnvironmentObject private var layoutEngine: LayoutEngine
     @EnvironmentObject private var model: AppModel
     @State private var launchAtLogin: Bool = false
+    @State private var accessibilityAllowed = WindowRescueService.isTrusted
 
     private var accent: Color {
         Theme.accent(layoutEngine.document.globalSettings.theme)
@@ -100,6 +101,56 @@ struct GeneralSettingsView: View {
                     }
                 )
             )
+
+            // Windows behind the dashboard
+            VStack(alignment: .leading, spacing: 6) {
+                settingsToggle(
+                    "Move Windows Out from Behind the Dashboard",
+                    subtitle: "A window that opens on the dashboard's display moves to the display you're using",
+                    icon: "macwindow.on.rectangle",
+                    isOn: Binding(
+                        get: { layoutEngine.document.globalSettings.moveWindowsFromBehindDashboard },
+                        set: { newValue in
+                            var gs = layoutEngine.document.globalSettings
+                            gs.moveWindowsFromBehindDashboard = newValue
+                            layoutEngine.updateGlobalSettings(gs)
+                            if newValue { model.windowRescue?.start() } else { model.windowRescue?.stop() }
+                        }
+                    )
+                )
+                if layoutEngine.document.globalSettings.moveWindowsFromBehindDashboard && !accessibilityAllowed {
+                    HStack(spacing: 10) {
+                        Text("Moving another app's windows needs Accessibility.")
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.textSecondary)
+                        Spacer()
+                        Button {
+                            WindowRescueService.requestTrust()
+                        } label: {
+                            Text("Allow…")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(accent)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.leading, 44)
+                    .padding(.trailing, 10)
+                }
+            }
+            // macOS doesn't announce the permission changing; look again now
+            // and then, and catch up on windows already hidden once allowed.
+            .task {
+                while !Task.isCancelled {
+                    let allowed = WindowRescueService.isTrusted
+                    if allowed && !accessibilityAllowed { model.windowRescue?.sweep() }
+                    accessibilityAllowed = allowed
+                    try? await Task.sleep(for: .seconds(2))
+                }
+            }
 
             // Quick capture
             settingsToggle(

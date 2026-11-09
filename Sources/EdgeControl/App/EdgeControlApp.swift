@@ -408,6 +408,20 @@ enum EdgeControlExecutable {
         if layoutEngine.document.globalSettings.quickCaptureEnabled { quickCapture.start() }
         model.quickCapture = quickCapture
 
+        // The dashboard hides windows only while it covers its display.
+        let windowRescue = WindowRescueService {
+            guard let dashboard = NSApp?.windows.first(where: { $0 is KioskWindow }), dashboard.isVisible,
+                dashboard.screen != nil, dashboard.level.rawValue > NSWindow.Level.normal.rawValue
+            else { return nil }
+            return dashboard.frame
+        }
+        // Not in the test host: it shares the bundle identifier, and macOS
+        // records an Accessibility attempt against the build that made it.
+        if layoutEngine.document.globalSettings.moveWindowsFromBehindDashboard && !AppSupport.isRunningTests {
+            windowRescue.start()
+        }
+        model.windowRescue = windowRescue
+
         let pluginManager = PluginManager()
         pluginManager.discoverAndLoad()
 

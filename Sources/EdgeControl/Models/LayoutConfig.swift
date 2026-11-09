@@ -164,6 +164,10 @@ public struct GlobalSettings: Codable, Sendable {
     /// where quick capture puts things and therefore the one note that is
     /// certain to exist once anybody has used the feature.
     public var desktopNoteId: String
+    /// In kiosk mode, moves other apps' windows that open on the dashboard's
+    /// display, where it hides them, to the display you're using. Needs the
+    /// Accessibility permission (see WindowRescueService).
+    public var moveWindowsFromBehindDashboard: Bool
 
     public init(
         selectedDisplayName: String? = nil,
@@ -176,7 +180,8 @@ public struct GlobalSettings: Codable, Sendable {
         theme: ThemeSettings = ThemeSettings(),
         allowSystemPanels: Bool = false,
         quickCaptureEnabled: Bool = true,
-        desktopNoteId: String = ""
+        desktopNoteId: String = "",
+        moveWindowsFromBehindDashboard: Bool = true
     ) {
         self.selectedDisplayName = selectedDisplayName
         self.kioskMode = kioskMode
@@ -189,6 +194,7 @@ public struct GlobalSettings: Codable, Sendable {
         self.allowSystemPanels = allowSystemPanels
         self.quickCaptureEnabled = quickCaptureEnabled
         self.desktopNoteId = desktopNoteId
+        self.moveWindowsFromBehindDashboard = moveWindowsFromBehindDashboard
     }
 
     enum CodingKeys: String, CodingKey {
@@ -197,6 +203,7 @@ public struct GlobalSettings: Codable, Sendable {
         case allowSystemPanels
         case quickCaptureEnabled
         case desktopNoteId
+        case moveWindowsFromBehindDashboard
     }
 
     // Custom Decodable so existing layout.json files (which don't carry
@@ -216,6 +223,8 @@ public struct GlobalSettings: Codable, Sendable {
         desktopNoteId = try c.decodeIfPresent(String.self, forKey: .desktopNoteId) ?? ""
         theme = try c.decodeIfPresent(ThemeSettings.self, forKey: .theme) ?? ThemeSettings()
         allowSystemPanels = try c.decodeIfPresent(Bool.self, forKey: .allowSystemPanels) ?? false
+        moveWindowsFromBehindDashboard =
+            try c.decodeIfPresent(Bool.self, forKey: .moveWindowsFromBehindDashboard) ?? true
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -231,5 +240,6 @@ public struct GlobalSettings: Codable, Sendable {
         try c.encode(allowSystemPanels, forKey: .allowSystemPanels)
         try c.encode(quickCaptureEnabled, forKey: .quickCaptureEnabled)
         try c.encode(desktopNoteId, forKey: .desktopNoteId)
+        try c.encode(moveWindowsFromBehindDashboard, forKey: .moveWindowsFromBehindDashboard)
     }
 }
